@@ -119,6 +119,21 @@ export const IncomeReportOutputSchema = z.object({
 });
 export type IncomeReportOutput = z.infer<typeof IncomeReportOutputSchema>;
 
+// Types for Proof Generation
+export const ProofGenerationInputSchema = z.object({
+  proofId: z.string().describe('The unique ID of the proof record (e.g., CMP001).'),
+  employeeId: z.string().describe('The ID of the employee.'),
+  timestamp: z.string().describe('The ISO 8601 timestamp of the clock-in event.'),
+});
+export type ProofGenerationInput = z.infer<typeof ProofGenerationInputSchema>;
+
+export const ProofGenerationOutputSchema = z.object({
+  fileName: z.string().describe('The suggested file name (e.g., "Comprovante_CMP001.txt").'),
+  proofContent: z.string().describe('The full text content of the generated proof, formatted as a single string with line breaks (\\n).'),
+});
+export type ProofGenerationOutput = z.infer<typeof ProofGenerationOutputSchema>;
+
+
 
 export const summaryData = [
     { title: "Horas Esta Semana", value: "32.5", change: "+5.2%", changeType: "positive" },
