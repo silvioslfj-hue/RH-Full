@@ -10,7 +10,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 import { timeBankData } from '@/lib/data';
 
 const PayrollInputSchema = z.object({
@@ -24,6 +24,7 @@ const PayrollInputSchema = z.object({
   // PJ specific fields
   contractedWorkDays: z.number().optional().describe('Number of contracted work days for the month (for PJ).'),
   actualWorkedDays: z.number().optional().describe('Number of actual days worked in the month (for PJ).'),
+  pjExtraDaysAction: z.enum(['pay', 'ignore']).describe('What to do with extra worked days for PJ employees: pay them or ignore them.'),
   benefits: z.object({
     valeTransporte: z.number().optional().describe('Value of transportation benefit to be deducted.'),
     valeRefeicao: z.number().optional().describe('Value of meal benefit to be deducted.'),
@@ -89,11 +90,13 @@ const prompt = ai.definePrompt({
     **Regra Principal: Distinção de Contrato**
     - Se \`contractType\` for **"PJ"**:
       - O salário bruto é a base. Não há descontos de INSS, IRRF, nem FGTS.
-      - Verifique se 'actualWorkedDays' é maior que 'contractedWorkDays'.
-      - Se for, calcule o valor dos dias extras. O valor de um dia é (salário bruto / dias contratados).
-      - Adicione o valor total dos dias extras como um provento chamado "Pagamento por Dias Adicionais".
-      - Ignore completamente os campos de horas extras ('normalOvertimeHours', 'holidayOvertimeHours') para PJ.
-      - O salário líquido será o salário bruto mais o valor dos dias adicionais.
+      - Ignore completamente os campos de horas extras ('normalOvertimeHours', 'holidayOvertimeHours', 'overtimeAction') para PJ.
+      - Verifique o parâmetro \`pjExtraDaysAction\`.
+      - Se \`pjExtraDaysAction\` for 'pay' E 'actualWorkedDays' for maior que 'contractedWorkDays':
+        - Calcule o valor dos dias extras. O valor de um dia é (salário bruto / dias contratados).
+        - Adicione o valor total dos dias extras como um provento chamado "Pagamento por Dias Adicionais".
+      - Se \`pjExtraDaysAction\` for 'ignore', não faça nada, mesmo que haja dias extras trabalhados.
+      - O salário líquido será o salário bruto mais o valor dos dias adicionais (se aplicável).
     - Se \`contractType\` for **"CLT"**: Prossiga com o cálculo detalhado abaixo.
 
     **Processo de Cálculo para CLT:**

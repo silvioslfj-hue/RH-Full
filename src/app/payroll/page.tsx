@@ -70,6 +70,7 @@ export default function PayrollPage() {
 
   // Esta configuração agora viria das configurações globais. Para o protótipo, vamos fixá-la.
   const globalOvertimeAction = "pay"; 
+  const globalPjExtraDaysAction = "pay";
 
   const handleProcessPayroll = () => {
     startTransition(() => {
@@ -102,6 +103,7 @@ export default function PayrollPage() {
                         normalOvertimeHours,
                         holidayOvertimeHours,
                         overtimeAction: globalOvertimeAction,
+                        pjExtraDaysAction: 'ignore', // Irrelevante para CLT
                         benefits: {
                             valeTransporte: 150,
                             valeRefeicao: 440,
@@ -118,7 +120,8 @@ export default function PayrollPage() {
                         grossSalary: employee.grossSalary,
                         contractedWorkDays,
                         actualWorkedDays,
-                        overtimeAction: 'pay', // Irrelevante para PJ, mas o schema exige
+                        overtimeAction: 'bank', // Irrelevante para PJ
+                        pjExtraDaysAction: globalPjExtraDaysAction,
                         benefits: {}
                     };
                 }

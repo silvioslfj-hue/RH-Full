@@ -22,6 +22,7 @@ import { ManagerDialog } from "@/components/settings/manager-dialog";
 import { unitData as initialUnitData, roleData as initialRoleData, companyData as initialCompanyData, workShiftData as initialWorkShiftData, managerData as initialManagerData } from "@/lib/data";
 import type { Unit, Role, Company, WorkShift, Manager } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
 
 
 export default function SettingsPage() {
@@ -46,6 +47,7 @@ export default function SettingsPage() {
 
     // State for payroll settings
     const [overtimeAction, setOvertimeAction] = useState("pay");
+    const [pjExtraDaysAction, setPjExtraDaysAction] = useState("pay");
 
     const handleSavePayrollSettings = () => {
         // In a real app, this would save to a backend.
@@ -329,22 +331,44 @@ export default function SettingsPage() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                          <div>
-                            <Label className="text-base font-semibold">Ação Padrão para Horas Extras</Label>
+                            <h3 className="text-lg font-semibold text-foreground">Contrato CLT</h3>
+                            <Label className="text-base font-semibold">Ação Padrão para Horas Extras (CLT)</Label>
                             <p className="text-sm text-muted-foreground mb-4">
-                                Escolha o que fazer com as horas extras apuradas no fechamento do ponto, caso não haja horas de banco de horas a vencer.
+                                Escolha o que fazer com as horas extras apuradas no fechamento do ponto (caso não haja horas de banco de horas a vencer).
                             </p>
                             <RadioGroup value={overtimeAction} onValueChange={setOvertimeAction}>
                                 <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="pay" id="pay" />
-                                    <Label htmlFor="pay" className="font-normal">Pagar na Folha</Label>
+                                    <RadioGroupItem value="pay" id="clt-pay" />
+                                    <Label htmlFor="clt-pay" className="font-normal">Pagar na Folha</Label>
                                 </div>
-                                <p className="text-xs text-muted-foreground pl-6">As horas extras serão calculadas com acréscimo de 50% e adicionadas como provento no holerite do mês.</p>
+                                <p className="text-xs text-muted-foreground pl-6">As horas extras serão calculadas com acréscimo de 50% ou 100% e adicionadas como provento no holerite do mês.</p>
                                 
                                 <div className="flex items-center space-x-2 mt-4">
-                                    <RadioGroupItem value="bank" id="bank" />
-                                    <Label htmlFor="bank" className="font-normal">Adicionar ao Banco de Horas</Label>
+                                    <RadioGroupItem value="bank" id="clt-bank" />
+                                    <Label htmlFor="clt-bank" className="font-normal">Adicionar ao Banco de Horas</Label>
                                 </div>
                                 <p className="text-xs text-muted-foreground pl-6">As horas extras serão adicionadas ao saldo do banco de horas do colaborador para compensação futura.</p>
+                            </RadioGroup>
+                        </div>
+                        <Separator />
+                         <div>
+                            <h3 className="text-lg font-semibold text-foreground">Contrato PJ</h3>
+                            <Label className="text-base font-semibold">Ação Padrão para Dias Extras (PJ)</Label>
+                            <p className="text-sm text-muted-foreground mb-4">
+                                Escolha o que fazer se um colaborador PJ trabalhar mais dias do que o contratado no mês.
+                            </p>
+                            <RadioGroup value={pjExtraDaysAction} onValueChange={setPjExtraDaysAction}>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="pay" id="pj-pay" />
+                                    <Label htmlFor="pj-pay" className="font-normal">Pagar na Folha</Label>
+                                </div>
+                                <p className="text-xs text-muted-foreground pl-6">O sistema calculará o valor dos dias excedentes e os adicionará como provento no pagamento.</p>
+                                
+                                <div className="flex items-center space-x-2 mt-4">
+                                    <RadioGroupItem value="ignore" id="pj-ignore" />
+                                    <Label htmlFor="pj-ignore" className="font-normal">Não Pagar (Ignorar)</Label>
+                                </div>
+                                <p className="text-xs text-muted-foreground pl-6">Os dias excedentes serão ignorados e nenhum pagamento adicional será gerado.</p>
                             </RadioGroup>
                         </div>
                     </CardContent>
