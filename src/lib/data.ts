@@ -106,6 +106,20 @@ export const PayslipGenerationOutputSchema = z.object({
 export type PayslipGenerationOutput = z.infer<typeof PayslipGenerationOutputSchema>;
 
 
+// Types for Income Report Generation
+export const IncomeReportInputSchema = z.object({
+  employeeId: z.string().describe('The ID of the employee.'),
+  year: z.number().describe('The calendar year for the report.'),
+});
+export type IncomeReportInput = z.infer<typeof IncomeReportInputSchema>;
+
+export const IncomeReportOutputSchema = z.object({
+  fileName: z.string().describe('The suggested file name (e.g., "Informe_Rendimentos_2023.txt").'),
+  reportContent: z.string().describe('The full text content of the generated income report, formatted as a single string with line breaks (\\n).'),
+});
+export type IncomeReportOutput = z.infer<typeof IncomeReportOutputSchema>;
+
+
 export const summaryData = [
     { title: "Horas Esta Semana", value: "32.5", change: "+5.2%", changeType: "positive" },
     { title: "Próxima Folga", value: "2 dias", change: "Próximo: 25 de Julho", changeType: "neutral" },
