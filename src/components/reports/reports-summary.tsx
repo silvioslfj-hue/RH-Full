@@ -9,25 +9,29 @@ const summaryData = [
       title: "Total de Colaboradores",
       value: "105",
       description: "+2 este mês",
-      icon: Users
+      icon: Users,
+      href: "/reports"
     },
     {
       title: "Taxa de Absenteísmo",
       value: "2.1%",
       description: "Média do mês",
-      icon: Percent
+      icon: Percent,
+      href: "/reports"
     },
     {
       title: "Horas Extras (Mês)",
       value: "82.5h",
       description: "-5% vs. mês anterior",
-      icon: Hourglass
+      icon: Hourglass,
+      href: "/reports"
     },
     {
       title: "Taxa de Rotatividade (Turnover)",
       value: "1.5%",
       description: "Anualizada",
-      icon: TrendingUp
+      icon: TrendingUp,
+      href: "/reports"
     },
   ];
 
