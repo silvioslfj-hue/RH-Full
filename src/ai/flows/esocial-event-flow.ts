@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -11,7 +12,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-export const ESocialEventInputSchema = z.object({
+const ESocialEventInputSchema = z.object({
   employeeId: z.string().describe('The ID of the employee for whom to generate the event data.'),
 });
 export type ESocialEventInput = z.infer<typeof ESocialEventInputSchema>;
