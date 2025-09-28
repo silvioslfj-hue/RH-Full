@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -5,9 +6,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { FacialRecognitionModal } from './facial-recognition-modal'
 import { PlayCircle, PauseCircle, Clock } from 'lucide-react'
-import { ptBR } from 'date-fns/locale'
 
-export function ClockWidget() {
+export type ClockEvent = {
+  time: string;
+  type: 'Entrada' | 'Saída';
+};
+
+interface ClockWidgetProps {
+  onClockEvent: (event: ClockEvent) => void;
+}
+
+export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
   const [isClockedIn, setIsClockedIn] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -54,14 +63,19 @@ export function ClockWidget() {
   }
 
   const handleVerificationSuccess = () => {
-    setIsClockedIn(!isClockedIn)
-    if (isClockedIn) {
-      // If was clocked in, now clocking out
-      // You might want to reset timeElapsed here or log it
-    } else {
-      // If was clocked out, now clocking in
+    const newStatus = !isClockedIn
+    setIsClockedIn(newStatus)
+
+    const eventType = newStatus ? 'Entrada' : 'Saída'
+    onClockEvent({
+      time: formatTime(new Date()),
+      type: eventType,
+    })
+
+    if (newStatus) { // Clocking in
       setTimeElapsed(0)
     }
+    // If clocking out, timeElapsed just stops.
   }
 
   return (
@@ -74,8 +88,8 @@ export function ClockWidget() {
           </CardTitle>
           <CardDescription>{formatDate(currentTime)}</CardDescription>
         </CardHeader>
-        <CardContent className="flex-grow flex flex-col items-center justify-center gap-4">
-          <div className="text-6xl font-bold font-mono tracking-wider">
+        <CardContent className="flex-grow flex flex-col items-center justify-center gap-4 py-12">
+          <div className="text-7xl font-bold font-mono tracking-wider">
             {formatTime(currentTime)}
           </div>
           <div className="text-center">

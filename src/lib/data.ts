@@ -1,3 +1,6 @@
+
+import type { ClockEvent } from "@/components/dashboard/clock-widget";
+
 export const summaryData = [
     { title: "Horas Esta Semana", value: "32.5", change: "+5.2%", changeType: "positive" },
     { title: "Próxima Folga", value: "2 dias", change: "Próximo: 25 de Julho", changeType: "neutral" },
@@ -42,3 +45,9 @@ export const initialTimecardData = `{
         "July 12, 2024 - 9 to 5"
     ]
 }`;
+
+export const todaysActivityData: ClockEvent[] = [
+    { time: "09:01:12", type: "Entrada" },
+    { time: "12:32:45", type: "Saída" },
+    { time: "13:33:10", type: "Entrada" },
+];

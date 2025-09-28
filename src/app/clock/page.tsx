@@ -1,12 +1,27 @@
+
+"use client";
+
+import { useState } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
-import { ClockWidget } from "@/components/dashboard/clock-widget";
+import { ClockWidget, ClockEvent } from "@/components/dashboard/clock-widget";
+import { TodaysActivity } from "@/components/dashboard/todays-activity";
+import { todaysActivityData as initialActivity } from "@/lib/data";
 
 export default function ClockPage() {
+  const [activity, setActivity] = useState<ClockEvent[]>(initialActivity);
+
+  const handleClockEvent = (newEvent: ClockEvent) => {
+    setActivity(prev => [...prev, newEvent]);
+  }
+
   return (
     <AppLayout>
-      <div className="flex items-center justify-center h-[calc(100vh-120px)]">
-        <div className="w-full max-w-2xl">
-          <ClockWidget />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <div className="lg:col-span-2">
+          <ClockWidget onClockEvent={handleClockEvent} />
+        </div>
+        <div className="lg:col-span-1">
+          <TodaysActivity activities={activity} />
         </div>
       </div>
     </AppLayout>
