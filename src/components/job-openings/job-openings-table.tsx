@@ -91,5 +91,3 @@ export function JobOpeningsTable({ data, onEdit, onDelete }: JobOpeningsTablePro
     </Table>
   )
 }
-
-    

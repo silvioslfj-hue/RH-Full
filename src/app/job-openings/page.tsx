@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { jobOpeningsData } from "@/lib/data";
 import { JobOpeningsTable } from "@/components/job-openings/job-openings-table";
+import { marked } from "marked";
 
 const CopyButton = ({ textToCopy }: { textToCopy: string }) => {
     const { toast } = useToast();
@@ -62,7 +63,11 @@ export default function JobOpeningsPage() {
 
         try {
             const result = await generateJobOpening({ role: jobTitle });
-            setGeneratedContent(result);
+            
+            const htmlDescription = marked.parse(result.description);
+            const contentWithHtml = { ...result, description: htmlDescription };
+
+            setGeneratedContent(contentWithHtml);
 
             const newJob: GeneratedJobOpening = {
                 id: `VAGA${(jobHistory.length + 1).toString().padStart(3, '0')}`,
@@ -89,8 +94,12 @@ export default function JobOpeningsPage() {
 
     const handleEdit = (job: GeneratedJobOpening) => {
         setJobTitle(job.role);
+        
+        const htmlDescription = marked.parse(job.description);
+        const contentWithHtml = { ...job, description: htmlDescription };
+
         setGeneratedContent({
-            description: job.description,
+            description: contentWithHtml.description,
             interviewQuestions: job.interviewQuestions,
             requiredSkills: job.requiredSkills
         });
@@ -139,7 +148,7 @@ export default function JobOpeningsPage() {
                                 ) : (
                                 <Wand2 className="mr-2 h-4 w-4" />
                                 )}
-                                Gerar
+                                {editingJobId ? "Salvar e Gerar Novo" : "Gerar"}
                             </Button>
                         </div>
                     </CardHeader>
@@ -174,14 +183,14 @@ export default function JobOpeningsPage() {
                                     </TabsList>
                                     <ScrollArea className="flex-1 mt-4 h-96">
                                         <TabsContent value="description">
-                                            <div className="prose prose-sm dark:prose-invert max-w-none relative">
+                                            <div className="prose prose-sm dark:prose-invert max-w-none relative p-4">
                                                  <div className="absolute top-0 right-0">
                                                     <CopyButton textToCopy={generatedContent.description} />
                                                  </div>
-                                                <div dangerouslySetInnerHTML={{ __html: generatedContent.description.replace(/\\n/g, '<br />') }} />
+                                                <div dangerouslySetInnerHTML={{ __html: generatedContent.description }} />
                                             </div>
                                         </TabsContent>
-                                        <TabsContent value="questions">
+                                        <TabsContent value="questions" className="p-4">
                                              <div className="relative">
                                                 <div className="absolute top-0 right-0">
                                                     <CopyButton textToCopy={generatedContent.interviewQuestions.map(q => `[${q.category}] ${q.question}`).join('\n')} />
@@ -199,7 +208,7 @@ export default function JobOpeningsPage() {
                                                 </ul>
                                             </div>
                                         </TabsContent>
-                                        <TabsContent value="skills">
+                                        <TabsContent value="skills" className="p-4">
                                             <div className="relative">
                                                 <div className="absolute top-0 right-0">
                                                     <CopyButton textToCopy={generatedContent.requiredSkills.join(', ')} />

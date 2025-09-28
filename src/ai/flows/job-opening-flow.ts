@@ -21,28 +21,29 @@ const prompt = ai.definePrompt({
   input: { schema: JobOpeningInputSchema },
   output: { schema: JobOpeningOutputSchema },
   prompt: `
-    You are an expert HR recruitment specialist. Your task is to generate comprehensive job opening materials for the role of "{{role}}".
-    Provide a detailed and engaging job description, a set of relevant interview questions (both technical and behavioral), and a list of key skills.
+    Você é um especialista em recrutamento de RH. Sua tarefa é gerar materiais abrangentes para a abertura de uma vaga para o cargo de "{{role}}".
+    Forneça uma descrição detalhada e envolvente da vaga, um conjunto de perguntas de entrevista relevantes (tanto técnicas quanto comportamentais) e uma lista de habilidades-chave.
 
-    Job Title: {{role}}
+    Título da Vaga: {{role}}
 
-    Instructions:
-    1.  **Job Description:** Write a compelling job description. It should include:
-        - A brief introduction to the role and the company.
-        - A clear list of key responsibilities.
-        - A list of required qualifications and skills (both hard and soft).
-        - A mention of company benefits or culture.
-        - Use Markdown for formatting (e.g., headers, bullet points).
+    Instruções:
+    1.  **Descrição da Vaga:** Escreva uma descrição de vaga atraente. Deve incluir:
+        - Uma breve introdução ao cargo e à empresa.
+        - Uma lista clara de responsabilidades principais.
+        - Uma lista de qualificações e habilidades necessárias (tanto técnicas quanto comportamentais).
+        - Uma menção aos benefícios ou à cultura da empresa.
+        - Use Markdown para formatação (ex: cabeçalhos como '## Título', listas com '- Item').
 
-    2.  **Interview Questions:** Create a list of insightful interview questions.
-        - Include a mix of technical questions to assess capability and behavioral questions to gauge fit.
-        - Categorize each question (e.g., "Technical", "Behavioral", "Situational").
+    2.  **Perguntas de Entrevista:** Crie uma lista de perguntas de entrevista perspicazes.
+        - Inclua uma mistura de perguntas técnicas para avaliar a capacidade e perguntas comportamentais para avaliar o ajuste cultural.
+        - Categorize cada pergunta (ex: "Técnica", "Comportamental", "Situacional").
 
-    3.  **Required Skills:** List the most critical skills and competencies for a candidate to succeed in this role.
+    3.  **Habilidades Necessárias:** Liste as habilidades e competências mais críticas para um candidato ter sucesso neste cargo.
 
-    Generate the output strictly according to the provided output schema.
+    Gere a saída estritamente de acordo com o schema de saída fornecido.
   `,
 });
+
 
 const generateJobOpeningFlow = ai.defineFlow(
   {
