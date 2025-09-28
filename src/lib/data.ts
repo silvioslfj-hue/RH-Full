@@ -110,6 +110,16 @@ export type TimeBankEntry = {
     status: 'Crítico' | 'Atenção' | 'OK';
 }
 
+export type DisciplinaryAction = {
+    id: string;
+    employeeId: string;
+    employeeName: string;
+    date: string;
+    type: 'Advertência Verbal' | 'Advertência Escrita' | 'Suspensão';
+    reason: string;
+    issuer: string;
+}
+
 
 // Types for payslip generation
 export const PayslipGenerationInputSchema = z.object({
@@ -364,8 +374,14 @@ export const invoicesData: Invoice[] = [
     { id: "NF002", competence: "2024-06", amount: 8500.00, uploadDate: "2024-07-01", status: "Pago", fileName: "nf_junho.pdf" },
     { id: "NF003", competence: "2024-05", amount: 8000.00, uploadDate: "2024-06-01", status: "Pago", fileName: "nf_maio.pdf" },
 ];
+
+export const disciplinaryData: DisciplinaryAction[] = [
+    { id: "AD001", employeeId: "FUNC001", employeeName: "Carlos Andrade", date: "2024-07-03", type: "Advertência Verbal", reason: "Atraso na entrega do projeto X.", issuer: "Carlos Souza" },
+    { id: "AD002", employeeId: "FUNC002", employeeName: "Mariana Costa", date: "2024-06-21", type: "Advertência Escrita", reason: "Falta não justificada no dia 20/06/2024.", issuer: "Ana Oliveira" }
+]
     
 
     
+
 
 
