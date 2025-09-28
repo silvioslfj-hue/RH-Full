@@ -1,17 +1,20 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { PlusCircle, FileDown } from "lucide-react";
+import { PlusCircle, FileDown, Search, Building, MapPin } from "lucide-react";
 import { EmployeesTable } from "@/components/employees/employees-table";
 import { EmployeeDialog } from "@/components/employees/employee-dialog";
 import { employeeData as initialEmployeeData, unitData, roleData, workShiftData, companyData, esocialEventsData } from "@/lib/data";
 import type { Employee, EsocialEvent } from "@/lib/data";
 import { ContractChangeDialog } from "@/components/employees/contract-change-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 export default function EmployeesPage() {
     const { toast } = useToast();
@@ -20,6 +23,19 @@ export default function EmployeesPage() {
     const [isContractChangeDialogOpen, setIsContractChangeDialogOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [events, setEvents] = useState<EsocialEvent[]>(esocialEventsData);
+
+    const [nameFilter, setNameFilter] = useState('');
+    const [companyFilter, setCompanyFilter] = useState('all');
+    const [unitFilter, setUnitFilter] = useState('all');
+
+    const filteredEmployees = useMemo(() => {
+        return employees.filter(employee => {
+            const nameMatch = employee.name.toLowerCase().includes(nameFilter.toLowerCase());
+            const companyMatch = companyFilter === 'all' || employee.company === companyFilter;
+            const unitMatch = unitFilter === 'all' || employee.unit === unitFilter;
+            return nameMatch && companyMatch && unitMatch;
+        });
+    }, [employees, nameFilter, companyFilter, unitFilter]);
 
     const handleOpenEmployeeDialog = (employee: Employee | null = null) => {
         setEditingEmployee(employee);
@@ -35,7 +51,8 @@ export default function EmployeesPage() {
         if (editingEmployee) {
             setEmployees(employees.map(e => e.id === employee.id ? employee : e));
         } else {
-            setEmployees([...employees, { ...employee, id: `FUNC${(employees.length + 1).toString().padStart(3, '0')}` }]);
+            const newEmployee = { ...employee, id: `FUNC${(employees.length + 1).toString().padStart(3, '0')}` };
+            setEmployees([...employees, newEmployee]);
         }
         handleCloseEmployeeDialog();
     };
@@ -105,12 +122,57 @@ export default function EmployeesPage() {
 
                 <Card>
                     <CardHeader>
+                        <CardTitle>Filtros de Busca</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input 
+                                    placeholder="Buscar por nome..." 
+                                    className="pl-10" 
+                                    value={nameFilter}
+                                    onChange={e => setNameFilter(e.target.value)}
+                                />
+                            </div>
+                            <Select value={companyFilter} onValueChange={setCompanyFilter}>
+                                <SelectTrigger>
+                                    <div className="flex items-center gap-2">
+                                        <Building className="h-4 w-4 text-muted-foreground" />
+                                        <SelectValue placeholder="Filtrar por empresa" />
+                                    </div>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todas as Empresas</SelectItem>
+                                    {companyData.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            <Select value={unitFilter} onValueChange={setUnitFilter}>
+                                <SelectTrigger>
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                                        <SelectValue placeholder="Filtrar por unidade" />
+                                    </div>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todas as Unidades</SelectItem>
+                                    {unitData.map(u => <SelectItem key={u.id} value={u.name}>{u.name}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
                         <CardTitle>Lista de Colaboradores</CardTitle>
-                        <CardDescription>Visualize todos os colaboradores e seus status atuais.</CardDescription>
+                        <CardDescription>
+                            Exibindo {filteredEmployees.length} de {employees.length} colaboradores.
+                        </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <EmployeesTable 
-                            data={employees}
+                            data={filteredEmployees}
                             onEdit={handleOpenEmployeeDialog}
                             onDelete={handleDeleteEmployee}
                             onContractChange={handleOpenContractChangeDialog}
