@@ -14,10 +14,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 
 
-const collaboratorModules = [
+const collaboratorModulesCLT = [
     { id: "time-tracking-collab", label: "Registro de Ponto e Justificativas" },
     { id: "reports-collab", label: "Meus Relatórios e Holerites" },
     { id: "absences-collab", label: "Solicitação de Ausências" },
+    { id: "proofs-collab", label: "Comprovantes de Ponto" },
+    { id: "income-report-collab", label: "Informe de Rendimentos" },
+];
+
+const collaboratorModulesPJ = [
+    { id: "time-tracking-pj", label: "Registro de Ponto" },
+    { id: "invoices-pj", label: "Envio de Notas Fiscais" },
+    { id: "income-report-pj", label: "Informe de Rendimentos" },
 ];
 
 const adminModules = [
@@ -150,9 +158,23 @@ export default function SuperAdminPage() {
                                 </div>
                                 <Separator />
                                 <div>
-                                    <h3 className="text-lg font-semibold mb-3">Módulos do Colaborador</h3>
+                                    <h3 className="text-lg font-semibold mb-3">Módulos do Colaborador (CLT)</h3>
                                     <div className="space-y-3">
-                                        {collaboratorModules.map((module) => (
+                                        {collaboratorModulesCLT.map((module) => (
+                                            <div key={module.id} className="flex items-center space-x-2">
+                                                <Checkbox id={module.id} defaultChecked />
+                                                <Label htmlFor={module.id} className="font-normal">
+                                                    {module.label}
+                                                </Label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <Separator />
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">Módulos do Colaborador (PJ)</h3>
+                                    <div className="space-y-3">
+                                        {collaboratorModulesPJ.map((module) => (
                                             <div key={module.id} className="flex items-center space-x-2">
                                                 <Checkbox id={module.id} defaultChecked />
                                                 <Label htmlFor={module.id} className="font-normal">
