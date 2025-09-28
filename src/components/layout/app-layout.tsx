@@ -23,7 +23,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   
   return (
     <SidebarProvider>
-      <div className="min-h-screen">
+      <div className="flex min-h-screen">
         <Sidebar collapsible="icon">
           <div className="flex flex-col h-full">
             <div className="p-4 flex items-center justify-between">
