@@ -46,6 +46,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
+import { AdjustmentRequestDialog } from "./adjustment-request-dialog";
 
 function AITool() {
   const [isPending, startTransition] = useTransition();
@@ -141,10 +142,13 @@ function AITool() {
 }
 
 function TimeSheetManager() {
+    const { toast } = useToast();
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
         from: new Date(2024, 6, 1),
         to: new Date(2024, 6, 31)
     });
+    const [isAdjustmentDialogOpen, setIsAdjustmentDialogOpen] = useState(false);
+
 
   const dummyTimeSheet = [
     { day: "01/07", date: "Seg", entries: "09:01 - 12:30, 13:31 - 18:05", worked: "08:03", balance: "+0:03", status: "ok" },
@@ -153,7 +157,24 @@ function TimeSheetManager() {
     { day: "04/07", date: "Qui", entries: "Ausência Justificada", worked: "00:00", balance: "-8:00", status: "info", issue: "Licença Médica" },
     { day: "05/07", date: "Sex", entries: "Férias", worked: "00:00", balance: "N/A", status: "info", issue: "Férias" },
   ]
+
+  const handleApprove = () => {
+    toast({
+      title: "Espelho de Ponto Aprovado",
+      description: "O espelho de ponto do funcionário foi marcado como aprovado.",
+    });
+  };
+
+  const handleAdjustmentRequest = (reason: string) => {
+    toast({
+      title: "Solicitação de Ajuste Enviada",
+      description: "O funcionário foi notificado para realizar o ajuste no ponto.",
+    });
+    setIsAdjustmentDialogOpen(false);
+  };
+
   return (
+    <>
      <Card>
       <CardHeader>
         <CardTitle>Espelho de Ponto</CardTitle>
@@ -250,16 +271,22 @@ function TimeSheetManager() {
         </Table>
       </CardContent>
        <div className="flex items-center justify-end gap-4 p-6 border-t">
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => setIsAdjustmentDialogOpen(true)}>
             <AlertTriangle className="mr-2 h-4 w-4" />
             Solicitar Ajuste
           </Button>
-          <Button>
+          <Button onClick={handleApprove}>
             <CheckCircle className="mr-2 h-4 w-4" />
             Aprovar Espelho de Ponto
           </Button>
         </div>
     </Card>
+     <AdjustmentRequestDialog
+        isOpen={isAdjustmentDialogOpen}
+        onClose={() => setIsAdjustmentDialogOpen(false)}
+        onConfirm={handleAdjustmentRequest}
+      />
+    </>
   )
 }
 
