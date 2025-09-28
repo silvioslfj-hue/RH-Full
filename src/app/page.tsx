@@ -25,7 +25,7 @@ function CollaboratorLoginForm() {
         </div>
         <div className="flex flex-col space-y-1.5">
           <Label htmlFor="password-collaborator">Senha</Label>
-          <Input id="password-collaborator" type="password" placeholder="Sua senha" />
+          <Input id="password-collaborator" type="password" placeholder="Sua senha" autoComplete="new-password" />
         </div>
       </div>
       <Button type="submit" className="w-full mt-6">
