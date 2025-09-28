@@ -12,10 +12,18 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { KeyRound, Settings, Send } from "lucide-react";
+import { KeyRound, Settings, Send, Building, Search, UserPlus, UserMinus, FileText } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { companyData } from "@/lib/data";
+import { Input } from "@/components/ui/input";
 
+const pendingEvents = {
+    admissions: 2,
+    terminations: 1,
+    payrolls: 15,
+}
 
 export default function ESocialPage() {
     const { toast } = useToast();
@@ -43,34 +51,97 @@ export default function ESocialPage() {
           <CardHeader>
             <CardTitle>Painel de Controle do eSocial</CardTitle>
             <CardDescription>
-              Centralize o envio das informações trabalhistas, fiscais e previdenciárias.
+              Selecione a empresa e a competência para visualizar e enviar os eventos pendentes.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <Alert>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">Competência</label>
+                    <Input type="month" defaultValue="2024-07" />
+                </div>
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">Empresa (CNPJ)</label>
+                    <Select>
+                        <SelectTrigger>
+                            <div className="flex items-center gap-2">
+                                <Building className="h-4 w-4 text-muted-foreground" />
+                                <SelectValue placeholder="Selecione a empresa" />
+                            </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                            {companyData.map(c => (
+                                <SelectItem key={c.id} value={c.cnpj}>
+                                    {c.name} - {c.cnpj}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                 <div className="flex items-end">
+                    <Button className="w-full">
+                        <Search className="mr-2 h-4 w-4" />
+                        Consultar Pendências
+                    </Button>
+                </div>
+            </div>
+             <Alert>
                 <KeyRound className="h-4 w-4" />
-                <AlertTitle>Integração e Automação</AlertTitle>
+                <AlertTitle>Certificado Digital</AlertTitle>
                 <AlertDescription>
-                    Para automatizar o envio dos eventos para o eSocial, é fundamental que a sua empresa tenha um <strong>Certificado Digital A1</strong> configurado no sistema. O certificado é a identidade eletrônica da sua empresa e garante a validade jurídica dos envios.
+                    Certifique-se de que a empresa selecionada possui um <strong>Certificado Digital A1</strong> válido e configurado para realizar os envios.
+                    <Button variant="link" className="p-0 h-auto ml-1" asChild>
+                        <Link href="/settings">Verificar configuração</Link>
+                    </Button>
                 </AlertDescription>
             </Alert>
-             <div className="p-6 border rounded-lg bg-muted/30 text-center">
-                <h3 className="text-lg font-semibold">Pronto para começar?</h3>
-                <p className="text-muted-foreground mt-1 mb-4">Gere e envie os eventos periódicos e não periódicos com segurança.</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Eventos Pendentes para Julho/2024</CardTitle>
+                <CardDescription>Resumo dos eventos não periódicos e periódicos a serem enviados.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Card className="bg-muted/30">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-base font-medium">Admissões (S-2200)</CardTitle>
+                        <UserPlus className="h-5 w-5 text-muted-foreground"/>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{pendingEvents.admissions}</div>
+                        <p className="text-xs text-muted-foreground">Novos colaboradores registrados</p>
+                    </CardContent>
+                </Card>
+                 <Card className="bg-muted/30">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-base font-medium">Desligamentos (S-2299)</CardTitle>
+                        <UserMinus className="h-5 w-5 text-muted-foreground"/>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{pendingEvents.terminations}</div>
+                        <p className="text-xs text-muted-foreground">Rescisões de contrato</p>
+                    </CardContent>
+                </Card>
+                 <Card className="bg-muted/30">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-base font-medium">Folhas (S-1200/S-1210)</CardTitle>
+                        <FileText className="h-5 w-5 text-muted-foreground"/>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{pendingEvents.payrolls}</div>
+                        <p className="text-xs text-muted-foreground">Remunerações a serem enviadas</p>
+                    </CardContent>
+                </Card>
+            </CardContent>
+             <CardFooter className="flex-col items-stretch gap-4 sm:flex-row sm:justify-end">
+                <Button variant="outline">Ver Detalhes dos Eventos</Button>
                  <Button onClick={handleSendEvents}>
                     <Send className="mr-2 h-4 w-4"/>
-                    Gerar e Enviar Eventos
+                    Gerar e Enviar Eventos para o eSocial
                 </Button>
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-end">
-             <Button variant="outline" asChild>
-                <Link href="/settings">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Configurar Certificado Digital
-                </Link>
-            </Button>
-          </CardFooter>
+            </CardFooter>
         </Card>
       </div>
     </AppLayout>
