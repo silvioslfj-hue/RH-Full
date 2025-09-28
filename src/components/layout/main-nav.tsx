@@ -10,11 +10,12 @@ import {
   SidebarMenuButton,
   useSidebar
 } from '@/components/ui/sidebar'
-import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText, FileArchive, Settings } from 'lucide-react'
+import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText, FileArchive, Settings, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 const adminMenuItems = [
   { href: '/dashboard', label: 'Resumo', icon: LayoutDashboard },
+  { href: '/employees', label: 'Colaboradores', icon: Users },
   { href: '/timecards', label: 'Cartões de Ponto', icon: Clock },
   { href: '/absences', label: 'Ausências', icon: CalendarOff },
   { href: '/reports', label: 'Relatórios', icon: BarChart3 },
@@ -32,7 +33,7 @@ const collaboratorMenuItems = [
   { href: '/income-reports', label: 'Informe de Rendimentos', icon: FileText },
 ]
 
-const adminPaths = ['/dashboard', '/timecards', '/reports', '/fiscal-files', '/settings'];
+const adminPaths = ['/dashboard', '/timecards', '/reports', '/fiscal-files', '/settings', '/employees'];
 
 export function MainNav() {
   const pathname = usePathname();
@@ -42,7 +43,7 @@ export function MainNav() {
   useEffect(() => {
     // Lógica para determinar o contexto do usuário (admin vs. colaborador)
     // Para o protótipo, usaremos o sessionStorage para simular o estado de login
-    if (pathname.startsWith('/dashboard') || pathname.startsWith('/timecards') || pathname.startsWith('/reports') || pathname.startsWith('/fiscal-files') || pathname.startsWith('/settings')) {
+    if (adminPaths.some(p => pathname.startsWith(p))) {
         window.sessionStorage.setItem('userRole', 'admin');
         setIsAdminView(true);
     } else if (pathname.startsWith('/clock') || pathname.startsWith('/justifications') || pathname.startsWith('/my-reports') || pathname.startsWith('/proofs') || pathname.startsWith('/payslips') || pathname.startsWith('/income-reports')) {

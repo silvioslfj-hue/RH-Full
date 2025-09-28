@@ -37,6 +37,16 @@ export type WorkShift = {
   breakDuration: number; // in minutes
 }
 
+export type Employee = {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    unit: string;
+    status: 'Ativo' | 'Inativo' | 'Férias';
+    avatar?: string;
+}
+
 
 export const summaryData = [
     { title: "Horas Esta Semana", value: "32.5", change: "+5.2%", changeType: "positive" },
@@ -148,3 +158,10 @@ export const workShiftData: WorkShift[] = [
     { id: "JOR002", name: "Meio Período (Seg-Sex, 4h/dia)", days: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"], startTime: "09:00", endTime: "13:00", breakDuration: 0 },
     { id: "JOR003", name: "Plantão 12x36", days: ["Alternados"], startTime: "07:00", endTime: "19:00", breakDuration: 60 },
 ];
+
+export const employeeData: Employee[] = [
+    { id: "FUNC001", name: "Jane Doe", email: "jane.doe@example.com", role: "Desenvolvedor Front-end", unit: "Matriz São Paulo", status: "Ativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d" },
+    { id: "FUNC002", name: "John Smith", email: "john.smith@example.com", role: "Desenvolvedor Back-end", unit: "Filial Rio de Janeiro", status: "Ativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026705d" },
+    { id: "FUNC003", name: "Alice Johnson", email: "alice.johnson@example.com", role: "Designer de Produto", unit: "Matriz São Paulo", status: "Férias", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026706d" },
+    { id: "FUNC004", name: "Robert Brown", email: "robert.brown@example.com", role: "Analista de RH", unit: "Escritório Belo Horizonte", status: "Inativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026707d" },
+]
