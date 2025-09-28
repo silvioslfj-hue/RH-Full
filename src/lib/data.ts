@@ -165,3 +165,11 @@ export const employeeData: Employee[] = [
     { id: "FUNC003", name: "Alice Johnson", email: "alice.johnson@example.com", role: "Designer de Produto", unit: "Matriz São Paulo", status: "Férias", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026706d" },
     { id: "FUNC004", name: "Robert Brown", email: "robert.brown@example.com", role: "Analista de RH", unit: "Escritório Belo Horizonte", status: "Inativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026707d" },
 ]
+
+export const payrollHistoryData = [
+  { id: "HIST001", competence: "Julho/2024", employeeId: "FUNC001", employeeName: "Jane Doe", grossSalary: 7500.00, netSalary: 5890.50, status: "Finalizado" },
+  { id: "HIST002", competence: "Julho/2024", employeeId: "FUNC002", employeeName: "John Smith", grossSalary: 8200.00, netSalary: 6210.80, status: "Finalizado" },
+  { id: "HIST003", competence: "Junho/2024", employeeId: "FUNC001", employeeName: "Jane Doe", grossSalary: 7500.00, netSalary: 5890.50, status: "Finalizado" },
+  { id: "HIST004", competence: "Junho/2024", employeeId: "FUNC002", employeeName: "John Smith", grossSalary: 8000.00, netSalary: 6050.20, status: "Finalizado" },
+  { id: "HIST005", competence: "Junho/2024", employeeId: "FUNC003", employeeName: "Alice Johnson", grossSalary: 6000.00, netSalary: 4850.00, status: "Finalizado" },
+];
