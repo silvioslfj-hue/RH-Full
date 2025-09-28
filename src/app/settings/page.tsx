@@ -6,7 +6,7 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Building, Briefcase, Clock, MapPin } from "lucide-react";
+import { PlusCircle, Building, Briefcase, Clock, MapPin, UserCircle } from "lucide-react";
 import { UnitsTable } from "@/components/settings/units-table";
 import { UnitDialog } from "@/components/settings/unit-dialog";
 import { RolesTable } from "@/components/settings/roles-table";
@@ -15,8 +15,10 @@ import { CompaniesTable } from "@/components/settings/companies-table";
 import { CompanyDialog } from "@/components/settings/company-dialog";
 import { WorkShiftsTable } from "@/components/settings/work-shifts-table";
 import { WorkShiftDialog } from "@/components/settings/work-shift-dialog";
-import { unitData as initialUnitData, roleData as initialRoleData, companyData as initialCompanyData, workShiftData as initialWorkShiftData } from "@/lib/data";
-import type { Unit, Role, Company, WorkShift } from "@/lib/data";
+import { ManagersTable } from "@/components/settings/managers-table";
+import { ManagerDialog } from "@/components/settings/manager-dialog";
+import { unitData as initialUnitData, roleData as initialRoleData, companyData as initialCompanyData, workShiftData as initialWorkShiftData, managerData as initialManagerData } from "@/lib/data";
+import type { Unit, Role, Company, WorkShift, Manager } from "@/lib/data";
 
 
 export default function SettingsPage() {
@@ -24,16 +26,19 @@ export default function SettingsPage() {
     const [roles, setRoles] = useState(initialRoleData);
     const [companies, setCompanies] = useState(initialCompanyData);
     const [workShifts, setWorkShifts] = useState(initialWorkShiftData);
+    const [managers, setManagers] = useState(initialManagerData);
 
     const [isUnitDialogOpen, setIsUnitDialogOpen] = useState(false);
     const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
     const [isCompanyDialogOpen, setIsCompanyDialogOpen] = useState(false);
     const [isWorkShiftDialogOpen, setIsWorkShiftDialogOpen] = useState(false);
+    const [isManagerDialogOpen, setIsManagerDialogOpen] = useState(false);
 
     const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
     const [editingRole, setEditingRole] = useState<Role | null>(null);
     const [editingCompany, setEditingCompany] = useState<Company | null>(null);
     const [editingWorkShift, setEditingWorkShift] = useState<WorkShift | null>(null);
+    const [editingManager, setEditingManager] = useState<Manager | null>(null);
 
     // Unit Handlers
     const handleOpenUnitDialog = (unit: Unit | null = null) => {
@@ -118,6 +123,27 @@ export default function SettingsPage() {
     const handleDeleteWorkShift = (id: string) => {
         setWorkShifts(workShifts.filter(ws => ws.id !== id));
     };
+    
+    // Manager Handlers
+    const handleOpenManagerDialog = (manager: Manager | null = null) => {
+        setEditingManager(manager);
+        setIsManagerDialogOpen(true);
+    };
+    const handleCloseManagerDialog = () => {
+        setEditingManager(null);
+        setIsManagerDialogOpen(false);
+    };
+    const handleSaveManager = (manager: Manager) => {
+        if (editingManager) {
+            setManagers(managers.map(m => m.id === manager.id ? manager : m));
+        } else {
+            setManagers([...managers, { ...manager, id: `GES${(managers.length + 1).toString().padStart(3, '0')}` }]);
+        }
+        handleCloseManagerDialog();
+    };
+    const handleDeleteManager = (id: string) => {
+        setManagers(managers.filter(m => m.id !== id));
+    };
 
 
   return (
@@ -133,7 +159,7 @@ export default function SettingsPage() {
         </div>
 
         <Tabs defaultValue="companies">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="companies">
                     <Building className="mr-2" />
                     Empresas
@@ -145,6 +171,10 @@ export default function SettingsPage() {
                 <TabsTrigger value="roles">
                     <Briefcase className="mr-2" />
                     Cargos
+                </TabsTrigger>
+                 <TabsTrigger value="managers">
+                    <UserCircle className="mr-2" />
+                    Gestores
                 </TabsTrigger>
                 <TabsTrigger value="work-shifts">
                     <Clock className="mr-2" />
@@ -224,6 +254,30 @@ export default function SettingsPage() {
                 </Card>
             </TabsContent>
 
+            <TabsContent value="managers" className="pt-6">
+                 <Card>
+                    <CardHeader>
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <CardTitle>Gestores</CardTitle>
+                                <CardDescription>Gerencie os gestores diretos que podem ser associados aos colaboradores.</CardDescription>
+                            </div>
+                            <Button onClick={() => handleOpenManagerDialog()}>
+                                <PlusCircle className="mr-2" />
+                                Adicionar Gestor
+                            </Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <ManagersTable
+                            data={managers}
+                            onEdit={handleOpenManagerDialog}
+                            onDelete={handleDeleteManager}
+                        />
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
             <TabsContent value="work-shifts" className="pt-6">
                  <Card>
                     <CardHeader>
@@ -273,6 +327,12 @@ export default function SettingsPage() {
             onClose={handleCloseWorkShiftDialog}
             onSave={handleSaveWorkShift}
             workShift={editingWorkShift}
+        />
+        <ManagerDialog
+            isOpen={isManagerDialogOpen}
+            onClose={handleCloseManagerDialog}
+            onSave={handleSaveManager}
+            manager={editingManager}
         />
     </AppLayout>
   );

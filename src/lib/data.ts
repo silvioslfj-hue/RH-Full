@@ -17,6 +17,12 @@ export type Role = {
     description: string;
 }
 
+export type Manager = {
+    id: string;
+    name: string;
+    department: string;
+}
+
 export type Company = {
     id: string;
     name: string;
@@ -157,6 +163,12 @@ export const roleData: Role[] = [
     { id: "CAR002", name: "Desenvolvedor Back-end", department: "Tecnologia", description: "Gerencia a lógica do servidor, banco de dados e APIs." },
     { id: "CAR003", name: "Designer de Produto", department: "Produto", description: "Cria a experiência do usuário e o design visual dos produtos." },
     { id: "CAR004", name: "Analista de RH", department: "Recursos Humanos", description: "Gerencia o recrutamento, a folha de pagamento e as relações com os funcionários." },
+]
+
+export const managerData: Manager[] = [
+    { id: "GES001", name: "Carlos Souza", department: "Tecnologia" },
+    { id: "GES002", name: "Ana Oliveira", department: "Produto" },
+    { id: "GES003", name: "Beatriz Lima", department: "Recursos Humanos" },
 ]
 
 export const companyData: Company[] = [
