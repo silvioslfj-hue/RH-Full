@@ -62,8 +62,8 @@ export async function generateTerminationData(input: TerminationInput): Promise<
 // In a real app, this would fetch data from a database
 const getEmployeeForTermination = (employeeId: string) => {
     const mockDatabase: Record<string, any> = {
-        'FUNC001': { cpf: '111.222.333-44', matricula: 'M-1001', admissionDate: '2022-01-10', salary: 5000.00 },
-        'FUNC004': { cpf: '999.888.777-66', matricula: 'M-1004', admissionDate: '2023-05-20', salary: 4000.00 },
+        'FUNC001': { cpf: '111.222.333-44', matricula: 'M-1001', admissionDate: '2022-01-10', salary: 5000.00, hasUnpaidVacation: true },
+        'FUNC004': { cpf: '999.888.777-66', matricula: 'M-1004', admissionDate: '2023-05-20', salary: 4000.00, hasUnpaidVacation: false },
     };
     return mockDatabase[employeeId] || null;
 }
@@ -81,20 +81,24 @@ const prompt = ai.definePrompt({
     {{{json input}}}
     \`\`\`
 
-    **Instruções para o S-2299:**
-    - Use o 'cpf' e 'matricula' do funcionário.
-    - Use o 'mtvDeslig' e 'dtDeslig' fornecidos.
-    - Crie um demonstrativo de pagamento ('dmDev') para as verbas rescisórias.
-    - Simule os seguintes valores de verbas rescisórias e seus códigos de rubrica:
-      - Saldo de Salários (codRubr: 1000): Calcule proporcional aos dias trabalhados no mês do desligamento.
-      - Aviso Prévio Indenizado (codRubr: 6000): Use o valor de 1 salário.
-      - 13º Salário Proporcional (codRubr: 5501): Calcule (salário / 12 * meses trabalhados no ano).
-      - Férias Vencidas + 1/3 (codRubr: 7000): Se aplicável, use 1.33 * salário.
-      - Férias Proporcionais + 1/3 (codRubr: 7001): Calcule (salário / 12 * meses desde a última férias) * 1.33.
+    **Regras de Cálculo de Verbas Rescisórias:**
+    - **Se 'mtvDeslig' for "01" (Rescisão COM Justa Causa):**
+      - O funcionário tem direito APENAS a:
+        1. **Saldo de Salários** (codRubr: 1000): Calcule proporcional aos dias trabalhados no mês do desligamento.
+        2. **Férias Vencidas + 1/3** (codRubr: 7000): Calcule APENAS se 'hasUnpaidVacation' for true. O valor é 1.33 * salário.
+      - NÃO calcular: Aviso prévio, 13º salário proporcional, férias proporcionais. Os valores para estes devem ser ZERO.
 
-    **Instruções para o Resumo das Verbas (terminationPaySummary):**
-    - Calcule e preencha os campos 'salaryBalance', 'vacationPay' e 'thirteenthSalaryPay' com os mesmos valores simulados acima.
-    - O campo 'severancePay' deve ser a soma de todas as verbas calculadas.
+    - **Se 'mtvDeslig' for diferente de "01" (ex: Rescisão SEM Justa Causa):**
+      - Calcule TODAS as verbas a seguir:
+      1. **Saldo de Salários** (codRubr: 1000): Proporcional aos dias trabalhados no mês do desligamento.
+      2. **Aviso Prévio Indenizado** (codRubr: 6000): Use o valor de 1 salário.
+      3. **13º Salário Proporcional** (codRubr: 5501): Calcule (salário / 12 * meses trabalhados no ano).
+      4. **Férias Vencidas + 1/3** (codRubr: 7000): Se 'hasUnpaidVacation' for true, use 1.33 * salário.
+      5. **Férias Proporcionais + 1/3** (codRubr: 7001): Calcule (salário / 12 * meses desde a última férias) * 1.33.
+
+    **Instruções para a Saída:**
+    1.  **s2299_data:** Preencha a estrutura do evento S-2299. Inclua em 'itensRemun' apenas as rubricas com valor maior que zero.
+    2.  **terminationPaySummary:** Preencha o resumo com os valores calculados para cada campo. Se uma verba não for devida (ex: 13º em justa causa), seu valor deve ser 0. O campo 'severancePay' deve ser a soma de TODAS as verbas calculadas.
 
     Gere o objeto JSON completo correspondente ao schema de saída.
   `,
@@ -119,6 +123,7 @@ const generateTerminationFlow = ai.defineFlow(
             matricula: employeeData.matricula,
             admissionDate: employeeData.admissionDate,
             salary: employeeData.salary,
+            hasUnpaidVacation: employeeData.hasUnpaidVacation,
         },
         mtvDeslig: input.reasonCode,
         dtDeslig: input.terminationDate,

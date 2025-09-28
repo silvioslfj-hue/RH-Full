@@ -16,7 +16,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Employee } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 interface TerminationDialogProps {
   isOpen: boolean;
@@ -28,8 +29,8 @@ interface TerminationDialogProps {
 
 // Based on eSocial Table 19
 const terminationReasons = [
-    { code: "01", description: "Rescisão com justa causa, por iniciativa do empregador" },
     { code: "02", description: "Rescisão sem justa causa, por iniciativa do empregador" },
+    { code: "01", description: "Rescisão com justa causa, por iniciativa do empregador" },
     { code: "03", description: "Rescisão antecipada de contrato a termo por iniciativa do empregador" },
     { code: "04", description: "Rescisão por término de contrato a termo" },
     { code: "05", description: "Rescisão por iniciativa do empregado" },
@@ -61,6 +62,8 @@ export function TerminationDialog({ isOpen, onClose, onSave, employee, isProcess
     onSave({ reasonCode, terminationDate });
   };
 
+  const isJustCause = reasonCode === "01";
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
@@ -86,6 +89,15 @@ export function TerminationDialog({ isOpen, onClose, onSave, employee, isProcess
                     </SelectContent>
                 </Select>
             </div>
+            {isJustCause && (
+                <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Atenção: Rescisão por Justa Causa</AlertTitle>
+                    <AlertDescription>
+                        Ao selecionar esta opção, o colaborador perderá o direito a diversas verbas rescisórias, como aviso prévio e 13º salário proporcional. A IA fará o cálculo de acordo com a legislação.
+                    </AlertDescription>
+                </Alert>
+            )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isProcessing}>
