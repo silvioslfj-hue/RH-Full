@@ -11,9 +11,9 @@ export const summaryData = [
 export const absenceData = [
   { id: "ABS001", employee: "Alice Johnson", startDate: "2024-07-25", endDate: "2024-07-26", type: "Férias", status: "Aprovado" },
   { id: "ABS002", employee: "Bob Williams", startDate: "2024-08-01", endDate: "2024-08-01", type: "Licença Médica", status: "Pendente" },
-  { id: "ABS003", employee: "Charlie Brown", startDate: "2024-07-22", endDate: "2024-07-22", type: "Pessoal", status: "Negado" },
+  { id: "ABS003", employee: "Jane Doe", startDate: "2024-07-22", endDate: "2024-07-22", type: "Pessoal", status: "Negado" },
   { id: "ABS004", employee: "Diana Miller", startDate: "2024-08-05", endDate: "2024-08-09", type: "Férias", status: "Pendente" },
-  { id: "ABS005", employee: "Ethan Davis", startDate: "2024-07-29", endDate: "2024-07-29", type: "Licença Médica", status: "Aprovado" },
+  { id: "ABS005", employee: "Jane Doe", startDate: "2024-07-29", endDate: "2024-07-29", type: "Licença Médica", status: "Aprovado" },
   { id: "ABS006", employee: "Fiona Garcia", startDate: "2024-08-12", endDate: "2024-08-12", type: "Pessoal", status: "Pendente" },
 ];
 

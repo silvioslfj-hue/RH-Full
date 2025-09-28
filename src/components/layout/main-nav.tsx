@@ -35,20 +35,15 @@ export function MainNav() {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar();
 
-  const isAdminRoute = adminPaths.some(path => pathname.startsWith(path));
+  const isAdminRoute = adminPaths.some(path => pathname.startsWith(path)) || (pathname.startsWith('/absences') && !collaboratorPaths.some(path => pathname.startsWith(path)));
   let menuItems;
   
   if (isAdminRoute) {
     menuItems = adminMenuItems;
-  } else if (collaboratorPaths.some(path => pathname.startsWith(path))) {
-    menuItems = collaboratorMenuItems;
-  } else if (pathname.startsWith('/absences')) {
-    // Para rotas compartilhadas, precisaríamos de uma lógica de perfil de usuário real.
-    // Como protótipo, assumimos que o menu do colaborador é o padrão aqui.
-    menuItems = collaboratorMenuItems;
   } else {
-    // Default para admin se nada corresponder (ex: página inicial do dashboard)
-    menuItems = adminMenuItems;
+    // Para rotas compartilhadas como /absences, precisamos de uma lógica mais robusta.
+    // Por agora, se não for uma rota admin específica, assumimos que é colaborador.
+    menuItems = collaboratorMenuItems;
   }
 
 

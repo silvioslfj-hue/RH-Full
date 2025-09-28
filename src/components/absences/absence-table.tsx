@@ -11,7 +11,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Check, X, MoreHorizontal } from "lucide-react"
+import { Check, X, MoreHorizontal, Trash2 } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,9 +30,10 @@ type Absence = {
 
 interface AbsenceTableProps {
   data: Absence[];
+  isAdmin: boolean;
 }
 
-export function AbsenceTable({ data }: AbsenceTableProps) {
+export function AbsenceTable({ data, isAdmin }: AbsenceTableProps) {
   const getStatusVariant = (status: Absence['status']) => {
     switch (status) {
       case 'Aprovado':
@@ -49,13 +50,13 @@ export function AbsenceTable({ data }: AbsenceTableProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Solicitações de Ausência</CardTitle>
+        <CardTitle>Histórico de Solicitações</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Funcionário</TableHead>
+              {isAdmin && <TableHead>Funcionário</TableHead>}
               <TableHead>Datas</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Status</TableHead>
@@ -65,14 +66,14 @@ export function AbsenceTable({ data }: AbsenceTableProps) {
           <TableBody>
             {data.map((absence) => (
               <TableRow key={absence.id}>
-                <TableCell className="font-medium">{absence.employee}</TableCell>
+                {isAdmin && <TableCell className="font-medium">{absence.employee}</TableCell>}
                 <TableCell>{absence.startDate} a {absence.endDate}</TableCell>
                 <TableCell>{absence.type}</TableCell>
                 <TableCell>
                   <Badge variant={getStatusVariant(absence.status)}>{absence.status}</Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  {absence.status === 'Pendente' ? (
+                  {isAdmin && absence.status === 'Pendente' ? (
                     <div className="flex gap-2 justify-end">
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600 hover:bg-green-100 hover:text-green-700">
                         <Check className="h-4 w-4" />
@@ -91,6 +92,12 @@ export function AbsenceTable({ data }: AbsenceTableProps) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>Ver Detalhes</DropdownMenuItem>
+                         {!isAdmin && absence.status === 'Pendente' && (
+                          <DropdownMenuItem className="text-red-500">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Cancelar Solicitação
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
