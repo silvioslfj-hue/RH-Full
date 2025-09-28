@@ -9,20 +9,27 @@ import {
   SidebarMenuButton,
   useSidebar
 } from '@/components/ui/sidebar'
-import { LayoutDashboard, Clock, CalendarOff, BarChart3, BotMessageSquare, Hourglass } from 'lucide-react'
+import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass } from 'lucide-react'
 
-const menuItems = [
-  { href: '/clock', label: 'Registro de Ponto', icon: Hourglass },
+const adminMenuItems = [
   { href: '/dashboard', label: 'Resumo', icon: LayoutDashboard },
   { href: '/timecards', label: 'Cartões de Ponto', icon: Clock },
   { href: '/absences', label: 'Ausências', icon: CalendarOff },
   { href: '/reports', label: 'Relatórios', icon: BarChart3 },
 ]
 
+const collaboratorMenuItems = [
+  { href: '/clock', label: 'Registro de Ponto', icon: Hourglass },
+]
+
+const adminPaths = ['/dashboard', '/timecards', '/absences', '/reports'];
+
 export function MainNav() {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar();
 
+  const isAccessingAdminRoute = adminPaths.some(path => pathname.startsWith(path));
+  const menuItems = isAccessingAdminRoute ? adminMenuItems : collaboratorMenuItems;
 
   const handleLinkClick = () => {
     setOpenMobile(false);
@@ -38,7 +45,7 @@ export function MainNav() {
               isActive={pathname === item.href}
               tooltip={{ children: item.label }}
             >
-              <Link href={item.href} onClick={handleLinkClick}>
+              <Link href={item.href!} onClick={handleLinkClick}>
                 <item.icon />
                 <span>{item.label}</span>
               </Link>
