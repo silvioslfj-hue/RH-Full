@@ -79,6 +79,15 @@ export type PayrollHistory = {
   payrollData?: PayrollOutput;
 };
 
+export type Invoice = {
+    id: string;
+    competence: string;
+    amount: number;
+    uploadDate: string;
+    status: 'Enviado' | 'Processando' | 'Pago' | 'Erro';
+    fileName: string;
+}
+
 export type TimeSheetEntry = {
     day: string;
     date: string;
@@ -348,6 +357,13 @@ export const timeBankData: TimeBankEntry[] = [
     { employeeId: 'FUNC002', employeeName: 'Mariana Costa', role: "Desenvolvedor Front-end", avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026705d', balance: '12h 15m', expiringHours: '12h 15m', expiryDate: '30/09/2024', status: 'Crítico' },
     { employeeId: 'FUNC003', employeeName: 'Alice Johnson', role: "Designer de Produto", avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026706d', balance: '2h 00m', expiringHours: '0h 00m', expiryDate: '31/12/2024', status: 'OK' },
 ];
+
+export const invoicesData: Invoice[] = [
+    { id: "NF001", competence: "2024-07", amount: 8500.00, uploadDate: "2024-08-01", status: "Pago", fileName: "nf_julho.pdf" },
+    { id: "NF002", competence: "2024-06", amount: 8500.00, uploadDate: "2024-07-01", status: "Pago", fileName: "nf_junho.pdf" },
+    { id: "NF003", competence: "2024-05", amount: 8000.00, uploadDate: "2024-06-01", status: "Pago", fileName: "nf_maio.pdf" },
+];
     
 
     
+

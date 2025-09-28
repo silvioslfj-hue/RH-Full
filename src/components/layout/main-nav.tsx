@@ -20,13 +20,14 @@ import { absenceData, timeSheetData, timeBankData } from '@/lib/data'
 
 
 const collaboratorMenuItems = [
-  { href: '/clock', label: 'Registro de Ponto', icon: Hourglass },
-  { href: '/justifications', label: 'Justificativas', icon: FileCheck },
-  { href: '/my-reports', label: 'Meus Relatórios', icon: BarChart3 },
-  { href: '/absences', label: 'Minhas Ausências', icon: CalendarOff },
-  { href: '/proofs', label: 'Comprovantes', icon: Receipt },
-  { href: '/payslips', label: 'Holerites', icon: Wallet },
-  { href: '/income-reports', label: 'Informe de Rendimentos', icon: FileText },
+  { href: '/clock', label: 'Registro de Ponto', icon: Hourglass, contract: ['CLT', 'PJ'] },
+  { href: '/justifications', label: 'Justificativas', icon: FileCheck, contract: ['CLT'] },
+  { href: '/my-reports', label: 'Meus Relatórios', icon: BarChart3, contract: ['CLT'] },
+  { href: '/absences', label: 'Minhas Ausências', icon: CalendarOff, contract: ['CLT'] },
+  { href: '/proofs', label: 'Comprovantes', icon: Receipt, contract: ['CLT'] },
+  { href: '/payslips', label: 'Holerites', icon: Wallet, contract: ['CLT'] },
+  { href: '/invoices', label: 'Notas Fiscais', icon: Receipt, contract: ['PJ'] },
+  { href: '/income-reports', label: 'Informe de Rendimentos', icon: ['CLT', 'PJ'] },
 ]
 
 const adminPaths = ['/dashboard', '/timecards', '/reports', '/fiscal-files', '/settings', '/employees', '/payroll', '/payroll-history', '/payroll-reports', '/esocial', '/job-openings', '/time-bank'];
@@ -35,6 +36,7 @@ export function MainNav() {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
   const [isAdminView, setIsAdminView] = useState(false);
+  const [userContractType, setUserContractType] = useState<'CLT' | 'PJ'>('CLT'); // Default to CLT for demo
 
   // Simulação de contagem de pendências
   const pendingAbsencesCount = absenceData.filter(a => a.status === 'Pendente').length;
@@ -44,19 +46,27 @@ export function MainNav() {
   useEffect(() => {
     // Lógica para determinar o contexto do usuário (admin vs. colaborador)
     // Para o protótipo, usaremos o sessionStorage para simular o estado de login
+    const role = window.sessionStorage.getItem('userRole');
+    const contract = window.sessionStorage.getItem('userContractType') as 'CLT' | 'PJ' | null;
+    
     if (adminPaths.some(p => pathname.startsWith(p))) {
         window.sessionStorage.setItem('userRole', 'admin');
         setIsAdminView(true);
-    } else if (pathname.startsWith('/clock') || pathname.startsWith('/justifications') || pathname.startsWith('/my-reports') || pathname.startsWith('/proofs') || pathname.startsWith('/payslips') || pathname.startsWith('/income-reports')) {
-        window.sessionStorage.setItem('userRole', 'collaborator');
+    } else {
         setIsAdminView(false);
-    } else if (pathname.startsWith('/absences')) {
-        // A página de ausências é compartilhada. Mantém o contexto atual.
-        const role = window.sessionStorage.getItem('userRole');
-        setIsAdminView(role === 'admin');
-    } else if (pathname === '/') {
-        window.sessionStorage.removeItem('userRole');
+        if (role === 'collaborator') {
+             setUserContractType(contract || 'CLT');
+        }
     }
+    
+    // Simulação de troca de usuário PJ
+    if (pathname === '/clock') {
+       // Suponha que um login específico defina isso.
+       // Se o usuário 'Mariana Costa' (PJ) fizesse login, isso seria setado.
+       // Para este demo, vamos simular que qualquer um pode ser PJ.
+       // window.sessionStorage.setItem('userContractType', 'PJ');
+    }
+    
   }, [pathname]);
 
 
@@ -180,7 +190,9 @@ export function MainNav() {
   return (
     <SidebarContent>
       <SidebarMenu>
-        {collaboratorMenuItems.map((item) => (
+        {collaboratorMenuItems
+         .filter(item => item.contract.includes(userContractType))
+         .map((item) => (
           <SidebarMenuItem key={item.href}>
             <SidebarMenuButton
               asChild

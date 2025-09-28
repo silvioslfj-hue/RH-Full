@@ -83,7 +83,11 @@ const prompt = ai.definePrompt({
     Você é um gerente de folha de pagamento inteligente e autônomo. Sua tarefa é calcular o holerite de um funcionário, considerando o tipo de contrato (CLT ou PJ).
 
     **Regra Principal: Distinção de Contrato**
-    - Se \`contractType\` for **"PJ"**: O cálculo é simples. O salário líquido é o salário bruto. Ignore todas as outras regras de horas extras, banco de horas e descontos. Gere um holerite com proventos e descontos zerados, onde o salário líquido é igual ao bruto.
+    - Se \`contractType\` for **"PJ"**:
+      - O salário bruto é a base.
+      - As horas extras (tanto normais quanto de feriado) devem ser tratadas como "Serviços Adicionais". Calcule o valor dessas horas com base em um valor/hora de (salário bruto / 160) e adicione como um provento chamado "Pagamento por Serviços Adicionais". NÃO aplique percentuais de 50% ou 100%.
+      - Não há descontos de INSS, IRRF, nem FGTS.
+      - O salário líquido será o salário bruto mais o valor dos serviços adicionais.
     - Se \`contractType\` for **"CLT"**: Prossiga com o cálculo detalhado abaixo.
 
     **Processo de Cálculo para CLT:**

@@ -8,14 +8,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Icons } from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState } from 'react';
 
 function CollaboratorLoginForm() {
   const router = useRouter();
+  const [accessCode, setAccessCode] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (typeof window !== 'undefined') {
       window.sessionStorage.setItem('userRole', 'collaborator');
+      // Simulação para diferenciar CLT e PJ
+      if (accessCode === 'PJ') {
+         window.sessionStorage.setItem('userContractType', 'PJ');
+      } else {
+         window.sessionStorage.setItem('userContractType', 'CLT');
+      }
     }
     router.push('/clock');
   };
@@ -25,7 +33,13 @@ function CollaboratorLoginForm() {
       <div className="grid w-full items-center gap-4">
         <div className="flex flex-col space-y-1.5">
           <Label htmlFor="access-code">Código de Acesso</Label>
-          <Input id="access-code" type="text" placeholder="Insira seu código" />
+          <Input 
+            id="access-code" 
+            type="text" 
+            placeholder="Insira seu código (ou 'PJ' para teste)"
+            value={accessCode}
+            onChange={(e) => setAccessCode(e.target.value)}
+           />
         </div>
         <div className="flex flex-col space-y-1.5">
           <Label htmlFor="password-collaborator">Senha</Label>
