@@ -8,7 +8,7 @@ import { TeamStatus } from "@/components/dashboard/admin/team-status";
 import { RecentAbsenceRequests } from "@/components/dashboard/admin/recent-absence-requests";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Building, Factory } from "lucide-react";
-import { absenceData as initialAbsenceData, esocialEventsData } from "@/lib/data";
+import { absenceData as initialAbsenceData, esocialEventsData, employeeData } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { ESocialPendingAlert } from "@/components/dashboard/admin/esocial-pending-alert";
 
@@ -28,6 +28,8 @@ export default function DashboardPage() {
 
   const pendingAbsenceRequests = absenceData.filter(a => a.status === "Pendente");
   const pendingESocialEventsCount = esocialEventsData.filter(e => e.status === "Pendente").length;
+  const activeEmployeesCount = employeeData.filter(e => e.status === "Ativo").length;
+  const timecardAlertsCount = 2; // Valor simulado para alertas de ponto
 
 
   return (
@@ -75,6 +77,8 @@ export default function DashboardPage() {
         <QuickActions 
           pendingAbsenceRequestsCount={pendingAbsenceRequests.length}
           pendingESocialEventsCount={pendingESocialEventsCount}
+          timecardAlertsCount={timecardAlertsCount}
+          activeEmployeesCount={activeEmployeesCount}
         />
 
         {pendingESocialEventsCount > 0 && (
