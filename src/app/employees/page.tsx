@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { PlusCircle, FileDown, Search, Building, MapPin, Briefcase } from "lucide-react";
+import { PlusCircle, FileDown, Search, Building, MapPin } from "lucide-react";
 import { EmployeesTable } from "@/components/employees/employees-table";
 import { EmployeeDialog } from "@/components/employees/employee-dialog";
 import { employeeData as initialEmployeeData, unitData, roleData, workShiftData, companyData, esocialEventsData } from "@/lib/data";
@@ -14,7 +14,6 @@ import { ContractChangeDialog } from "@/components/employees/contract-change-dia
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { JobOpeningDialog } from "@/components/employees/job-opening-dialog";
 
 
 export default function EmployeesPage() {
@@ -22,7 +21,6 @@ export default function EmployeesPage() {
     const [employees, setEmployees] = useState(initialEmployeeData);
     const [isEmployeeDialogOpen, setIsEmployeeDialogOpen] = useState(false);
     const [isContractChangeDialogOpen, setIsContractChangeDialogOpen] = useState(false);
-    const [isJobOpeningDialogOpen, setIsJobOpeningDialogOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [events, setEvents] = useState<EsocialEvent[]>(esocialEventsData);
 
@@ -115,10 +113,6 @@ export default function EmployeesPage() {
                             <FileDown className="mr-2" />
                             Importar
                         </Button>
-                        <Button variant="secondary" onClick={() => setIsJobOpeningDialogOpen(true)}>
-                            <Briefcase className="mr-2" />
-                            Gerar Vaga com IA
-                        </Button>
                         <Button onClick={() => handleOpenEmployeeDialog()}>
                             <PlusCircle className="mr-2" />
                             Adicionar Colaborador
@@ -204,11 +198,6 @@ export default function EmployeesPage() {
                 onSave={handleContractChange}
                 employee={editingEmployee}
                 roles={roleData}
-            />
-
-            <JobOpeningDialog
-                isOpen={isJobOpeningDialogOpen}
-                onClose={() => setIsJobOpeningDialogOpen(false)}
             />
         </AppLayout>
     );

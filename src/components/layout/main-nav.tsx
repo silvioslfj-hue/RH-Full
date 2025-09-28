@@ -13,7 +13,7 @@ import {
   SidebarGroupLabel,
   SidebarMenuBadge
 } from '@/components/ui/sidebar'
-import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText, FileArchive, Settings, Users, Calculator, History, PieChart, Briefcase, Building, LandPlot, Coins } from 'lucide-react'
+import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText, FileArchive, Settings, Users, Calculator, History, PieChart, Briefcase } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { absenceData, timeSheetData } from '@/lib/data'
 
@@ -28,7 +28,7 @@ const collaboratorMenuItems = [
   { href: '/income-reports', label: 'Informe de Rendimentos', icon: FileText },
 ]
 
-const adminPaths = ['/dashboard', '/timecards', '/reports', '/fiscal-files', '/settings', '/employees', '/payroll', '/payroll-history', '/payroll-reports', '/esocial'];
+const adminPaths = ['/dashboard', '/timecards', '/reports', '/fiscal-files', '/settings', '/employees', '/payroll', '/payroll-history', '/payroll-reports', '/esocial', '/job-openings'];
 
 export function MainNav() {
   const pathname = usePathname();
@@ -85,6 +85,15 @@ export function MainNav() {
                   <span>Ausências</span>
                   {pendingAbsencesCount > 0 && <SidebarMenuBadge>{pendingAbsencesCount}</SidebarMenuBadge>}
                 </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarGroup>
+
+           <SidebarGroup>
+            <SidebarGroupLabel>Recrutamento</SidebarGroupLabel>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname.startsWith('/job-openings')} tooltip={{ children: 'Assistente de Vagas' }}>
+                <Link href='/job-openings' onClick={handleLinkClick}><Briefcase /><span>Assistente de Vagas</span></Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarGroup>

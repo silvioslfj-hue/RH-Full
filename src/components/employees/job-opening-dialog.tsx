@@ -140,7 +140,7 @@ export function JobOpeningDialog({ isOpen, onClose }: JobOpeningDialogProps) {
                                 <CardTitle>Descrição da Vaga</CardTitle>
                                 <CopyButton textToCopy={generatedContent.description} />
                             </CardHeader>
-                            <CardContent className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: generatedContent.description.replace(/\n/g, '<br />') }} />
+                            <CardContent className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: generatedContent.description.replace(/\\n/g, '<br />') }} />
                         </Card>
                     </TabsContent>
                     <TabsContent value="questions">
