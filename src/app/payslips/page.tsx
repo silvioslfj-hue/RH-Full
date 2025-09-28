@@ -22,6 +22,42 @@ export default function PayslipsPage() {
   const [selectedPayslip, setSelectedPayslip] = useState<PayslipType | null>(null);
   const [isGenerating, startTransition] = useTransition();
 
+  const handleGenerateContent = async (item: PayslipType): Promise<string | null> => {
+    try {
+        // Em um app real, os dados detalhados do payroll viriam do `item`
+        const detailedPayrollData = {
+             grossSalary: item.grossSalary,
+             earnings: [ { name: "Horas Extras (50%)", value: item.grossSalary * 0.1 } ],
+             deductions: [
+                { name: "INSS", value: item.grossSalary * 0.11 },
+                { name: "IRRF", value: item.grossSalary * 0.07 },
+                { name: "Vale Refeição", value: 440 },
+             ],
+             totalEarnings: item.grossSalary + (item.grossSalary * 0.1),
+             totalDeductions: (item.grossSalary * 0.11) + (item.grossSalary * 0.07) + 440,
+             netSalary: item.netSalary
+        };
+
+        const input: PayslipGenerationInput = {
+            company: { name: "RH-Full Soluções em TI", cnpj: "01.234.567/0001-89" },
+            employee: { name: item.employeeName, role: "Desenvolvedor" }, // Role seria dinâmico
+            competence: item.competence,
+            payrollData: detailedPayrollData
+        }
+
+        const result = await generatePayslipContent(input);
+        return result.payslipContent;
+    } catch (error) {
+        console.error(error);
+        toast({
+            variant: "destructive",
+            title: "Erro ao Gerar Holerite",
+            description: "Não foi possível gerar o documento. Tente novamente."
+        });
+        return null;
+    }
+  }
+
   const handleViewPayslip = (item: PayslipType) => {
     startTransition(async () => {
         setSelectedPayslip(item);
@@ -29,43 +65,42 @@ export default function PayslipsPage() {
             title: "Gerando seu Holerite...",
             description: `Aguarde enquanto a IA prepara seu holerite de ${item.competence}.`
         });
-        
-        try {
-            // Em um app real, os dados detalhados do payroll viriam do `item`
-            const detailedPayrollData = {
-                 grossSalary: item.grossSalary,
-                 earnings: [ { name: "Horas Extras (50%)", value: item.grossSalary * 0.1 } ],
-                 deductions: [
-                    { name: "INSS", value: item.grossSalary * 0.11 },
-                    { name: "IRRF", value: item.grossSalary * 0.07 },
-                    { name: "Vale Refeição", value: 440 },
-                 ],
-                 totalEarnings: item.grossSalary + (item.grossSalary * 0.1),
-                 totalDeductions: (item.grossSalary * 0.11) + (item.grossSalary * 0.07) + 440,
-                 netSalary: item.netSalary
-            };
-
-            const input: PayslipGenerationInput = {
-                company: { name: "RH-Full Soluções em TI", cnpj: "01.234.567/0001-89" },
-                employee: { name: item.employeeName, role: "Desenvolvedor" }, // Role seria dinâmico
-                competence: item.competence,
-                payrollData: detailedPayrollData
-            }
-
-            const result = await generatePayslipContent(input);
-            setPayslipContent(result.payslipContent);
+        const content = await handleGenerateContent(item);
+        if (content) {
+            setPayslipContent(content);
             setIsViewerOpen(true);
-
-        } catch (error) {
-            console.error(error);
-            toast({
-                variant: "destructive",
-                title: "Erro ao Gerar Holerite",
-                description: "Não foi possível gerar o documento. Tente novamente."
-            });
         }
+        setSelectedPayslip(null); // Reset after generation
     });
   };
+
+  const handleDownloadPayslip = (item: PayslipType) => {
+     startTransition(async () => {
+        setSelectedPayslip(item);
+        toast({
+            title: "Preparando seu Download...",
+            description: `Aguarde enquanto a IA gera o arquivo de seu holerite de ${item.competence}.`
+        });
+        const content = await handleGenerateContent(item);
+        if (content) {
+            const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            const fileName = `holerite_${item.employeeName.replace(/\s/g, '_')}_${item.competence.replace('/', '-')}.txt`;
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            toast({
+                title: "Download Iniciado",
+                description: `O arquivo ${fileName} foi salvo.`
+            });
+        }
+        setSelectedPayslip(null); // Reset after generation
+    });
+  }
 
   const filteredPayslips = dummyPayslips.filter(p => p.competence.endsWith(selectedYear));
 
@@ -98,29 +133,36 @@ export default function PayslipsPage() {
           </CardHeader>
           <CardContent>
             <ul className="space-y-3">
-              {filteredPayslips.map((payslip) => (
-                <li key={payslip.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <span className="font-medium">Recibo de Pagamento - {payslip.competence}</span>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleViewPayslip(payslip)} disabled={isGenerating && selectedPayslip?.id === payslip.id}>
-                       {isGenerating && selectedPayslip?.id === payslip.id ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            <Eye className="mr-2 h-4 w-4" />
-                        )}
-                      {isGenerating && selectedPayslip?.id === payslip.id ? "Gerando..." : "Visualizar"}
-                    </Button>
-                    <Button variant="ghost" size="icon" title="Baixar PDF (simulação)">
-                      <Download className="h-5 w-5" />
-                    </Button>
-                  </div>
-                </li>
-              ))}
+              {filteredPayslips.map((payslip) => {
+                const isProcessing = isGenerating && selectedPayslip?.id === payslip.id;
+                return (
+                  <li key={payslip.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <span className="font-medium">Recibo de Pagamento - {payslip.competence}</span>
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleViewPayslip(payslip)} disabled={isProcessing}>
+                         {isProcessing ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                              <Eye className="mr-2 h-4 w-4" />
+                          )}
+                        {isProcessing ? "Gerando..." : "Visualizar"}
+                      </Button>
+                       <Button variant="ghost" size="icon" title="Baixar Holerite" onClick={() => handleDownloadPayslip(payslip)} disabled={isProcessing}>
+                          {isProcessing ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                          ) : (
+                            <Download className="h-5 w-5" />
+                          )}
+                      </Button>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </CardContent>
         </Card>
       </div>
-      {selectedPayslip && (
+      {selectedPayslip && payslipContent && (
         <PayslipViewerDialog
             isOpen={isViewerOpen}
             onClose={() => setIsViewerOpen(false)}
