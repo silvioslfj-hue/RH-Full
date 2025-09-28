@@ -13,47 +13,27 @@ import { RolesTable } from "@/components/settings/roles-table";
 import { RoleDialog } from "@/components/settings/role-dialog";
 import { CompaniesTable } from "@/components/settings/companies-table";
 import { CompanyDialog } from "@/components/settings/company-dialog";
-import { unitData as initialUnitData, roleData as initialRoleData, companyData as initialCompanyData } from "@/lib/data";
-import type { Unit, Role, Company } from "@/lib/data";
-
-function WorkShiftsTab() {
-    return (
-        <Card>
-            <CardHeader>
-                 <div className="flex justify-between items-start">
-                    <div>
-                        <CardTitle>Jornadas de Trabalho</CardTitle>
-                        <CardDescription>Crie e gerencie os modelos de jornada de trabalho.</CardDescription>
-                    </div>
-                     <Button>
-                        <PlusCircle className="mr-2" />
-                        Adicionar Jornada
-                    </Button>
-                </div>
-            </CardHeader>
-            <CardContent>
-                 <div className="text-center text-muted-foreground py-8">
-                    <Clock className="mx-auto h-12 w-12" />
-                    <p className="mt-4">O gerenciamento de jornadas de trabalho será implementado em breve.</p>
-                </div>
-            </CardContent>
-        </Card>
-    )
-}
+import { WorkShiftsTable } from "@/components/settings/work-shifts-table";
+import { WorkShiftDialog } from "@/components/settings/work-shift-dialog";
+import { unitData as initialUnitData, roleData as initialRoleData, companyData as initialCompanyData, workShiftData as initialWorkShiftData } from "@/lib/data";
+import type { Unit, Role, Company, WorkShift } from "@/lib/data";
 
 
 export default function SettingsPage() {
     const [units, setUnits] = useState(initialUnitData);
     const [roles, setRoles] = useState(initialRoleData);
     const [companies, setCompanies] = useState(initialCompanyData);
+    const [workShifts, setWorkShifts] = useState(initialWorkShiftData);
 
     const [isUnitDialogOpen, setIsUnitDialogOpen] = useState(false);
     const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
     const [isCompanyDialogOpen, setIsCompanyDialogOpen] = useState(false);
+    const [isWorkShiftDialogOpen, setIsWorkShiftDialogOpen] = useState(false);
 
     const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
     const [editingRole, setEditingRole] = useState<Role | null>(null);
     const [editingCompany, setEditingCompany] = useState<Company | null>(null);
+    const [editingWorkShift, setEditingWorkShift] = useState<WorkShift | null>(null);
 
     // Unit Handlers
     const handleOpenUnitDialog = (unit: Unit | null = null) => {
@@ -116,6 +96,27 @@ export default function SettingsPage() {
     };
     const handleDeleteCompany = (id: string) => {
         setCompanies(companies.filter(c => c.id !== id));
+    };
+    
+    // Work Shift Handlers
+    const handleOpenWorkShiftDialog = (workShift: WorkShift | null = null) => {
+        setEditingWorkShift(workShift);
+        setIsWorkShiftDialogOpen(true);
+    };
+    const handleCloseWorkShiftDialog = () => {
+        setEditingWorkShift(null);
+        setIsWorkShiftDialogOpen(false);
+    };
+    const handleSaveWorkShift = (workShift: WorkShift) => {
+        if (editingWorkShift) {
+            setWorkShifts(workShifts.map(ws => ws.id === workShift.id ? workShift : ws));
+        } else {
+            setWorkShifts([...workShifts, { ...workShift, id: `JOR${(workShifts.length + 1).toString().padStart(3, '0')}` }]);
+        }
+        handleCloseWorkShiftDialog();
+    };
+    const handleDeleteWorkShift = (id: string) => {
+        setWorkShifts(workShifts.filter(ws => ws.id !== id));
     };
 
 
@@ -224,7 +225,27 @@ export default function SettingsPage() {
             </TabsContent>
 
             <TabsContent value="work-shifts" className="pt-6">
-                <WorkShiftsTab />
+                 <Card>
+                    <CardHeader>
+                         <div className="flex justify-between items-start">
+                            <div>
+                                <CardTitle>Jornadas de Trabalho</CardTitle>
+                                <CardDescription>Crie e gerencie os modelos de jornada de trabalho.</CardDescription>
+                            </div>
+                             <Button onClick={() => handleOpenWorkShiftDialog()}>
+                                <PlusCircle className="mr-2" />
+                                Adicionar Jornada
+                            </Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                         <WorkShiftsTable
+                            data={workShifts}
+                            onEdit={handleOpenWorkShiftDialog}
+                            onDelete={handleDeleteWorkShift}
+                        />
+                    </CardContent>
+                </Card>
             </TabsContent>
         </Tabs>
       </div>
@@ -246,6 +267,12 @@ export default function SettingsPage() {
             onClose={handleCloseCompanyDialog}
             onSave={handleSaveCompany}
             company={editingCompany}
+        />
+        <WorkShiftDialog
+            isOpen={isWorkShiftDialogOpen}
+            onClose={handleCloseWorkShiftDialog}
+            onSave={handleSaveWorkShift}
+            workShift={editingWorkShift}
         />
     </AppLayout>
   );

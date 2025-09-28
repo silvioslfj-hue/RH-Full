@@ -28,6 +28,16 @@ export type Company = {
     certificateFile?: string;
 }
 
+export type WorkShift = {
+  id: string;
+  name: string;
+  days: string[];
+  startTime: string;
+  endTime: string;
+  breakDuration: number; // in minutes
+}
+
+
 export const summaryData = [
     { title: "Horas Esta Semana", value: "32.5", change: "+5.2%", changeType: "positive" },
     { title: "Próxima Folga", value: "2 dias", change: "Próximo: 25 de Julho", changeType: "neutral" },
@@ -132,3 +142,9 @@ export const companyData: Company[] = [
     { id: "EMP001", name: "RH-Full Soluções em TI", cnpj: "01.234.567/0001-89", address: "Av. Principal, 123", city: "São Paulo", state: "SP", zip: "01000-000", certificateFile: "rh_full_cert.pfx" },
     { id: "EMP002", name: "InovaTech Consultoria", cnpj: "98.765.432/0001-10", address: "Rua da Inovação, 456", city: "Rio de Janeiro", state: "RJ", zip: "20000-000" }
 ]
+
+export const workShiftData: WorkShift[] = [
+    { id: "JOR001", name: "Padrão (Seg-Sex, 8h/dia)", days: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"], startTime: "09:00", endTime: "18:00", breakDuration: 60 },
+    { id: "JOR002", name: "Meio Período (Seg-Sex, 4h/dia)", days: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"], startTime: "09:00", endTime: "13:00", breakDuration: 0 },
+    { id: "JOR003", name: "Plantão 12x36", days: ["Alternados"], startTime: "07:00", endTime: "19:00", breakDuration: 60 },
+];
