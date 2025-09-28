@@ -6,3 +6,4 @@ import '@/ai/flows/payroll-flow.ts';
 import '@/ai/flows/esocial-event-flow.ts';
 import '@/ai/flows/contract-change-flow.ts';
 import '@/ai/flows/fiscal-file-flow.ts';
+import '@/ai/flows/proof-generation-flow.ts';

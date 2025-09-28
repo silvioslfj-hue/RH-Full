@@ -1,36 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Calendar as CalendarIcon, Download, Search } from "lucide-react";
+import { Calendar as CalendarIcon, Download, Search, Loader2 } from "lucide-react";
 import { format, isWithinInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
 import { useToast } from "@/hooks/use-toast";
+import { generateProofContent, type ProofGenerationInput } from "@/ai/flows/proof-generation-flow";
 
 const allProofs = [
-  { id: "CMP001", timestamp: "2024-07-22T09:01:12.000Z", type: "Entrada" },
-  { id: "CMP002", timestamp: "2024-07-22T12:32:45.000Z", type: "Saída" },
-  { id: "CMP003", timestamp: "2024-07-22T13:33:10.000Z", type: "Entrada" },
-  { id: "CMP004", timestamp: "2024-07-22T18:05:00.000Z", type: "Saída" },
-  { id: "CMP005", timestamp: "2024-07-23T08:58:30.000Z", type: "Entrada" },
-  { id: "CMP006", timestamp: "2024-07-23T12:30:00.000Z", type: "Saída" },
-  { id: "CMP007", timestamp: "2024-07-23T13:30:00.000Z", type: "Entrada" },
-  { id: "CMP008", timestamp: "2024-07-23T18:00:00.000Z", type: "Saída" },
-  { id: "CMP009", timestamp: "2024-08-01T09:00:00.000Z", type: "Entrada" },
-  { id: "CMP010", timestamp: "2024-08-01T18:00:00.000Z", type: "Saída" },
+  { id: "CMP001", timestamp: "2024-07-22T09:01:12.000Z", type: "Entrada", employeeId: "FUNC001" },
+  { id: "CMP002", timestamp: "2024-07-22T12:32:45.000Z", type: "Saída", employeeId: "FUNC001" },
+  { id: "CMP003", timestamp: "2024-07-22T13:33:10.000Z", type: "Entrada", employeeId: "FUNC001" },
+  { id: "CMP004", timestamp: "2024-07-22T18:05:00.000Z", type: "Saída", employeeId: "FUNC001" },
+  { id: "CMP005", timestamp: "2024-07-23T08:58:30.000Z", type: "Entrada", employeeId: "FUNC002" },
+  { id: "CMP006", timestamp: "2024-07-23T12:30:00.000Z", type: "Saída", employeeId: "FUNC002" },
+  { id: "CMP007", timestamp: "2024-07-23T13:30:00.000Z", type: "Entrada", employeeId: "FUNC002" },
+  { id: "CMP008", timestamp: "2024-07-23T18:00:00.000Z", type: "Saída", employeeId: "FUNC002" },
+  { id: "CMP009", timestamp: "2024-08-01T09:00:00.000Z", type: "Entrada", employeeId: "FUNC001" },
+  { id: "CMP010", timestamp: "2024-08-01T18:00:00.000Z", type: "Saída", employeeId: "FUNC001" },
 ];
 
 export default function ProofsPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [filteredProofs, setFilteredProofs] = useState<typeof allProofs>([]);
   const { toast } = useToast();
+  const [isGenerating, startTransition] = useTransition();
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
 
   const handleSearch = () => {
     if (!dateRange?.from || !dateRange?.to) {
@@ -57,11 +60,48 @@ export default function ProofsPage() {
     }
   }
 
-  const handleDownloadProof = (proofId: string) => {
-     toast({
-        title: "Download Iniciado",
-        description: `O comprovante ${proofId} está sendo gerado.`,
-      });
+  const handleDownloadProof = (proof: (typeof allProofs)[0]) => {
+     startTransition(async () => {
+        setGeneratingId(proof.id);
+        toast({
+          title: "Gerando Comprovante...",
+          description: `A IA está gerando o comprovante ${proof.id}.`,
+        });
+
+        try {
+            const input: ProofGenerationInput = {
+                proofId: proof.id,
+                employeeId: proof.employeeId,
+                timestamp: proof.timestamp,
+            };
+
+            const result = await generateProofContent(input);
+
+            const blob = new Blob([result.proofContent], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = result.fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            toast({
+                title: "Comprovante Gerado!",
+                description: `O arquivo ${result.fileName} foi baixado.`,
+            });
+        } catch (error) {
+            console.error("Error generating proof:", error);
+            toast({
+                variant: "destructive",
+                title: "Erro na Geração",
+                description: "Não foi possível gerar o comprovante com a IA.",
+            });
+        } finally {
+            setGeneratingId(null);
+        }
+     });
   }
 
   return (
@@ -147,8 +187,12 @@ export default function ProofsPage() {
                       <TableCell className="font-mono">{format(new Date(proof.timestamp), "HH:mm:ss")}</TableCell>
                       <TableCell>{proof.type}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => handleDownloadProof(proof.id)}>
-                          <Download className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" onClick={() => handleDownloadProof(proof)} disabled={isGenerating}>
+                          {isGenerating && generatingId === proof.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Download className="h-4 w-4" />
+                          )}
                         </Button>
                       </TableCell>
                     </TableRow>
