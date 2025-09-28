@@ -15,9 +15,7 @@ import { z } from 'genkit';
 const ContractChangeInputSchema = z.object({
   employeeId: z.string().describe('The ID of the employee whose contract is being changed.'),
   changeDate: z.string().describe('The effective date of the change (format AAAA-MM-DD).'),
-  newSalary: z.number().optional().describe('The new base salary, if changed.'),
-  newRole: z.string().optional().describe('The new job role title, if changed.'),
-  newWorkShiftId: z.string().optional().describe('The ID of the new work shift, if changed.'),
+  changeDetails: z.string().describe('A string containing the details of the change, e.g., "Alteração de contrato: Novo cargo: Analista de RH Novo salário: R$ 5500"'),
 });
 export type ContractChangeInput = z.infer<typeof ContractChangeInputSchema>;
 
@@ -71,13 +69,24 @@ const getEmployeeForContractChange = (employeeId: string) => {
     return mockDatabase[employeeId] || null;
 }
 
+const extractChangeInfo = (details: string) => {
+    const salaryMatch = details.match(/Novo salário: R\$ (\d+\.?\d*)/);
+    const roleMatch = details.match(/Novo cargo: ([\w\s]+)/);
+
+    const newSalary = salaryMatch ? parseFloat(salaryMatch[1]) : undefined;
+    const newRole = roleMatch ? roleMatch[1].trim() : undefined;
+    
+    return { newSalary, newRole };
+}
+
+
 const prompt = ai.definePrompt({
   name: 'esocialS2206Prompt',
   input: { schema: z.any() }, 
   output: { schema: S2206DataSchema },
   prompt: `
     Você é um especialista em eSocial. Sua tarefa é gerar os dados para o evento S-2206 (Alteração de Contrato de Trabalho) com base nas informações fornecidas.
-    Gere apenas os blocos de informação que sofreram alteração (salário, cargo ou jornada).
+    Gere apenas os blocos de informação que sofreram alteração (salário, cargo ou jornada). Se o salário não mudou, omita o bloco 'remuneracao'. Se o cargo não mudou, omita o bloco 'cargo'.
 
     Use os seguintes dados como fonte:
     \`\`\`json
@@ -87,8 +96,9 @@ const prompt = ai.definePrompt({
     Observações importantes:
     - O campo 'cpfTrab' e 'matricula' são obrigatórios no 'ideVinculo'.
     - O campo 'dtAlteracao' é obrigatório.
-    - Se o salário mudou, inclua o bloco 'remuneracao'.
-    - Se o cargo ou jornada mudaram, inclua o bloco 'infoRegimeTrab.infoCeletista'.
+    - Se o salário mudou, inclua o bloco 'remuneracao'. O valor 'vrSalFx' deve ser o novo salário.
+    - Se o cargo mudou, inclua o bloco 'infoRegimeTrab.infoCeletista.cargo'.
+    - O 'codCargo' deve ser um código simulado com base no nome do novo cargo (ex: 'CAR-ANALRH' para 'Analista de RH').
 
     Gere o objeto JSON correspondente ao schema de saída.
   `,
@@ -107,16 +117,19 @@ const generateContractChangeFlow = ai.defineFlow(
         throw new Error(`Employee with ID ${input.employeeId} not found.`);
     }
 
+    const { newSalary, newRole } = extractChangeInfo(input.changeDetails);
+    
+    const newRoleCode = newRole ? `CAR-${newRole.replace(/\s+/g, '').toUpperCase().substring(0,6)}` : undefined;
+
     const promptData = {
-      ...input,
+      employeeId: input.employeeId,
+      changeDate: input.changeDate,
       employee: {
         cpf: employeeData.cpf.replace(/\D/g, ''),
         matricula: employeeData.matricula,
       },
-      // Pass role info if it changes
-      ...(input.newRole && { newRoleInfo: { codCargo: "CAR-NEW", nmCargo: input.newRole } }),
-      // Pass work shift info if it changes
-      ...(input.newWorkShiftId && { newWorkShiftInfo: { codHorContrat: input.newWorkShiftId } }),
+      ...(newSalary && { newSalary: newSalary }),
+      ...(newRole && { newRoleInfo: { codCargo: newRoleCode, nmCargo: newRole } }),
     };
 
     const { output } = await prompt(promptData);

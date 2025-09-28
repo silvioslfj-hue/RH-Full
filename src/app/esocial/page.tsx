@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { KeyRound, Settings, Send, Building, Search, UserPlus, UserMinus, FileText, Loader2, FilePen } from "lucide-react";
+import { KeyRound, Settings, Send, Building, Search, UserPlus, UserMinus, FileText, Loader2, FilePen, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -41,15 +41,30 @@ export default function ESocialPage() {
     const [generatedData, setGeneratedData] = useState<object | null>(null);
     const [dataViewerTitle, setDataViewerTitle] = useState('');
 
-    const pendingEvents = useMemo(() => {
-        const pending = events.filter(e => e.status === 'Pendente');
+    const [competenceFilter, setCompetenceFilter] = useState("2024-07");
+    const [companyFilter, setCompanyFilter] = useState("01.234.567/0001-89");
+
+    const filteredEvents = useMemo(() => {
+        return events.filter(e => {
+            const eventDate = new Date(e.referenceDate);
+            const [year, month] = competenceFilter.split('-');
+            const competenceMatch = eventDate.getFullYear() === parseInt(year) && (eventDate.getMonth() + 1) === parseInt(month);
+            // In a real app, company would be an ID. Here we simulate it based on employee ID for demo purposes.
+            const companyMatch = companyFilter === 'all' || (companyFilter === '01.234.567/0001-89' ? ['FUNC001', 'FUNC003', 'FUNC005'].includes(e.employeeId) : ['FUNC002'].includes(e.employeeId));
+            return competenceMatch && companyMatch;
+        });
+    }, [events, competenceFilter, companyFilter]);
+
+
+    const pendingEventsSummary = useMemo(() => {
+        const pending = filteredEvents.filter(e => e.status === 'Pendente');
         return {
             admissions: pending.filter(e => e.type.startsWith('S-2200')).length,
             terminations: pending.filter(e => e.type.startsWith('S-2299')).length,
             payrolls: pending.filter(e => e.type.startsWith('S-1200') || e.type.startsWith('S-1210')).length,
             contractChanges: pending.filter(e => e.type.startsWith('S-2206')).length,
         }
-    }, [events]);
+    }, [filteredEvents]);
 
 
     const handleSendEvents = () => {
@@ -77,17 +92,13 @@ export default function ESocialPage() {
                     let title = '';
 
                     if (event.type.startsWith('S-2200')) {
-                        // O 'employeeId' viria do evento, que foi gerado quando o funcionário foi cadastrado.
-                        const employeeId = event.employeeId;
-                        data = await generateESocialEventData({ employeeId });
+                        data = await generateESocialEventData({ employeeId: event.employeeId });
                         title = 'Dados Estruturados do Evento eSocial (S-2200 - Admissão)';
                     } else if (event.type.startsWith('S-2206')) {
-                         // A simulação de dados para este evento é mais simples no flow
                          data = await generateContractChangeData({
                             employeeId: event.employeeId,
                             changeDate: event.referenceDate,
-                            // Em um cenário real, os dados da alteração estariam no `event.details`
-                            newSalary: 7000.00, 
+                            changeDetails: event.details,
                         });
                          title = 'Dados Estruturados do Evento eSocial (S-2206 - Alteração Contratual)';
                     }
@@ -100,7 +111,13 @@ export default function ESocialPage() {
                             title: `Dados Gerados para ${event.employeeName}!`,
                             description: `Os dados estruturados para o evento ${event.type} foram gerados pela IA.`,
                         });
-                        // Em uma aplicação real, aqui você adicionaria o XML gerado a uma fila de envio.
+                        // Mark as sent for demo purposes
+                        setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: 'Enviado' } : e));
+                        setSelectedEvents(prev => prev.filter(id => id !== eventId));
+
+                        // In a real app, you would add the XML to a transmission queue here.
+                        // We stop after the first successful generation for this demo.
+                        break; 
                     }
                 } catch (error) {
                      toast({
@@ -108,6 +125,7 @@ export default function ESocialPage() {
                         title: `Erro ao Gerar Dados para ${event.employeeName}`,
                         description: `Não foi possível gerar os dados do evento ${event.type} com a IA.`,
                     });
+                     setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: 'Erro' } : e));
                 }
             }
         });
@@ -128,6 +146,15 @@ export default function ESocialPage() {
         toast({
             title: "Evento Rejeitado",
             description: "O evento foi marcado como rejeitado e não será enviado.",
+        });
+    }
+
+    const handleResetFilters = () => {
+        setCompetenceFilter("2024-07");
+        setCompanyFilter("all");
+         toast({
+            title: "Filtros Redefinidos",
+            description: "Exibindo todos os eventos para a competência padrão.",
         });
     }
 
@@ -154,11 +181,11 @@ export default function ESocialPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Competência</label>
-                    <Input type="month" defaultValue="2024-07" />
+                    <Input type="month" value={competenceFilter} onChange={e => setCompetenceFilter(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Empresa (CNPJ)</label>
-                    <Select>
+                    <Select value={companyFilter} onValueChange={setCompanyFilter}>
                         <SelectTrigger>
                             <div className="flex items-center gap-2">
                                 <Building className="h-4 w-4 text-muted-foreground" />
@@ -166,6 +193,9 @@ export default function ESocialPage() {
                             </div>
                         </SelectTrigger>
                         <SelectContent>
+                             <SelectItem value="all">
+                                Todas as Empresas
+                            </SelectItem>
                             {companyData.map(c => (
                                 <SelectItem key={c.id} value={c.cnpj}>
                                     {c.name} - {c.cnpj}
@@ -175,9 +205,9 @@ export default function ESocialPage() {
                     </Select>
                 </div>
                  <div className="flex items-end">
-                    <Button className="w-full">
-                        <Search className="mr-2 h-4 w-4" />
-                        Consultar Pendências
+                    <Button variant="outline" className="w-full" onClick={handleResetFilters}>
+                        <XCircle className="mr-2 h-4 w-4" />
+                        Limpar Filtros
                     </Button>
                 </div>
             </div>
@@ -196,7 +226,7 @@ export default function ESocialPage() {
 
         <Card>
             <CardHeader>
-                <CardTitle>Eventos Pendentes para Julho/2024</CardTitle>
+                <CardTitle>Eventos Pendentes para {competenceFilter}</CardTitle>
                 <CardDescription>Resumo dos eventos não periódicos e periódicos a serem enviados.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -206,7 +236,7 @@ export default function ESocialPage() {
                         <UserPlus className="h-5 w-5 text-muted-foreground"/>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{pendingEvents.admissions}</div>
+                        <div className="text-2xl font-bold">{pendingEventsSummary.admissions}</div>
                         <p className="text-xs text-muted-foreground">Novos colaboradores registrados</p>
                     </CardContent>
                 </Card>
@@ -216,7 +246,7 @@ export default function ESocialPage() {
                         <FilePen className="h-5 w-5 text-muted-foreground"/>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{pendingEvents.contractChanges}</div>
+                        <div className="text-2xl font-bold">{pendingEventsSummary.contractChanges}</div>
                         <p className="text-xs text-muted-foreground">Alterações de contrato</p>
                     </CardContent>
                 </Card>
@@ -226,7 +256,7 @@ export default function ESocialPage() {
                         <UserMinus className="h-5 w-5 text-muted-foreground"/>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{pendingEvents.terminations}</div>
+                        <div className="text-2xl font-bold">{pendingEventsSummary.terminations}</div>
                         <p className="text-xs text-muted-foreground">Rescisões de contrato</p>
                     </CardContent>
                 </Card>
@@ -236,7 +266,7 @@ export default function ESocialPage() {
                         <FileText className="h-5 w-5 text-muted-foreground"/>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{pendingEvents.payrolls}</div>
+                        <div className="text-2xl font-bold">{pendingEventsSummary.payrolls}</div>
                         <p className="text-xs text-muted-foreground">Remunerações a serem enviadas</p>
                     </CardContent>
                 </Card>
@@ -250,7 +280,7 @@ export default function ESocialPage() {
             </CardHeader>
             <CardContent>
                 <ESocialEventsTable 
-                    data={events}
+                    data={filteredEvents}
                     selectedEvents={selectedEvents}
                     onSelectedEventsChange={setSelectedEvents}
                     onDelete={handleDeleteEvent}
@@ -286,5 +316,3 @@ export default function ESocialPage() {
     </AppLayout>
   );
 }
-
-    
