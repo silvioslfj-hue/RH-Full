@@ -52,22 +52,22 @@ const prompt = ai.definePrompt({
     ----------------------------------------------------------------
     | Cód. | Descrição               |      Proventos |     Descontos |
     ----------------------------------------------------------------
-    | 101  | SALÁRIO BASE              | R$ {{printf "%.2f" payrollData.grossSalary}}      |               |
+    | 101  | SALÁRIO BASE              | R$ {{padRight payrollData.grossSalary 12}} |               |
     {{#each payrollData.earnings}}
-    | 201  | {{padRight name 23}} | R$ {{printf "%.2f" value}}      |               |
+    | 201  | {{padRight name 23}} | R$ {{padRight value 12}} |               |
     {{/each}}
     {{#each payrollData.deductions}}
-    | 301  | {{padRight name 23}} |                | R$ {{printf "%.2f" value}}     |
+    | 301  | {{padRight name 23}} |                | R$ {{padRight value 11}} |
     {{/each}}
     ----------------------------------------------------------------
-    |      | TOTAIS                    | R$ {{printf "%.2f" payrollData.totalEarnings}}      | R$ {{printf "%.2f" payrollData.totalDeductions}}     |
+    |      | TOTAIS                    | R$ {{padRight payrollData.totalEarnings 12}} | R$ {{padRight payrollData.totalDeductions 11}} |
     ----------------------------------------------------------------
-    | SALÁRIO LÍQUIDO                                | R$ {{printf "%.2f" payrollData.netSalary}}     |
+    | SALÁRIO LÍQUIDO                                | R$ {{padRight payrollData.netSalary 11}} |
     ----------------------------------------------------------------
   `,
   custom: {
     // Helper to right-pad strings for alignment
-    padRight: (str: string, len: number) => str.padEnd(len, ' '),
+    padRight: (str: string, len: number) => String(str).padEnd(len, ' '),
   },
 });
 
@@ -78,7 +78,22 @@ const generatePayslipContentFlow = ai.defineFlow(
     outputSchema: PayslipGenerationOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
+    // Format all numbers to two decimal places as strings for the prompt
+    const formattedPayrollData = {
+      grossSalary: input.payrollData.grossSalary.toFixed(2),
+      totalEarnings: input.payrollData.totalEarnings.toFixed(2),
+      totalDeductions: input.payrollData.totalDeductions.toFixed(2),
+      netSalary: input.payrollData.netSalary.toFixed(2),
+      earnings: input.payrollData.earnings.map(e => ({ ...e, value: e.value.toFixed(2) })),
+      deductions: input.payrollData.deductions.map(d => ({ ...d, value: d.value.toFixed(2) })),
+    };
+
+    const promptInput = {
+      ...input,
+      payrollData: formattedPayrollData,
+    };
+    
+    const { output } = await prompt(promptInput);
     return output!;
   }
 );
