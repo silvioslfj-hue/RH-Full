@@ -7,6 +7,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar
 } from '@/components/ui/sidebar'
 import { LayoutDashboard, Clock, CalendarOff, BarChart3, BotMessageSquare, Hourglass } from 'lucide-react'
 
@@ -20,6 +21,12 @@ const menuItems = [
 
 export function MainNav() {
   const pathname = usePathname()
+  const { setOpenMobile } = useSidebar();
+
+
+  const handleLinkClick = () => {
+    setOpenMobile(false);
+  }
 
   return (
     <SidebarContent>
@@ -31,7 +38,7 @@ export function MainNav() {
               isActive={pathname === item.href}
               tooltip={{ children: item.label }}
             >
-              <Link href={item.href}>
+              <Link href={item.href} onClick={handleLinkClick}>
                 <item.icon />
                 <span>{item.label}</span>
               </Link>
