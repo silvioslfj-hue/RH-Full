@@ -52,10 +52,6 @@ export function UserNav() {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem>
-            <CreditCard className="mr-2" />
-            <span>Faturamento</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
             <Settings className="mr-2" />
             <span>Configurações</span>
           </DropdownMenuItem>
