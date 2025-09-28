@@ -9,21 +9,27 @@ import { useToast } from '@/hooks/use-toast'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { ClockConfirmationDialog } from './clock-confirmation-dialog'
 import { useRouter } from 'next/navigation'
+import { db } from '@/lib/firebaseClient'
+import { collection, addDoc } from 'firebase/firestore'
 
 export type ClockEvent = {
+  id?: string;
   time: string;
   type: 'Entrada' | 'Saída';
   location?: string;
+  timestamp: Date;
+  employeeId: string;
 };
 
 interface ClockWidgetProps {
   onClockEvent: (event: ClockEvent) => void;
+  initialIsClockedIn: boolean;
 }
 
 type VerificationStatus = 'idle' | 'scanning' | 'verifying' | 'success';
 
-export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
-  const [isClockedIn, setIsClockedIn] = useState(false)
+export function ClockWidget({ onClockEvent, initialIsClockedIn }: ClockWidgetProps) {
+  const [isClockedIn, setIsClockedIn] = useState(initialIsClockedIn)
   const [status, setStatus] = useState<VerificationStatus>('idle');
   const [currentTime, setCurrentTime] = useState(new Date())
   const [timeElapsed, setTimeElapsed] = useState(0)
@@ -33,6 +39,9 @@ export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
   const router = useRouter();
+  
+  // Assume logged in user for demo
+  const employeeId = "user_jane_doe";
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -120,27 +129,39 @@ export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
     return `${h}:${m}:${s}`
   }
 
-  const handleVerificationSuccess = () => {
+  const handleVerificationSuccess = async () => {
     const newStatus = !isClockedIn
-    setIsClockedIn(newStatus)
-
     const eventType = newStatus ? 'Entrada' : 'Saída'
+    const now = new Date();
     
     const newEvent: ClockEvent = {
-      time: formatTime(new Date()),
+      time: formatTime(now),
       type: eventType,
       location: location
         ? `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}`
         : "N/A",
+      timestamp: now,
+      employeeId: employeeId,
     };
     
-    onClockEvent(newEvent);
+    try {
+        const docRef = await addDoc(collection(db, "clock_events"), newEvent);
+        onClockEvent({ ...newEvent, id: docRef.id });
+        setIsClockedIn(newStatus);
+        
+        if (newStatus) { // Clocking in
+          setTimeElapsed(0)
+        }
 
-    if (newStatus) { // Clocking in
-      setTimeElapsed(0)
+        setIsConfirmationDialogOpen(true);
+    } catch(error) {
+        console.error("Error saving clock event: ", error);
+        toast({
+            variant: "destructive",
+            title: "Erro ao Salvar Registro",
+            description: "Não foi possível salvar seu registro de ponto. Tente novamente.",
+        });
     }
-
-    setIsConfirmationDialogOpen(true);
   }
 
   const handleClockAction = () => {
@@ -149,8 +170,8 @@ export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
         // Simulate a verification process
         setTimeout(() => {
             setStatus('success');
-            setTimeout(() => {
-              handleVerificationSuccess();
+            setTimeout(async () => {
+              await handleVerificationSuccess();
               // Reset to scanning after a while - this will be quick before dialog
               setTimeout(() => setStatus('scanning'), 200);
             }, 1000)
