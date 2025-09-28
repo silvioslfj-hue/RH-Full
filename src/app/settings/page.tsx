@@ -4,9 +4,11 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Building, Briefcase, Clock, MapPin, UserCircle } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { PlusCircle, Building, Briefcase, Clock, MapPin, UserCircle, Calculator } from "lucide-react";
 import { UnitsTable } from "@/components/settings/units-table";
 import { UnitDialog } from "@/components/settings/unit-dialog";
 import { RolesTable } from "@/components/settings/roles-table";
@@ -19,9 +21,11 @@ import { ManagersTable } from "@/components/settings/managers-table";
 import { ManagerDialog } from "@/components/settings/manager-dialog";
 import { unitData as initialUnitData, roleData as initialRoleData, companyData as initialCompanyData, workShiftData as initialWorkShiftData, managerData as initialManagerData } from "@/lib/data";
 import type { Unit, Role, Company, WorkShift, Manager } from "@/lib/data";
+import { useToast } from "@/hooks/use-toast";
 
 
 export default function SettingsPage() {
+    const { toast } = useToast();
     const [units, setUnits] = useState(initialUnitData);
     const [roles, setRoles] = useState(initialRoleData);
     const [companies, setCompanies] = useState(initialCompanyData);
@@ -39,6 +43,17 @@ export default function SettingsPage() {
     const [editingCompany, setEditingCompany] = useState<Company | null>(null);
     const [editingWorkShift, setEditingWorkShift] = useState<WorkShift | null>(null);
     const [editingManager, setEditingManager] = useState<Manager | null>(null);
+
+    // State for payroll settings
+    const [overtimeAction, setOvertimeAction] = useState("pay");
+
+    const handleSavePayrollSettings = () => {
+        // In a real app, this would save to a backend.
+        toast({
+            title: "Configurações Salvas",
+            description: "As configurações da folha de pagamento foram atualizadas.",
+        })
+    }
 
     // Unit Handlers
     const handleOpenUnitDialog = (unit: Unit | null = null) => {
@@ -159,7 +174,7 @@ export default function SettingsPage() {
         </div>
 
         <Tabs defaultValue="companies">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="companies">
                     <Building className="mr-2" />
                     Empresas
@@ -179,6 +194,10 @@ export default function SettingsPage() {
                 <TabsTrigger value="work-shifts">
                     <Clock className="mr-2" />
                     Jornadas
+                </TabsTrigger>
+                <TabsTrigger value="payroll">
+                    <Calculator className="mr-2" />
+                    Folha de Pagamento
                 </TabsTrigger>
             </TabsList>
 
@@ -299,6 +318,39 @@ export default function SettingsPage() {
                             onDelete={handleDeleteWorkShift}
                         />
                     </CardContent>
+                </Card>
+            </TabsContent>
+
+            <TabsContent value="payroll" className="pt-6">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Configurações da Folha de Pagamento</CardTitle>
+                        <CardDescription>Defina as regras e padrões para o processamento da folha de pagamento.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                         <div>
+                            <Label className="text-base font-semibold">Ação Padrão para Horas Extras</Label>
+                            <p className="text-sm text-muted-foreground mb-4">
+                                Escolha o que fazer com as horas extras apuradas no fechamento do ponto, caso não haja horas de banco de horas a vencer.
+                            </p>
+                            <RadioGroup value={overtimeAction} onValueChange={setOvertimeAction}>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="pay" id="pay" />
+                                    <Label htmlFor="pay" className="font-normal">Pagar na Folha</Label>
+                                </div>
+                                <p className="text-xs text-muted-foreground pl-6">As horas extras serão calculadas com acréscimo de 50% e adicionadas como provento no holerite do mês.</p>
+                                
+                                <div className="flex items-center space-x-2 mt-4">
+                                    <RadioGroupItem value="bank" id="bank" />
+                                    <Label htmlFor="bank" className="font-normal">Adicionar ao Banco de Horas</Label>
+                                </div>
+                                <p className="text-xs text-muted-foreground pl-6">As horas extras serão adicionadas ao saldo do banco de horas do colaborador para compensação futura.</p>
+                            </RadioGroup>
+                        </div>
+                    </CardContent>
+                     <CardFooter className="border-t px-6 py-4">
+                        <Button onClick={handleSavePayrollSettings}>Salvar Configurações</Button>
+                    </CardFooter>
                 </Card>
             </TabsContent>
         </Tabs>

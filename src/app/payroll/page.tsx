@@ -50,7 +50,6 @@ type EmployeePayroll = {
     role: string;
     grossSalary: number;
     status: PayrollStatus;
-    overtimeAction: OvertimeAction;
     payrollData?: PayrollOutput;
 };
 
@@ -60,7 +59,6 @@ const initialPayrollData: EmployeePayroll[] = employeeData.map(e => ({
   role: e.role,
   grossSalary: 7500.00, // Salário de exemplo, idealmente viria do cadastro do funcionário
   status: "Pendente",
-  overtimeAction: "pay", // Ação padrão
 }));
 
 
@@ -69,11 +67,8 @@ export default function PayrollPage() {
   const [payrollRun, setPayrollRun] = useState<EmployeePayroll[]>(initialPayrollData);
   const [isProcessing, startTransition] = useTransition();
 
-  const handleOvertimeActionChange = (employeeId: string, action: OvertimeAction) => {
-    setPayrollRun(prev => 
-        prev.map(e => e.id === employeeId ? { ...e, overtimeAction: action } : e)
-    );
-  };
+  // Esta configuração agora viria das configurações globais. Para o protótipo, vamos fixá-la.
+  const globalOvertimeAction: OvertimeAction = "pay"; 
 
   const handleProcessPayroll = () => {
     startTransition(() => {
@@ -100,7 +95,7 @@ export default function PayrollPage() {
                     grossSalary: employee.grossSalary,
                     hoursWorked: 160, // Exemplo
                     overtimeHours: overtimeHours,
-                    overtimeAction: employee.overtimeAction,
+                    overtimeAction: globalOvertimeAction, // Usa a configuração global
                     benefits: {
                         valeTransporte: 150,
                         valeRefeicao: 440,
@@ -230,7 +225,7 @@ export default function PayrollPage() {
           <CardHeader>
             <CardTitle>Processar Folha de Pagamento</CardTitle>
             <CardDescription>
-              Selecione a competência, defina como tratar as horas extras e inicie o processamento. A IA irá verificar e pagar automaticamente o banco de horas a vencer.
+              Selecione a competência e inicie o processamento. A IA irá verificar e pagar automaticamente o banco de horas a vencer, e tratará as horas extras conforme a configuração global do sistema.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -298,7 +293,6 @@ export default function PayrollPage() {
                         <TableRow>
                             <TableHead>Colaborador</TableHead>
                             <TableHead>Salário Bruto</TableHead>
-                            <TableHead>Ação Horas Extras</TableHead>
                             <TableHead>Proventos</TableHead>
                             <TableHead>Descontos</TableHead>
                             <TableHead>Salário Líquido</TableHead>
@@ -311,21 +305,6 @@ export default function PayrollPage() {
                             <TableRow key={employee.id}>
                                 <TableCell className="font-medium">{employee.name}</TableCell>
                                 <TableCell className="font-mono">R$ {employee.grossSalary.toFixed(2)}</TableCell>
-                                <TableCell>
-                                    <Select 
-                                        value={employee.overtimeAction} 
-                                        onValueChange={(value: OvertimeAction) => handleOvertimeActionChange(employee.id, value)}
-                                        disabled={employee.status !== 'Pendente'}
-                                    >
-                                        <SelectTrigger className="w-[180px] h-9">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="pay">Pagar na Folha</SelectItem>
-                                            <SelectItem value="bank">Adicionar ao Banco</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </TableCell>
                                 <TableCell className="font-mono text-green-600">
                                   {employee.payrollData ? `R$ ${employee.payrollData.totalEarnings.toFixed(2)}` : '-'}
                                 </TableCell>
