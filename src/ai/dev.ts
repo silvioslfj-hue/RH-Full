@@ -5,3 +5,4 @@ import '@/ai/flows/timecard-refactoring.ts';
 import '@/ai/flows/payroll-flow.ts';
 import '@/ai/flows/esocial-event-flow.ts';
 import '@/ai/flows/contract-change-flow.ts';
+import '@/ai/flows/fiscal-file-flow.ts';

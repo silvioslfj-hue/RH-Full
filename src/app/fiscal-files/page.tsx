@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import {
   Select,
@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Download, Calendar as CalendarIcon, FileText } from "lucide-react";
+import { Download, Calendar as CalendarIcon, FileText, Loader2, Search } from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -21,12 +21,13 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { generateFiscalFile, type FiscalFileInput } from "@/ai/flows/fiscal-file-flow";
 
 const fiscalFileTypes = {
     aej: {
@@ -44,9 +45,13 @@ const fiscalFileTypes = {
 }
 
 export default function FiscalFilesPage() {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: startOfMonth(new Date()),
+    to: new Date(),
+  });
   const [fileType, setFileType] = useState("aej");
   const { toast } = useToast();
+  const [isGenerating, startTransition] = useTransition();
 
   const handleGenerateFile = () => {
     if (!dateRange?.from || !dateRange?.to) {
@@ -58,9 +63,47 @@ export default function FiscalFilesPage() {
       });
       return;
     }
-    toast({
-      title: "Geração de Arquivo Iniciada",
-      description: `O arquivo ${fileType.toUpperCase()} está sendo processado e o download começará em breve.`,
+
+    startTransition(async () => {
+        toast({
+            title: "Geração de Arquivo Iniciada",
+            description: `A IA está processando o arquivo ${fileType.toUpperCase()}. O download começará em breve.`,
+        });
+
+        try {
+            const input: FiscalFileInput = {
+                fileType: fileType as FiscalFileInput['fileType'],
+                startDate: format(dateRange.from!, "yyyy-MM-dd"),
+                endDate: format(dateRange.to!, "yyyy-MM-dd"),
+                companyCnpj: "01234567000189", // Exemplo
+            };
+            
+            const result = await generateFiscalFile(input);
+
+            // Create a blob from the file content and trigger download
+            const blob = new Blob([result.fileContent], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = result.fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            toast({
+                title: "Arquivo Gerado com Sucesso!",
+                description: `O arquivo ${result.fileName} foi baixado.`,
+            });
+
+        } catch (error) {
+            console.error("Error generating fiscal file:", error);
+            toast({
+                variant: "destructive",
+                title: "Erro na Geração",
+                description: "Não foi possível gerar o arquivo fiscal com a IA. Tente novamente.",
+            });
+        }
     });
   };
 
@@ -83,7 +126,7 @@ export default function FiscalFilesPage() {
           <CardHeader>
             <CardTitle>Geração de Arquivos para Fiscalização</CardTitle>
             <CardDescription>
-              Selecione o tipo de arquivo, o período desejado e clique em "Gerar" para iniciar o download.
+              Selecione o tipo de arquivo, o período desejado e clique em "Gerar" para a IA criar o arquivo e iniciar o download.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -100,7 +143,7 @@ export default function FiscalFilesPage() {
                     AFDT - Arquivo Fonte de Dados Tratados
                   </SelectItem>
                   <SelectItem value="acjef">
-                    ACJEF - Arquivo de Controle de Jornada para Efeitos Fiscais
+                    ACJEF - Arquivo de Controle de Jornada
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -118,14 +161,14 @@ export default function FiscalFilesPage() {
                     {dateRange?.from ? (
                       dateRange.to ? (
                         <>
-                          {format(dateRange.from, "LLL dd, y", {
+                          {format(dateRange.from, "dd 'de' LLL, y", {
                             locale: ptBR,
                           })}{" "}
                           -{" "}
-                          {format(dateRange.to, "LLL dd, y", { locale: ptBR })}
+                          {format(dateRange.to, "dd 'de' LLL, y", { locale: ptBR })}
                         </>
                       ) : (
-                        format(dateRange.from, "LLL dd, y", { locale: ptBR })
+                        format(dateRange.from, "dd 'de' LLL, y", { locale: ptBR })
                       )
                     ) : (
                       <span>Escolha um período</span>
@@ -144,9 +187,13 @@ export default function FiscalFilesPage() {
                   />
                 </PopoverContent>
               </Popover>
-              <Button onClick={handleGenerateFile}>
-                <Download className="mr-2 h-4 w-4" />
-                Gerar Arquivo
+              <Button onClick={handleGenerateFile} disabled={isGenerating}>
+                {isGenerating ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <Download className="mr-2 h-4 w-4" />
+                )}
+                {isGenerating ? "Gerando..." : "Gerar Arquivo"}
               </Button>
             </div>
             {selectedFileDescription && (
