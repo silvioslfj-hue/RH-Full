@@ -8,7 +8,30 @@ import { Label } from '@/components/ui/label';
 import { Icons } from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-function LoginForm() {
+function CollaboratorLoginForm() {
+  const router = useRouter();
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    router.push('/dashboard');
+  };
+
+  return (
+    <form onSubmit={handleLogin}>
+      <div className="grid w-full items-center gap-4">
+        <div className="flex flex-col space-y-1.5">
+          <Label htmlFor="access-code">Código de Acesso</Label>
+          <Input id="access-code" type="text" placeholder="Insira seu código" />
+        </div>
+      </div>
+      <Button type="submit" className="w-full mt-6">
+        Entrar
+      </Button>
+    </form>
+  );
+}
+
+function AdminLoginForm() {
   const router = useRouter();
 
   const handleLogin = (e: React.FormEvent) => {
@@ -55,17 +78,17 @@ export default function LoginPage() {
             </TabsList>
             <TabsContent value="collaborator">
               <div className="p-4 pt-6">
-                <LoginForm />
+                <CollaboratorLoginForm />
               </div>
             </TabsContent>
             <TabsContent value="admin">
               <div className="p-4 pt-6">
-                <LoginForm />
+                <AdminLoginForm />
               </div>
             </TabsContent>
             <TabsContent value="super-admin">
               <div className="p-4 pt-6">
-                <LoginForm />
+                <AdminLoginForm />
               </div>
             </TabsContent>
           </Tabs>
