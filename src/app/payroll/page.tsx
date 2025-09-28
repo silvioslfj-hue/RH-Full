@@ -84,9 +84,16 @@ export default function PayrollPage() {
 
         const processEmployee = async (employee: EmployeePayroll) => {
             setPayrollRun(prev => prev.map(e => e.id === employee.id ? { ...e, status: "Processando" } : e));
+            
+            toast({
+                title: `Processando ${employee.name}...`,
+                description: "IA está verificando o banco de horas antes de calcular."
+            });
+            await new Promise(resolve => setTimeout(resolve, 1500)); // Simula a verificação
+
             try {
                 // Simulação de busca de dados do ponto
-                const overtimeHours = Math.floor(Math.random() * 20) + 5; // Ex: entre 5 e 25 horas extras
+                const overtimeHours = Math.floor(Math.random() * 10) + 2; // Ex: entre 2 e 12 horas extras
 
                 const input: PayrollInput = {
                     employeeName: employee.name,
@@ -111,7 +118,9 @@ export default function PayrollPage() {
 
         const runAll = async () => {
             for (const employee of payrollRun) {
-                await processEmployee(employee);
+                if (employee.status !== "Concluído") {
+                    await processEmployee(employee);
+                }
             }
             toast({
                 title: "Processamento Concluído",
@@ -137,20 +146,27 @@ export default function PayrollPage() {
 
     const headers = [
       "ID Funcionário", "Nome", "Salário Bruto", "Total Proventos", "Total Descontos", "Salário Líquido",
-      "INSS", "IRRF", "FGTS"
+      "INSS", "IRRF", "FGTS (Informativo)"
     ];
 
-    const rows = completedPayrolls.map(p => [
-      p.id,
-      p.name,
-      p.payrollData?.grossSalary.toFixed(2),
-      p.payrollData?.totalEarnings.toFixed(2),
-      p.payrollData?.totalDeductions.toFixed(2),
-      p.payrollData?.netSalary.toFixed(2),
-      p.payrollData?.deductions.find(d => d.name === 'INSS')?.value.toFixed(2) || '0.00',
-      p.payrollData?.deductions.find(d => d.name === 'IRRF')?.value.toFixed(2) || '0.00',
-      p.payrollData?.deductions.find(d => d.name === 'FGTS (informativo)')?.value.toFixed(2) || '0.00',
-    ].join(','));
+    const rows = completedPayrolls.map(p => {
+        const payroll = p.payrollData!;
+        const inss = payroll.deductions.find(d => d.name.toUpperCase().includes('INSS'))?.value.toFixed(2) || '0.00';
+        const irrf = payroll.deductions.find(d => d.name.toUpperCase().includes('IRRF'))?.value.toFixed(2) || '0.00';
+        const fgts = payroll.deductions.find(d => d.name.toUpperCase().includes('FGTS'))?.value.toFixed(2) || '0.00';
+        
+        return [
+          p.id,
+          p.name,
+          payroll.grossSalary.toFixed(2),
+          payroll.totalEarnings.toFixed(2),
+          payroll.totalDeductions.toFixed(2),
+          payroll.netSalary.toFixed(2),
+          inss,
+          irrf,
+          fgts
+        ].join(',');
+    });
 
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join("\n");
 
@@ -206,7 +222,7 @@ export default function PayrollPage() {
             Folha de Pagamento
           </h1>
           <p className="text-muted-foreground">
-            Calcule, processe e gerencie a folha de pagamento dos seus colaboradores.
+            Calcule, processe e gerencie a folha de pagamento dos seus colaboradores com assistência de IA.
           </p>
         </div>
 
@@ -214,7 +230,7 @@ export default function PayrollPage() {
           <CardHeader>
             <CardTitle>Processar Folha de Pagamento</CardTitle>
             <CardDescription>
-              Selecione a competência e os filtros desejados, depois inicie o processamento.
+              Selecione a competência, defina como tratar as horas extras e inicie o processamento. A IA irá verificar e pagar automaticamente o banco de horas a vencer.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

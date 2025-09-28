@@ -11,6 +11,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { timeBankData } from '@/lib/data';
 
 const PayrollInputSchema = z.object({
   employeeName: z.string().describe('The name of the employee.'),
@@ -28,7 +29,7 @@ export type PayrollInput = z.infer<typeof PayrollInputSchema>;
 const PayrollOutputSchema = z.object({
   grossSalary: z.number().describe('The base gross salary for the month.'),
   earnings: z.array(z.object({
-    name: z.string().describe('Name of the earning (e.g., "Horas Extras").'),
+    name: z.string().describe('Name of the earning (e.g., "Horas Extras", "Horas Banco Pagas").'),
     value: z.number().describe('Value of the earning.'),
   })).describe('List of all earnings (proventos).'),
   deductions: z.array(z.object({
@@ -46,37 +47,69 @@ export async function generatePayroll(input: PayrollInput): Promise<PayrollOutpu
   return generatePayrollFlow(input);
 }
 
+// This tool simulates checking a database for expiring time bank hours
+const getTimeBankStatus = ai.defineTool(
+  {
+    name: 'getTimeBankStatus',
+    description: 'Verifica o status do banco de horas de um funcionário para ver se há horas próximas do vencimento.',
+    inputSchema: z.object({ employeeName: z.string() }),
+    outputSchema: z.object({
+        hasExpiringHours: z.boolean(),
+        expiringHours: z.number(),
+    }),
+  },
+  async ({ employeeName }) => {
+    // In a real app, this would query a database.
+    const employeeEntry = timeBankData.find(e => e.employeeName === employeeName && (e.status === 'Crítico' || e.status === 'Atenção'));
+    if (employeeEntry) {
+        const hours = parseFloat(employeeEntry.expiringHours.replace('h', '.').replace('m', ''));
+        return {
+            hasExpiringHours: true,
+            expiringHours: hours,
+        }
+    }
+    return { hasExpiringHours: false, expiringHours: 0 };
+  }
+);
+
+
 const prompt = ai.definePrompt({
   name: 'payrollPrompt',
+  tools: [getTimeBankStatus],
   input: {schema: PayrollInputSchema},
   output: {schema: PayrollOutputSchema},
   prompt: `
-    Você é um especialista em folha de pagamento no Brasil. Sua tarefa é calcular o holerite de um funcionário com base nas informações fornecidas, seguindo a legislação trabalhista brasileira.
+    Você é um gerente de folha de pagamento inteligente e autônomo. Sua principal tarefa é calcular o holerite de um funcionário, mas com uma regra de negócio CRÍTICA: garantir que as horas do banco de horas prestes a expirar sejam pagas.
 
-    Informações do Funcionário:
+    **Seu processo deve ser o seguinte:**
+    1.  **SEMPRE** comece usando a ferramenta \`getTimeBankStatus\` para verificar se o funcionário tem horas do banco de horas próximas do vencimento.
+    2.  **Cenário 1: HÁ horas a expirar.**
+        - Se a ferramenta retornar \`hasExpiringHours: true\`, você DEVE pagar essas horas.
+        - Calcule o valor dessas horas (com acréscimo de 50%, como horas extras) e adicione-as aos proventos (earnings) com o nome "Horas Banco Pagas".
+        - O pagamento dessas horas do banco é PRIORITÁRIO. As horas extras normais do mês (\`overtimeHours\`) devem ser direcionadas para o banco de horas (ignorando o parâmetro \`overtimeAction\`).
+    3.  **Cenário 2: NÃO HÁ horas a expirar.**
+        - Se a ferramenta retornar \`hasExpiringHours: false\`, prossiga com o cálculo padrão das horas extras do mês, respeitando o parâmetro \`overtimeAction\` ('pay' ou 'bank').
+        
+    **Informações do Funcionário:**
     - Nome: {{{employeeName}}}
     - Salário Bruto: R$ {{{grossSalary}}}
     - Horas Trabalhadas: {{{hoursWorked}}}
-    - Horas Extras: {{{overtimeHours}}}
-    - Ação para Horas Extras: {{{overtimeAction}}} (se 'pay', pague as horas extras; se 'bank', adicione ao banco de horas e não pague no holerite)
+    - Horas Extras do Mês: {{{overtimeHours}}}
+    - Ação para Horas Extras (se não houver horas de banco a pagar): {{{overtimeAction}}}
     - Benefícios (descontos): Vale Transporte (R$ {{{benefits.valeTransporte}}}), Vale Refeição (R$ {{{benefits.valeRefeicao}}})
 
-    Regras de Cálculo:
-    1.  **Horas Extras:** 
-        - Se 'overtimeAction' for 'pay', calcule o valor das horas extras. Considere que a hora extra vale 50% a mais que a hora normal. A base de cálculo é o salário bruto para uma jornada de 220 horas mensais. Inclua este valor nos proventos (earnings).
-        - Se 'overtimeAction' for 'bank', NÃO calcule o valor das horas extras para pagamento. Elas serão adicionadas ao banco de horas e não devem aparecer nos proventos.
-    2.  **Salário de Contribuição:** A base para INSS e IRRF é (salário bruto + valor das horas extras pagas). Se as horas extras forem para o banco, a base é apenas o salário bruto.
-    3.  **Descontos (deductions):**
-        a.  **INSS:** Calcule o desconto do INSS com base no salário de contribuição, aplicando as alíquotas progressivas da tabela vigente.
-        b.  **IRRF:** Calcule o desconto do Imposto de Renda Retido na Fonte. A base de cálculo é (Salário de Contribuição - INSS). Aplique as alíquotas e deduções da tabela vigente.
-        c.  **Benefícios:** Inclua os valores de vale transporte e vale refeição como descontos.
-        d.  **FGTS:** Calcule o valor do FGTS (8% sobre o salário de contribuição). **Importante:** O FGTS não é descontado do salário do empregado, mas deve ser listado nos descontos com a observação "(informativo)".
-    4.  **Totais e Líquido:**
-        a.  Calcule \`totalEarnings\` (soma de todos os proventos).
-        b.  Calcule \`totalDeductions\` (soma de todos os descontos, exceto FGTS).
-        c.  Calcule \`netSalary\` (totalEarnings - totalDeductions).
+    **Regras Gerais de Cálculo:**
+    - A base para cálculo da hora é o salário bruto para uma jornada de 220 horas mensais.
+    - Horas extras ou horas do banco pagas têm um acréscimo de 50%.
+    - **Salário de Contribuição:** (salário bruto + valor das horas extras pagas + valor das horas do banco pagas).
+    - **Descontos (deductions):**
+        a.  **INSS:** Calcule com base no salário de contribuição (tabela progressiva).
+        b.  **IRRF:** Calcule com base em (Salário de Contribuição - INSS).
+        c.  **Benefícios:** Inclua os valores informados.
+        d.  **FGTS:** Calcule (8% sobre o salário de contribuição), mas liste-o como informativo, pois não é deduzido do líquido.
+    - **Totais:** Calcule \`totalEarnings\`, \`totalDeductions\` (sem FGTS) e \`netSalary\`.
 
-    Formate a saída estritamente como o JSON definido no schema de saída. Preencha todos os campos.
+    Formate a saída estritamente como o JSON definido no schema de saída.
   `,
 });
 
@@ -91,3 +124,4 @@ const generatePayrollFlow = ai.defineFlow(
     return output!;
   }
 );
+
