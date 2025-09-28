@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { Company } from '@/lib/data';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
-import { KeyRound, Upload, Search } from 'lucide-react';
+import { KeyRound, Upload, Search, File as FileIcon, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -78,6 +78,20 @@ export function CompanyDialog({ isOpen, onClose, onSave, company }: CompanyDialo
         });
     }, 1500);
   }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setCertificateFile(e.target.files[0]);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setCertificateFile(null);
+    const fileInput = document.getElementById('certificate-file') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
 
   const handleSubmit = () => {
     const companyData: Company = {
@@ -160,17 +174,38 @@ export function CompanyDialog({ isOpen, onClose, onSave, company }: CompanyDialo
                     O certificado é necessário para a assinatura de documentos e relatórios fiscais, como o eSocial.
                     </AlertDescription>
                     <div className="mt-4 space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="certificate-file">Arquivo do Certificado (.pfx, .p12)</Label>
-                        <Input id="certificate-file" type="file" onChange={(e) => setCertificateFile(e.target.files ? e.target.files[0] : null)} accept=".pfx,.p12" />
+                      <div className="space-y-2">
+                        <Label htmlFor="certificate-file">Arquivo do Certificado</Label>
+                         {certificateFile ? (
+                          <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-3">
+                            <div className="flex items-center gap-2">
+                              <FileIcon className="h-5 w-5 text-muted-foreground" />
+                              <span className="text-sm font-medium">{certificateFile.name}</span>
+                            </div>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleRemoveFile}>
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <label htmlFor="certificate-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted/70 transition-colors">
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                              <Upload className="w-8 h-8 mb-3 text-muted-foreground" />
+                              <p className="mb-2 text-sm text-center text-muted-foreground">
+                                <span className="font-semibold">Clique para enviar</span> ou arraste e solte
+                              </p>
+                              <p className="text-xs text-muted-foreground">.pfx, .p12</p>
+                            </div>
+                            <Input id="certificate-file" type="file" className="hidden" onChange={handleFileChange} accept=".pfx,.p12" />
+                          </label>
+                        )}
                         {company?.certificateFile && !certificateFile && (
                             <p className="text-xs text-muted-foreground">Um certificado já está configurado ({company.certificateFile}). Envie um novo arquivo para substituí-lo.</p>
                         )}
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="certificate-password">Senha do Certificado</Label>
-                        <Input id="certificate-password" type="password" value={certificatePassword} onChange={(e) => setCertificatePassword(e.target.value)} />
-                    </div>
+                      </div>
+                      <div className="space-y-2">
+                          <Label htmlFor="certificate-password">Senha do Certificado</Label>
+                          <Input id="certificate-password" type="password" value={certificatePassword} onChange={(e) => setCertificatePassword(e.target.value)} />
+                      </div>
                     </div>
                 </Alert>
             </TabsContent>
