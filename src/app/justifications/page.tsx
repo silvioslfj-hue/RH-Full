@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { Upload, X, File } from "lucide-react";
 
 export default function JustificationsPage() {
   const { toast } = useToast();
@@ -28,6 +29,21 @@ export default function JustificationsPage() {
     setDate("");
     setReason("");
     setFile(null);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setFile(null);
+    // Also reset the input value
+    const fileInput = document.getElementById('file') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   };
 
   return (
@@ -75,8 +91,28 @@ export default function JustificationsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="file">Anexar Documento (Opcional)</Label>
-                <Input id="file" type="file" onChange={e => setFile(e.target.files?.[0] || null)} />
-                <p className="text-sm text-muted-foreground">Anexe atestados ou outros documentos comprobatórios. Tamanho máx: 5MB.</p>
+                {file ? (
+                  <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-3">
+                    <div className="flex items-center gap-2">
+                      <File className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-sm font-medium">{file.name}</span>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleRemoveFile}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <label htmlFor="file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted/70">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="w-8 h-8 mb-3 text-muted-foreground" />
+                      <p className="mb-2 text-sm text-center text-muted-foreground">
+                        <span className="font-semibold">Clique para enviar</span> ou arraste e solte
+                      </p>
+                      <p className="text-xs text-muted-foreground">PDF, PNG, JPG (máx. 5MB)</p>
+                    </div>
+                    <Input id="file" type="file" className="hidden" onChange={handleFileChange} />
+                  </label>
+                )}
               </div>
               <div className="flex justify-end">
                 <Button type="submit">Enviar Solicitação</Button>
