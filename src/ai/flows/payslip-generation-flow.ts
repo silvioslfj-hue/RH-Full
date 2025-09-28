@@ -31,12 +31,7 @@ const prompt = ai.definePrompt({
     - **Competência:** {{competence}}
 
     **Valores da Folha:**
-    - Salário Bruto: R$ {{payrollData.grossSalary}}
-    - Total de Proventos: R$ {{payrollData.totalEarnings}}
-    - Total de Descontos: R$ {{payrollData.totalDeductions}}
-    - Salário Líquido: R$ {{payrollData.netSalary}}
-    - Proventos Detalhados: {{{json payrollData.earnings}}}
-    - Descontos Detalhados: {{{json payrollData.deductions}}}
+    {{{payrollData}}}
 
     **Layout do Holerite (siga este formato):**
 
@@ -52,23 +47,13 @@ const prompt = ai.definePrompt({
     ----------------------------------------------------------------
     | Cód. | Descrição               |      Proventos |     Descontos |
     ----------------------------------------------------------------
-    | 101  | SALÁRIO BASE              | R$ {{padRight payrollData.grossSalary 12}} |               |
-    {{#each payrollData.earnings}}
-    | 201  | {{padRight name 23}} | R$ {{padRight value 12}} |               |
-    {{/each}}
-    {{#each payrollData.deductions}}
-    | 301  | {{padRight name 23}} |                | R$ {{padRight value 11}} |
-    {{/each}}
+    {{{payrollData.tableBody}}}
     ----------------------------------------------------------------
-    |      | TOTAIS                    | R$ {{padRight payrollData.totalEarnings 12}} | R$ {{padRight payrollData.totalDeductions 11}} |
+    |      | TOTAIS                    | R$ {{payrollData.totalEarnings}} | R$ {{payrollData.totalDeductions}} |
     ----------------------------------------------------------------
-    | SALÁRIO LÍQUIDO                                | R$ {{padRight payrollData.netSalary 11}} |
+    | SALÁRIO LÍQUIDO                                | R$ {{payrollData.netSalary}} |
     ----------------------------------------------------------------
   `,
-  custom: {
-    // Helper to right-pad strings for alignment
-    padRight: (str: string, len: number) => String(str).padEnd(len, ' '),
-  },
 });
 
 const generatePayslipContentFlow = ai.defineFlow(
@@ -78,19 +63,27 @@ const generatePayslipContentFlow = ai.defineFlow(
     outputSchema: PayslipGenerationOutputSchema,
   },
   async (input) => {
-    // Format all numbers to two decimal places as strings for the prompt
-    const formattedPayrollData = {
-      grossSalary: input.payrollData.grossSalary.toFixed(2),
-      totalEarnings: input.payrollData.totalEarnings.toFixed(2),
-      totalDeductions: input.payrollData.totalDeductions.toFixed(2),
-      netSalary: input.payrollData.netSalary.toFixed(2),
-      earnings: input.payrollData.earnings.map(e => ({ ...e, value: e.value.toFixed(2) })),
-      deductions: input.payrollData.deductions.map(d => ({ ...d, value: d.value.toFixed(2) })),
-    };
+    // Helper to pad strings for alignment
+    const pad = (str: string, len: number) => String(str).padEnd(len, ' ');
+
+    let tableBody = `| 101  | ${pad('SALÁRIO BASE', 23)} | R$ ${pad(input.payrollData.grossSalary.toFixed(2), 12)} |               |\n`;
+    
+    input.payrollData.earnings.forEach(e => {
+        tableBody += `    | 201  | ${pad(e.name, 23)} | R$ ${pad(e.value.toFixed(2), 12)} |               |\n`;
+    });
+
+    input.payrollData.deductions.forEach(d => {
+        tableBody += `    | 301  | ${pad(d.name, 23)} |                | R$ ${pad(d.value.toFixed(2), 11)} |\n`;
+    });
 
     const promptInput = {
       ...input,
-      payrollData: formattedPayrollData,
+      payrollData: {
+        tableBody: tableBody.trim(),
+        totalEarnings: pad(input.payrollData.totalEarnings.toFixed(2), 12),
+        totalDeductions: pad(input.payrollData.totalDeductions.toFixed(2), 11),
+        netSalary: pad(input.payrollData.netSalary.toFixed(2), 11),
+      },
     };
     
     const { output } = await prompt(promptInput);
