@@ -9,7 +9,7 @@ import {
   SidebarMenuButton,
   useSidebar
 } from '@/components/ui/sidebar'
-import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck } from 'lucide-react'
+import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText } from 'lucide-react'
 
 const adminMenuItems = [
   { href: '/dashboard', label: 'Resumo', icon: LayoutDashboard },
@@ -24,10 +24,12 @@ const collaboratorMenuItems = [
   { href: '/absences', label: 'Minhas Ausências', icon: CalendarOff },
   { href: '/reports', label: 'Meus Relatórios', icon: BarChart3 },
   { href: '/proofs', label: 'Comprovantes', icon: Receipt },
+  { href: '/payslips', label: 'Holerites', icon: Wallet },
+  { href: '/income-reports', label: 'Informe de Rendimentos', icon: FileText },
 ]
 
 const adminPaths = ['/dashboard', '/timecards'];
-const collaboratorPaths = ['/clock', '/proofs', '/justifications'];
+const collaboratorPaths = ['/clock', '/proofs', '/justifications', '/payslips', '/income-reports'];
 
 export function MainNav() {
   const pathname = usePathname()
