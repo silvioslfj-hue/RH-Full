@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import {
@@ -49,6 +50,7 @@ export function WorkShiftsTable({ data, onEdit, onDelete }: WorkShiftsTableProps
           <TableHead>Horários</TableHead>
           <TableHead>Carga Horária</TableHead>
           <TableHead>Dias</TableHead>
+          <TableHead>Tolerância</TableHead>
           <TableHead className="text-right">Ações</TableHead>
         </TableRow>
       </TableHeader>
@@ -63,6 +65,7 @@ export function WorkShiftsTable({ data, onEdit, onDelete }: WorkShiftsTableProps
                 {shift.days.map(day => <Badge key={day} variant="secondary">{day}</Badge>)}
               </div>
             </TableCell>
+            <TableCell className="font-mono">{shift.tolerance} min</TableCell>
             <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

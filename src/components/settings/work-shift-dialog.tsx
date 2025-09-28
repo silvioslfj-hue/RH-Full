@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -17,6 +18,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Slider } from '@/components/ui/slider';
 import type { WorkShift } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
+import { Separator } from '../ui/separator';
 
 interface WorkShiftDialogProps {
   isOpen: boolean;
@@ -33,6 +35,7 @@ export function WorkShiftDialog({ isOpen, onClose, onSave, workShift }: WorkShif
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [breakDuration, setBreakDuration] = useState([60]);
+  const [tolerance, setTolerance] = useState([10]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -42,6 +45,7 @@ export function WorkShiftDialog({ isOpen, onClose, onSave, workShift }: WorkShif
       setStartTime(workShift.startTime);
       setEndTime(workShift.endTime);
       setBreakDuration([workShift.breakDuration]);
+      setTolerance([workShift.tolerance]);
     } else {
       // Reset form
       setName('');
@@ -49,6 +53,7 @@ export function WorkShiftDialog({ isOpen, onClose, onSave, workShift }: WorkShif
       setStartTime('09:00');
       setEndTime('18:00');
       setBreakDuration([60]);
+      setTolerance([10]);
     }
   }, [workShift, isOpen]);
   
@@ -69,6 +74,7 @@ export function WorkShiftDialog({ isOpen, onClose, onSave, workShift }: WorkShif
       startTime,
       endTime,
       breakDuration: breakDuration[0],
+      tolerance: tolerance[0],
     };
     onSave(workShiftData);
   };
@@ -127,6 +133,25 @@ export function WorkShiftDialog({ isOpen, onClose, onSave, workShift }: WorkShif
               <span className="font-mono text-lg w-16 text-center">{breakDuration[0]} min</span>
             </div>
           </div>
+          
+          <Separator />
+          
+           <div className="space-y-2">
+            <Label htmlFor="tolerance">Tolerância de Atraso na Entrada (em minutos)</Label>
+             <p className="text-sm text-muted-foreground">Alertas serão gerados para marcações fora desta tolerância.</p>
+            <div className="flex items-center gap-4">
+              <Slider
+                id="tolerance"
+                min={0}
+                max={30}
+                step={1}
+                value={tolerance}
+                onValueChange={setTolerance}
+              />
+              <span className="font-mono text-lg w-16 text-center">{tolerance[0]} min</span>
+            </div>
+          </div>
+
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>

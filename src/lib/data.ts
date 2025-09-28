@@ -44,6 +44,7 @@ export type WorkShift = {
   startTime: string;
   endTime: string;
   breakDuration: number; // in minutes
+  tolerance: number; // in minutes
 }
 
 export type Employee = {
@@ -301,9 +302,9 @@ export const companyData: Company[] = [
 ]
 
 export const workShiftData: WorkShift[] = [
-    { id: "JOR001", name: "Padrão (Seg-Sex, 8h/dia)", days: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"], startTime: "09:00", endTime: "18:00", breakDuration: 60 },
-    { id: "JOR002", name: "Meio Período (Seg-Sex, 4h/dia)", days: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"], startTime: "09:00", endTime: "13:00", breakDuration: 0 },
-    { id: "JOR003", name: "Plantão 12x36", days: ["Alternados"], startTime: "07:00", endTime: "19:00", breakDuration: 60 },
+    { id: "JOR001", name: "Padrão (Seg-Sex, 8h/dia)", days: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"], startTime: "09:00", endTime: "18:00", breakDuration: 60, tolerance: 10 },
+    { id: "JOR002", name: "Meio Período (Seg-Sex, 4h/dia)", days: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"], startTime: "09:00", endTime: "13:00", breakDuration: 0, tolerance: 5 },
+    { id: "JOR003", name: "Plantão 12x36", days: ["Alternados"], startTime: "07:00", endTime: "19:00", breakDuration: 60, tolerance: 15 },
 ];
 
 export const employeeData: Employee[] = [
@@ -333,7 +334,7 @@ export const esocialEventsData: EsocialEvent[] = [
 export const timeSheetData: TimeSheetEntry[] = [
     { day: "01/07", date: "Seg", entries: "09:01 - 12:30, 13:31 - 18:05", worked: "08:03", balance: "+0:03", status: "ok" },
     { day: "02/07", date: "Ter", entries: "08:58 - 12:35, 13:30 - 18:01", worked: "08:08", balance: "+0:08", status: "ok" },
-    { day: "03/07", date: "Qua", entries: "09:10 - 12:40, 13:45 - 18:15", worked: "08:00", balance: "+0:00", status: "warning", issue: "Atraso de 10min" },
+    { day: "03/07", date: "Qua", entries: "09:15 - 12:40, 13:45 - 18:15", worked: "07:55", balance: "-0:05", status: "warning", issue: "Atraso de 15min" },
     { day: "04/07", date: "Qui", entries: "Ausência Justificada", worked: "00:00", balance: "-8:00", status: "info", issue: "Licença Médica" },
     { day: "05/07", date: "Sex", entries: "Férias", worked: "00:00", balance: "N/A", status: "info", issue: "Férias" },
 ];
@@ -366,4 +367,5 @@ export const invoicesData: Invoice[] = [
     
 
     
+
 
