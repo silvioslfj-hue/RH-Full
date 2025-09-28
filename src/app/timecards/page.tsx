@@ -7,7 +7,7 @@ export default function TimecardsPage() {
       <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold font-headline tracking-tight">Gestão de Cartões de Ponto</h1>
-          <p className="text-muted-foreground">Gere e reformate os cartões de ponto dos funcionários para o processamento da folha de pagamento.</p>
+          <p className="text-muted-foreground">Visualize, ajuste e aprove os cartões de ponto dos funcionários.</p>
         </div>
         <TimecardManager />
       </div>
