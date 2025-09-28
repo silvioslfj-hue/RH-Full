@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -20,12 +21,13 @@ function CollaboratorLoginForm() {
       window.sessionStorage.setItem('userRole', 'collaborator');
       // Simulação para diferenciar CLT e PJ
       if (accessCode === 'PJ') {
-         window.sessionstorage.setItem('userContractType', 'PJ');
+         window.sessionStorage.setItem('userContractType', 'PJ');
       } else {
          window.sessionStorage.setItem('userContractType', 'CLT');
       }
+       window.sessionStorage.setItem('requiresPasswordChange', 'true');
     }
-    router.push('/clock');
+    router.push('/auth/change-password');
   };
 
   return (
@@ -43,7 +45,7 @@ function CollaboratorLoginForm() {
         </div>
         <div className="flex flex-col space-y-1.5">
           <Label htmlFor="password-collaborator">Senha</Label>
-          <Input id="password-collaborator" type="password" placeholder="Sua senha" autoComplete="new-password" />
+          <Input id="password-collaborator" type="password" placeholder="Sua senha" autoComplete="new-password" defaultValue="senha-provisoria"/>
         </div>
       </div>
       <Button type="submit" className="w-full mt-6">
@@ -60,8 +62,9 @@ function AdminLoginForm() {
     e.preventDefault();
     if (typeof window !== 'undefined') {
       window.sessionStorage.setItem('userRole', 'admin');
+      window.sessionStorage.setItem('requiresPasswordChange', 'true');
     }
-    router.push('/dashboard');
+    router.push('/auth/change-password');
   };
 
   return (
@@ -73,7 +76,7 @@ function AdminLoginForm() {
         </div>
         <div className="flex flex-col space-y-1.5">
           <Label htmlFor="password">Senha</Label>
-          <Input id="password" type="password" placeholder="Sua senha" />
+          <Input id="password" type="password" placeholder="Sua senha" defaultValue="senha-provisoria" />
         </div>
       </div>
       <Button type="submit" className="w-full mt-6">
@@ -151,9 +154,9 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex justify-center text-sm">
           <p>
-            Não tem uma conta?{' '}
+            Problemas com o acesso?{' '}
             <a href="#" className="text-primary hover:underline">
-              Cadastre-se
+              Contate o suporte
             </a>
           </p>
         </CardFooter>
