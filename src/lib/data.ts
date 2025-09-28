@@ -129,6 +129,13 @@ export type DisciplinaryAction = {
     issuer: string;
 }
 
+export type AdjustmentRequest = {
+    id: string;
+    date: string;
+    reason: string;
+    requester: string;
+};
+
 
 // Types for payslip generation
 export const PayslipGenerationInputSchema = z.object({

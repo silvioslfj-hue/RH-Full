@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,15 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Upload, X, File, Camera } from "lucide-react";
 import { DocumentScanner } from "@/components/justifications/document-scanner";
 import { PendingAdjustments } from "@/components/justifications/pending-adjustments";
+import { db } from "@/lib/firebaseClient";
+import { collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore";
+import type { AdjustmentRequest } from "@/lib/data";
 
-const pendingAdjustmentsData = [
-  {
-    id: "ADJ001",
-    date: "2024-07-03",
-    reason: "Esquecimento de marcação na saída.",
-    requester: "Carlos Souza"
-  }
-];
 
 export default function JustificationsPage() {
   const { toast } = useToast();
@@ -30,10 +25,28 @@ export default function JustificationsPage() {
   const [reason, setReason] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [pendingAdjustments, setPendingAdjustments] = useState(pendingAdjustmentsData);
+  const [pendingAdjustments, setPendingAdjustments] = useState<AdjustmentRequest[]>([]);
+  const [justifyingAdjustment, setJustifyingAdjustment] = useState<AdjustmentRequest | null>(null);
 
 
-  const handleJustify = (adjustment: typeof pendingAdjustmentsData[0]) => {
+  useEffect(() => {
+    const fetchAdjustments = async () => {
+        try {
+            // No mundo real, isso seria filtrado pelo ID do colaborador logado
+            const querySnapshot = await getDocs(collection(db, "adjustment_requests"));
+            const adjustments = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AdjustmentRequest));
+            setPendingAdjustments(adjustments);
+        } catch (error) {
+            console.error("Error fetching adjustment requests: ", error);
+            toast({ variant: "destructive", title: "Erro ao buscar ajustes pendentes." });
+        }
+    }
+    fetchAdjustments();
+  }, [toast]);
+
+
+  const handleJustify = (adjustment: AdjustmentRequest) => {
+    setJustifyingAdjustment(adjustment);
     setJustificationType("time-correction");
     setDate(adjustment.date);
     setReason(`Referente ao ajuste solicitado pelo gestor ${adjustment.requester}: ${adjustment.reason}\n\n`);
@@ -41,20 +54,54 @@ export default function JustificationsPage() {
   };
 
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Solicitação Enviada",
-      description: "Sua justificativa foi enviada para análise do RH.",
-    });
-    // Reset form
-    setJustificationType("");
-    setDate("");
-    setReason("");
-    setFile(null);
 
-    if (reason.includes("Referente ao ajuste")) {
-      setPendingAdjustments(prev => prev.filter(p => !reason.includes(p.reason)));
+    if(!justificationType || !date || !reason) {
+        toast({
+            variant: "destructive",
+            title: "Campos obrigatórios",
+            description: "Tipo, data e motivo são obrigatórios."
+        });
+        return;
+    }
+
+    try {
+        const docData = {
+            // Em um app real, o ID viria do usuário autenticado
+            employeeId: "user_jane_doe",
+            employeeName: "Jane Doe",
+            type: justificationType,
+            date,
+            reason,
+            fileName: file?.name || null,
+            status: "Pendente",
+            createdAt: new Date().toISOString(),
+        };
+
+        await addDoc(collection(db, "justifications"), docData);
+
+        toast({
+          title: "Solicitação Enviada",
+          description: "Sua justificativa foi enviada para análise do RH.",
+        });
+
+        // Se a justificativa foi para um ajuste, remove o ajuste pendente
+        if (justifyingAdjustment) {
+          await deleteDoc(doc(db, "adjustment_requests", justifyingAdjustment.id));
+          setPendingAdjustments(prev => prev.filter(p => p.id !== justifyingAdjustment.id));
+          setJustifyingAdjustment(null);
+        }
+
+        // Reset form
+        setJustificationType("");
+        setDate("");
+        setReason("");
+        setFile(null);
+
+    } catch (error) {
+        console.error("Error submitting justification:", error);
+        toast({ variant: "destructive", title: "Erro ao enviar solicitação." });
     }
   };
 

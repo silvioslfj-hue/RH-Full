@@ -4,17 +4,12 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Edit } from "lucide-react";
+import type { AdjustmentRequest } from "@/lib/data";
 
-type PendingAdjustment = {
-    id: string;
-    date: string;
-    reason: string;
-    requester: string;
-};
 
 interface PendingAdjustmentsProps {
-    adjustments: PendingAdjustment[];
-    onJustify: (adjustment: PendingAdjustment) => void;
+    adjustments: AdjustmentRequest[];
+    onJustify: (adjustment: AdjustmentRequest) => void;
 }
 
 export function PendingAdjustments({ adjustments, onJustify }: PendingAdjustmentsProps) {
