@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User, Settings, LogOut, CreditCard, LifeBuoy } from "lucide-react"
+import { User, LogOut } from "lucide-react"
 
 export function UserNav() {
   const companyLogo = PlaceHolderImages.find(p => p.id === 'company-logo');
@@ -52,11 +52,6 @@ export function UserNav() {
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <LifeBuoy className="mr-2" />
-          <span>Suporte</span>
-        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href="/">
