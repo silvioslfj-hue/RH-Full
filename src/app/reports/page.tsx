@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Building, Factory } from "lucide-react";
+import { ReportsSummary } from "@/components/reports/reports-summary";
 
 export default function ReportsPage() {
   const [company, setCompany] = useState("all");
@@ -23,7 +24,7 @@ export default function ReportsPage() {
       <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold font-headline tracking-tight">
-            Relatórios
+            Relatórios Gerenciais
           </h1>
           <p className="text-muted-foreground">
             Análises e insights sobre os dados da sua força de trabalho.
@@ -67,6 +68,8 @@ export default function ReportsPage() {
             </Select>
           </div>
         </div>
+
+        <ReportsSummary />
 
         <div className="grid gap-6 md:grid-cols-2">
           <AttendanceChart />
