@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Icons } from '@/components/icons';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
 
   const handleLogin = (e: React.FormEvent) => {
@@ -16,8 +17,28 @@ export default function LoginPage() {
   };
 
   return (
+    <form onSubmit={handleLogin}>
+      <div className="grid w-full items-center gap-4">
+        <div className="flex flex-col space-y-1.5">
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" type="email" placeholder="nome@exemplo.com" />
+        </div>
+        <div className="flex flex-col space-y-1.5">
+          <Label htmlFor="password">Senha</Label>
+          <Input id="password" type="password" placeholder="Sua senha" />
+        </div>
+      </div>
+      <Button type="submit" className="w-full mt-6">
+        Entrar
+      </Button>
+    </form>
+  );
+}
+
+export default function LoginPage() {
+  return (
     <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-full max-w-sm">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <Icons.logo className="h-10 w-10 text-primary" />
@@ -26,21 +47,28 @@ export default function LoginPage() {
           <CardDescription>Faça login para acessar seu painel</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin}>
-            <div className="grid w-full items-center gap-4">
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="nome@exemplo.com" />
+          <Tabs defaultValue="collaborator" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="collaborator">Colaborador</TabsTrigger>
+              <TabsTrigger value="admin">Administrador</TabsTrigger>
+              <TabsTrigger value="super-admin">Super Admin</TabsTrigger>
+            </TabsList>
+            <TabsContent value="collaborator">
+              <div className="p-4 pt-6">
+                <LoginForm />
               </div>
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="password">Senha</Label>
-                <Input id="password" type="password" placeholder="Sua senha" />
+            </TabsContent>
+            <TabsContent value="admin">
+              <div className="p-4 pt-6">
+                <LoginForm />
               </div>
-            </div>
-            <Button type="submit" className="w-full mt-6">
-              Entrar
-            </Button>
-          </form>
+            </TabsContent>
+            <TabsContent value="super-admin">
+              <div className="p-4 pt-6">
+                <LoginForm />
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
         <CardFooter className="flex justify-center text-sm">
           <p>
