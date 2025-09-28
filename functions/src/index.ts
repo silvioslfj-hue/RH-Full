@@ -105,13 +105,12 @@ export const transmitirEventoESocial = onCall(async (request) => {
         
         // In a real scenario, you'd re-run the AI generation here for security,
         // or trust the data generated and stored by the client-side flow.
-        // For this example, we assume the AI already generated the necessary data.
-        const jsonData = eventData.details; // Assuming JSON is in 'details'
+        const jsonData = eventData; 
 
         // 4. Convert JSON to XML
         logger.info("Converting JSON to XML", { eventId });
         const xmlString = convert.json2xml(jsonData, { compact: true, spaces: 4 });
-        logger.info("XML content generated:", { eventId, xml: xmlString });
+        logger.info("XML content generated:", { eventId, xml: xmlString.substring(0, 100) + '...' });
 
 
         // 5. Fetch Certificate and Sign the XML
@@ -126,17 +125,15 @@ export const transmitirEventoESocial = onCall(async (request) => {
         // Fetch the certificate password from Secret Manager
         const certPassword = await getSecret(certSecretName);
         
-        // TODO: Implement logic to sign the XML
-        // const signedXml = signXml(xmlString, certBuffer, certPassword);
-        logger.info("TODO: Sign XML using fetched certificate and password", { eventId, certPassword: "[REDACTED]" });
-        const signedXml = `<xml>Simulated SIGNED XML content with password ${certPassword.substring(0,2)}...</xml>`; // Placeholder
+        // This is a simulation of the signing process. A real implementation would use node-forge or crypto.
+        logger.info("Simulating XML signing using fetched certificate password", { eventId, certPassword: "[REDACTED]" });
+        const signedXml = `<xml>Simulated SIGNED XML content for event ${eventId} with password ${certPassword.substring(0,2)}...</xml>`; // Placeholder
 
         // 6. Transmit to eSocial API
-        // TODO: Implement the API call to the eSocial webservice.
+        logger.info("Simulating transmission to eSocial API", { eventId });
         // const esocialEndpoint = "https://webservices.producao.esocial.gov.br/...";
         // const response = await axios.post(esocialEndpoint, signedXml, { headers: { 'Content-Type': 'application/xml' } });
-        logger.info("TODO: Transmit to eSocial API", { eventId });
-        const receiptId = `mock_receipt_${Date.now()}`; // Placeholder
+        const receiptId = `mock_receipt_${Date.now()}`; // Placeholder for the actual receipt from the API response
 
         // 7. Update Firestore with the result
         await eventRef.update({status: "Enviado", receiptId: receiptId, sentAt: new Date()});
@@ -222,5 +219,3 @@ export const setupCompanySecrets = onCall(async (request) => {
         throw new HttpsError("internal", "Não foi possível salvar a senha do certificado.");
     }
 });
-
-    
