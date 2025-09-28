@@ -8,28 +8,16 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  useSidebar
+  useSidebar,
+  SidebarGroup,
+  SidebarGroupLabel
 } from '@/components/ui/sidebar'
-import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText, FileArchive, Settings, Users, Calculator, History, PieChart } from 'lucide-react'
+import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText, FileArchive, Settings, Users, Calculator, History, PieChart, Briefcase, Building, LandPlot, Coins } from 'lucide-react'
 import { useEffect, useState } from 'react'
-
-const adminMenuItems = [
-  { href: '/dashboard', label: 'Resumo', icon: LayoutDashboard },
-  { href: '/employees', label: 'Colaboradores', icon: Users },
-  { href: '/timecards', label: 'Cartões de Ponto', icon: Clock },
-  { href: '/payroll', label: 'Processar Folha', icon: Calculator },
-  { href: '/payroll-history', label: 'Histórico de Folhas', icon: History },
-  { href: '/payroll-reports', label: 'Relatórios de Folha', icon: PieChart },
-  { href: '/absences', label: 'Ausências', icon: CalendarOff },
-  { href: '/reports', label: 'Relatórios', icon: BarChart3 },
-  { href: '/fiscal-files', label: 'Arquivos Fiscais', icon: FileArchive },
-  { href: '/esocial', label: 'eSocial', icon: FileArchive },
-  { href: '/settings', label: 'Configurações', icon: Settings },
-]
 
 const collaboratorMenuItems = [
   { href: '/clock', label: 'Registro de Ponto', icon: Hourglass },
-  { href: 'justifications', label: 'Justificativas', icon: FileCheck },
+  { href: '/justifications', label: 'Justificativas', icon: FileCheck },
   { href: '/my-reports', label: 'Meus Relatórios', icon: BarChart3 },
   { href: '/absences', label: 'Minhas Ausências', icon: CalendarOff },
   { href: '/proofs', label: 'Comprovantes', icon: Receipt },
@@ -62,16 +50,102 @@ export function MainNav() {
     }
   }, [pathname]);
 
-  const menuItems = isAdminView ? adminMenuItems : collaboratorMenuItems;
 
   const handleLinkClick = () => {
     setOpenMobile(false);
   }
 
+  if (isAdminView) {
+    return (
+       <SidebarContent>
+        <SidebarMenu>
+          <SidebarGroup>
+            <SidebarGroupLabel>Gestão de Pessoas</SidebarGroupLabel>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname.startsWith('/dashboard')} tooltip={{ children: 'Resumo' }}>
+                <Link href='/dashboard' onClick={handleLinkClick}><LayoutDashboard /><span>Resumo</span></Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname.startsWith('/employees')} tooltip={{ children: 'Colaboradores' }}>
+                <Link href='/employees' onClick={handleLinkClick}><Users /><span>Colaboradores</span></Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname.startsWith('/absences')} tooltip={{ children: 'Ausências' }}>
+                <Link href='/absences' onClick={handleLinkClick}><CalendarOff /><span>Ausências</span></Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupLabel>Folha de Pagamento</SidebarGroupLabel>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname.startsWith('/payroll')} tooltip={{ children: 'Processar Folha' }}>
+                <Link href='/payroll' onClick={handleLinkClick}><Calculator /><span>Processar Folha</span></Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname.startsWith('/payroll-history')} tooltip={{ children: 'Histórico' }}>
+                <Link href='/payroll-history' onClick={handleLinkClick}><History /><span>Histórico</span></Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname.startsWith('/payroll-reports')} tooltip={{ children: 'Relatórios da Folha' }}>
+                <Link href='/payroll-reports' onClick={handleLinkClick}><PieChart /><span>Relatórios da Folha</span></Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupLabel>Ponto Eletrônico</SidebarGroupLabel>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname.startsWith('/timecards')} tooltip={{ children: 'Cartões de Ponto' }}>
+                <Link href='/timecards' onClick={handleLinkClick}><Clock /><span>Cartões de Ponto</span></Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarGroup>
+          
+           <SidebarGroup>
+            <SidebarGroupLabel>Relatórios e Análise</SidebarGroupLabel>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname.startsWith('/reports')} tooltip={{ children: 'Relatórios Gerenciais' }}>
+                <Link href='/reports' onClick={handleLinkClick}><BarChart3 /><span>Relatórios Gerenciais</span></Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupLabel>Conformidade Fiscal</SidebarGroupLabel>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname.startsWith('/esocial')} tooltip={{ children: 'eSocial' }}>
+                <Link href='/esocial' onClick={handleLinkClick}><FileArchive /><span>eSocial</span></Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname.startsWith('/fiscal-files')} tooltip={{ children: 'Arquivos Fiscais' }}>
+                <Link href='/fiscal-files' onClick={handleLinkClick}><FileText /><span>Arquivos Fiscais</span></Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupLabel>Sistema</SidebarGroupLabel>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname.startsWith('/settings')} tooltip={{ children: 'Configurações' }}>
+                <Link href='/settings' onClick={handleLinkClick}><Settings /><span>Configurações</span></Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarGroup>
+        </SidebarMenu>
+      </SidebarContent>
+    )
+  }
+
   return (
     <SidebarContent>
       <SidebarMenu>
-        {menuItems.map((item) => (
+        {collaboratorMenuItems.map((item) => (
           <SidebarMenuItem key={item.href}>
             <SidebarMenuButton
               asChild
