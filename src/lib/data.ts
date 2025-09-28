@@ -171,8 +171,8 @@ export const workShiftData: WorkShift[] = [
 ];
 
 export const employeeData: Employee[] = [
-    { id: "FUNC001", name: "Jane Doe", email: "jane.doe@example.com", company: "RH-Full Soluções em TI", role: "Desenvolvedor Front-end", unit: "Matriz São Paulo", status: "Ativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d" },
-    { id: "FUNC002", name: "John Smith", email: "john.smith@example.com", company: "InovaTech Consultoria", role: "Desenvolvedor Back-end", unit: "Filial Rio de Janeiro", status: "Ativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026705d" },
+    { id: "FUNC001", name: "Carlos Andrade", email: "carlos.andrade@example.com", company: "RH-Full Soluções em TI", role: "Desenvolvedor Back-end", unit: "Matriz São Paulo", status: "Ativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d" },
+    { id: "FUNC002", name: "Mariana Costa", email: "mariana.costa@example.com", company: "InovaTech Consultoria", role: "Desenvolvedor Front-end", unit: "Filial Rio de Janeiro", status: "Ativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026705d" },
     { id: "FUNC003", name: "Alice Johnson", email: "alice.johnson@example.com", company: "RH-Full Soluções em TI", role: "Designer de Produto", unit: "Matriz São Paulo", status: "Férias", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026706d" },
     { id: "FUNC004", name: "Robert Brown", email: "robert.brown@example.com", company: "InovaTech Consultoria", role: "Analista de RH", unit: "Escritório Belo Horizonte", status: "Inativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026707d" },
 ]
@@ -188,8 +188,8 @@ export const payrollHistoryData = [
 export const esocialEventsData: EsocialEvent[] = [
     { id: "EVT001", type: "S-2200 - Admissão", employeeName: "Carlos Andrade", employeeId: "FUNC001", referenceDate: "2024-07-01", status: "Pendente", details: "Admissão do novo analista de sistemas." },
     { id: "EVT002", type: "S-2200 - Admissão", employeeName: "Mariana Costa", employeeId: "FUNC002", referenceDate: "2024-07-01", status: "Pendente", details: "Admissão da nova designer." },
-    { id: "EVT003", type: "S-2299 - Desligamento", employeeName: "Felipe Souza", employeeId: "FUNC003", referenceDate: "2024-07-15", status: "Pendente", details: "Desligamento a pedido do funcionário." },
-    { id: "EVT004", type: "S-1200 - Remuneração", employeeName: "Jane Doe", employeeId: "FUNC001", referenceDate: "2024-07-31", status: "Pendente", details: "Folha de pagamento de Julho/2024" },
-    { id: "EVT005", type: "S-1200 - Remuneração", employeeName: "John Smith", employeeId: "FUNC002", referenceDate: "2024-07-31", status: "Pendente", details: "Folha de pagamento de Julho/2024" },
+    { id: "EVT003", type: "S-2299 - Desligamento", employeeName: "Felipe Souza", employeeId: "FUNC005", referenceDate: "2024-07-15", status: "Pendente", details: "Desligamento a pedido do funcionário." },
+    { id: "EVT004", type: "S-1200 - Remuneração", employeeName: "Carlos Andrade", employeeId: "FUNC001", referenceDate: "2024-07-31", status: "Pendente", details: "Folha de pagamento de Julho/2024" },
+    { id: "EVT005", type: "S-1200 - Remuneração", employeeName: "Mariana Costa", employeeId: "FUNC002", referenceDate: "2024-07-31", status: "Pendente", details: "Folha de pagamento de Julho/2024" },
     { id: "EVT006", type: "S-1210 - Pagamentos", employeeName: "Todos", employeeId: "N/A", referenceDate: "2024-08-05", status: "Enviado", details: "Pagamento de salários de Julho/2024" },
 ]

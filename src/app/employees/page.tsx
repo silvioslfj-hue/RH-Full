@@ -8,13 +8,18 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { PlusCircle, FileDown } from "lucide-react";
 import { EmployeesTable } from "@/components/employees/employees-table";
 import { EmployeeDialog } from "@/components/employees/employee-dialog";
-import { employeeData as initialEmployeeData, unitData, roleData, workShiftData, companyData } from "@/lib/data";
-import type { Employee } from "@/lib/data";
+import { employeeData as initialEmployeeData, unitData, roleData, workShiftData, companyData, esocialEventsData } from "@/lib/data";
+import type { Employee, EsocialEvent } from "@/lib/data";
+import { ContractChangeDialog } from "@/components/employees/contract-change-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 export default function EmployeesPage() {
+    const { toast } = useToast();
     const [employees, setEmployees] = useState(initialEmployeeData);
     const [isEmployeeDialogOpen, setIsEmployeeDialogOpen] = useState(false);
+    const [isContractChangeDialogOpen, setIsContractChangeDialogOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+    const [events, setEvents] = useState<EsocialEvent[]>(esocialEventsData);
 
     const handleOpenEmployeeDialog = (employee: Employee | null = null) => {
         setEditingEmployee(employee);
@@ -39,6 +44,44 @@ export default function EmployeesPage() {
         // In a real app, this would likely be a deactivation
         setEmployees(employees.filter(e => e.id !== id));
     };
+
+    const handleOpenContractChangeDialog = (employee: Employee) => {
+        setEditingEmployee(employee);
+        setIsContractChangeDialogOpen(true);
+    };
+
+    const handleContractChange = (changeData: { newSalary?: number; newRole?: string }) => {
+        if (!editingEmployee) return;
+
+        // 1. Update employee data (simulation)
+        setEmployees(employees.map(e => e.id === editingEmployee.id ? { 
+            ...e, 
+            role: changeData.newRole || e.role,
+            // In real app, salary would be updated somewhere else
+        } : e));
+
+        // 2. Create a new eSocial event
+        const newEvent: EsocialEvent = {
+            id: `EVT${(events.length + 1).toString().padStart(3, '0')}`,
+            type: "S-2206 - Alteração Contratual",
+            employeeId: editingEmployee.id,
+            employeeName: editingEmployee.name,
+            referenceDate: new Date().toISOString().split('T')[0],
+            status: "Pendente",
+            details: `Alteração de contrato: ${changeData.newRole ? `Novo cargo: ${changeData.newRole}` : ''} ${changeData.newSalary ? `Novo salário: R$ ${changeData.newSalary}` : ''}`
+        };
+        // In a real app, this would be saved to the database.
+        // For this demo, we can log it or, if we had a shared state, add it to the global state.
+        console.log("Novo evento eSocial gerado:", newEvent);
+        
+        toast({
+            title: "Evento eSocial Gerado!",
+            description: "Um evento S-2206 (Alteração Contratual) foi adicionado à fila de envio do eSocial."
+        })
+
+        setIsContractChangeDialogOpen(false);
+        setEditingEmployee(null);
+    }
 
     return (
         <AppLayout>
@@ -70,6 +113,7 @@ export default function EmployeesPage() {
                             data={employees}
                             onEdit={handleOpenEmployeeDialog}
                             onDelete={handleDeleteEmployee}
+                            onContractChange={handleOpenContractChangeDialog}
                         />
                     </CardContent>
                 </Card>
@@ -84,6 +128,14 @@ export default function EmployeesPage() {
                 roles={roleData}
                 workShifts={workShiftData}
                 companies={companyData}
+            />
+            
+             <ContractChangeDialog
+                isOpen={isContractChangeDialogOpen}
+                onClose={() => setIsContractChangeDialogOpen(false)}
+                onSave={handleContractChange}
+                employee={editingEmployee}
+                roles={roleData}
             />
         </AppLayout>
     );

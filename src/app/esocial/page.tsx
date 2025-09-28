@@ -12,14 +12,14 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { KeyRound, Settings, Send, Building, Search, UserPlus, UserMinus, FileText, Loader2 } from "lucide-react";
+import { KeyRound, Settings, Send, Building, Search, UserPlus, UserMinus, FileText, Loader2, FilePen } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { companyData, esocialEventsData } from "@/lib/data";
+import { companyData, esocialEventsData as initialEsocialEventsData } from "@/lib/data";
 import { Input } from "@/components/ui/input";
 import { ESocialEventsTable } from "@/components/esocial/esocial-events-table";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import type { EsocialEvent } from "@/lib/data";
 import {
   Dialog,
@@ -29,21 +29,27 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { generateESocialEventData } from "@/ai/flows/esocial-event-flow";
+import { generateContractChangeData } from "@/ai/flows/contract-change-flow";
 
-
-const pendingEvents = {
-    admissions: 2,
-    terminations: 1,
-    payrolls: 15,
-}
 
 export default function ESocialPage() {
     const { toast } = useToast();
     const [isSending, startTransition] = useTransition();
     const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
-    const [events, setEvents] = useState<EsocialEvent[]>(esocialEventsData);
+    const [events, setEvents] = useState<EsocialEvent[]>(initialEsocialEventsData);
     const [isDataViewerOpen, setIsDataViewerOpen] = useState(false);
     const [generatedData, setGeneratedData] = useState<object | null>(null);
+    const [dataViewerTitle, setDataViewerTitle] = useState('');
+
+    const pendingEvents = useMemo(() => {
+        const pending = events.filter(e => e.status === 'Pendente');
+        return {
+            admissions: pending.filter(e => e.type.startsWith('S-2200')).length,
+            terminations: pending.filter(e => e.type.startsWith('S-2299')).length,
+            payrolls: pending.filter(e => e.type.startsWith('S-1200') || e.type.startsWith('S-1210')).length,
+            contractChanges: pending.filter(e => e.type.startsWith('S-2206')).length,
+        }
+    }, [events]);
 
 
     const handleSendEvents = () => {
@@ -59,31 +65,49 @@ export default function ESocialPage() {
         startTransition(async () => {
              toast({
                 title: "Geração de Dados Iniciada...",
-                description: `Gerando dados para ${selectedEvents.length} eventos. Apenas eventos de admissão (S-2200) serão processados nesta demo.`,
+                description: `Gerando dados para ${selectedEvents.length} eventos. A IA processará eventos de Admissão (S-2200) e Alteração Contratual (S-2206) nesta demo.`,
             });
             
             for (const eventId of selectedEvents) {
                 const event = events.find(e => e.id === eventId);
-                // Nesta demo, a IA só está configurada para o evento S-2200 (Admissão)
-                if (event && event.type.startsWith('S-2200')) {
-                    try {
+                if (!event) continue;
+
+                try {
+                    let data: object | null = null;
+                    let title = '';
+
+                    if (event.type.startsWith('S-2200')) {
                         // O 'employeeId' viria do evento, que foi gerado quando o funcionário foi cadastrado.
                         const employeeId = event.employeeId;
-                        const data = await generateESocialEventData({ employeeId });
-                        setGeneratedData(data); // Mostra o último gerado
+                        data = await generateESocialEventData({ employeeId });
+                        title = 'Dados Estruturados do Evento eSocial (S-2200 - Admissão)';
+                    } else if (event.type.startsWith('S-2206')) {
+                         // A simulação de dados para este evento é mais simples no flow
+                         data = await generateContractChangeData({
+                            employeeId: event.employeeId,
+                            changeDate: event.referenceDate,
+                            // Em um cenário real, os dados da alteração estariam no `event.details`
+                            newSalary: 7000.00, 
+                        });
+                         title = 'Dados Estruturados do Evento eSocial (S-2206 - Alteração Contratual)';
+                    }
+                    
+                    if(data) {
+                        setGeneratedData(data);
+                        setDataViewerTitle(title);
                         setIsDataViewerOpen(true);
                         toast({
                             title: `Dados Gerados para ${event.employeeName}!`,
                             description: `Os dados estruturados para o evento ${event.type} foram gerados pela IA.`,
                         });
                         // Em uma aplicação real, aqui você adicionaria o XML gerado a uma fila de envio.
-                    } catch (error) {
-                         toast({
-                            variant: "destructive",
-                            title: `Erro ao Gerar Dados para ${event.employeeName}`,
-                            description: "Não foi possível gerar os dados do evento com a IA.",
-                        });
                     }
+                } catch (error) {
+                     toast({
+                        variant: "destructive",
+                        title: `Erro ao Gerar Dados para ${event.employeeName}`,
+                        description: `Não foi possível gerar os dados do evento ${event.type} com a IA.`,
+                    });
                 }
             }
         });
@@ -157,7 +181,7 @@ export default function ESocialPage() {
                 <CardTitle>Eventos Pendentes para Julho/2024</CardTitle>
                 <CardDescription>Resumo dos eventos não periódicos e periódicos a serem enviados.</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="bg-muted/30">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <CardTitle className="text-base font-medium">Admissões (S-2200)</CardTitle>
@@ -166,6 +190,16 @@ export default function ESocialPage() {
                     <CardContent>
                         <div className="text-2xl font-bold">{pendingEvents.admissions}</div>
                         <p className="text-xs text-muted-foreground">Novos colaboradores registrados</p>
+                    </CardContent>
+                </Card>
+                <Card className="bg-muted/30">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-base font-medium">Alterações (S-2206)</CardTitle>
+                        <FilePen className="h-5 w-5 text-muted-foreground"/>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{pendingEvents.contractChanges}</div>
+                        <p className="text-xs text-muted-foreground">Alterações de contrato</p>
                     </CardContent>
                 </Card>
                  <Card className="bg-muted/30">
@@ -194,7 +228,7 @@ export default function ESocialPage() {
         <Card>
              <CardHeader>
                 <CardTitle>Seleção de Eventos para Envio</CardTitle>
-                <CardDescription>Marque os eventos que você deseja gerar e enviar para o eSocial. A geração de dados com IA é simulada apenas para eventos de admissão (S-2200).</CardDescription>
+                <CardDescription>Marque os eventos que você deseja gerar e enviar para o eSocial. A geração de dados com IA é simulada para eventos de admissão (S-2200) e alteração contratual (S-2206).</CardDescription>
             </CardHeader>
             <CardContent>
                 <ESocialEventsTable 
@@ -219,7 +253,7 @@ export default function ESocialPage() {
        <Dialog open={isDataViewerOpen} onOpenChange={setIsDataViewerOpen}>
         <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>Dados Estruturados do Evento eSocial (S-2200)</DialogTitle>
+            <DialogTitle>{dataViewerTitle}</DialogTitle>
             <DialogDescription>
               Abaixo estão os dados gerados pela IA, prontos para serem convertidos em XML e transmitidos.
             </DialogDescription>

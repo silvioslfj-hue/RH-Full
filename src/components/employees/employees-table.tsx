@@ -10,12 +10,13 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { MoreHorizontal, Pencil, Trash2, FilePen } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge";
@@ -26,9 +27,10 @@ interface EmployeesTableProps {
   data: Employee[];
   onEdit: (employee: Employee) => void;
   onDelete: (id: string) => void;
+  onContractChange: (employee: Employee) => void;
 }
 
-export function EmployeesTable({ data, onEdit, onDelete }: EmployeesTableProps) {
+export function EmployeesTable({ data, onEdit, onDelete, onContractChange }: EmployeesTableProps) {
 
   const getStatusVariant = (status: Employee['status']) => {
     switch (status) {
@@ -92,8 +94,13 @@ export function EmployeesTable({ data, onEdit, onDelete }: EmployeesTableProps) 
                     <DropdownMenuItem>Ver Perfil Completo</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onEdit(employee)}>
                       <Pencil className="mr-2 h-4 w-4" />
-                      Editar
+                      Editar Colaborador
                     </DropdownMenuItem>
+                     <DropdownMenuItem onClick={() => onContractChange(employee)}>
+                      <FilePen className="mr-2 h-4 w-4" />
+                      Alterar Contrato
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-500">
