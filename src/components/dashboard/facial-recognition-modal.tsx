@@ -9,11 +9,12 @@ interface FacialRecognitionModalProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
+  action: 'Entrada' | 'Saída'
 }
 
 type VerificationStatus = 'idle' | 'scanning' | 'success' | 'failed'
 
-export function FacialRecognitionModal({ isOpen, onClose, onSuccess }: FacialRecognitionModalProps) {
+export function FacialRecognitionModal({ isOpen, onClose, onSuccess, action }: FacialRecognitionModalProps) {
   const [status, setStatus] = useState<VerificationStatus>('idle')
   const [progress, setProgress] = useState(0)
 
@@ -70,21 +71,21 @@ export function FacialRecognitionModal({ isOpen, onClose, onSuccess }: FacialRec
               <Camera className="w-24 h-24 text-slate-600" />
             </div>
             <Progress value={progress} className="w-full mt-4" />
-            <p className="text-center text-sm text-muted-foreground mt-2">Scanning...</p>
+            <p className="text-center text-sm text-muted-foreground mt-2">Verificando...</p>
           </>
         )
       case 'success':
         return (
           <div className="flex flex-col items-center justify-center gap-4 h-64">
             <CheckCircle className="w-24 h-24 text-green-500" />
-            <p className="text-lg font-semibold">Verification Successful</p>
+            <p className="text-lg font-semibold">Verificação Bem-sucedida</p>
           </div>
         )
       case 'failed':
         return (
           <div className="flex flex-col items-center justify-center gap-4 h-64">
             <XCircle className="w-24 h-24 text-destructive" />
-            <p className="text-lg font-semibold">Verification Failed</p>
+            <p className="text-lg font-semibold">Verificação Falhou</p>
           </div>
         )
       default:
@@ -96,9 +97,9 @@ export function FacialRecognitionModal({ isOpen, onClose, onSuccess }: FacialRec
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Facial Recognition</DialogTitle>
+          <DialogTitle>Reconhecimento Facial</DialogTitle>
           <DialogDescription>
-            Position your face in the center to verify your identity.
+            Posicione seu rosto no centro para verificar sua identidade para a {action}.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">

@@ -27,6 +27,7 @@ import {
 import { Calendar } from '@/components/ui/calendar'
 import { Calendar as CalendarIcon } from 'lucide-react'
 import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 import type { DateRange } from 'react-day-picker'
 
@@ -59,20 +60,20 @@ export function RequestAbsenceDialog({ isOpen, onClose, onSuccess }: RequestAbse
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Request Time Off</DialogTitle>
+          <DialogTitle>Solicitar Folga</DialogTitle>
           <DialogDescription>
-            Select the dates and reason for your absence. Click submit when you're done.
+            Selecione as datas e o motivo da sua ausência. Clique em enviar quando terminar.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="employee-name" className="text-right">
-              Employee
+              Funcionário
             </Label>
             <Input id="employee-name" value="Jane Doe" disabled className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">Dates</Label>
+            <Label className="text-right">Datas</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -87,14 +88,14 @@ export function RequestAbsenceDialog({ isOpen, onClose, onSuccess }: RequestAbse
                   {dateRange?.from ? (
                     dateRange.to ? (
                       <>
-                        {format(dateRange.from, 'LLL dd, y')} -{' '}
-                        {format(dateRange.to, 'LLL dd, y')}
+                        {format(dateRange.from, 'LLL dd, y', { locale: ptBR })} -{' '}
+                        {format(dateRange.to, 'LLL dd, y', { locale: ptBR })}
                       </>
                     ) : (
-                      format(dateRange.from, 'LLL dd, y')
+                      format(dateRange.from, 'LLL dd, y', { locale: ptBR })
                     )
                   ) : (
-                    <span>Pick a date range</span>
+                    <span>Escolha um período</span>
                   )}
                 </Button>
               </PopoverTrigger>
@@ -106,30 +107,31 @@ export function RequestAbsenceDialog({ isOpen, onClose, onSuccess }: RequestAbse
                   selected={dateRange}
                   onSelect={setDateRange}
                   numberOfMonths={2}
+                  locale={ptBR}
                 />
               </PopoverContent>
             </Popover>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="absence-type" className="text-right">
-              Type
+              Tipo
             </Label>
             <Select onValueChange={setAbsenceType} value={absenceType}>
               <SelectTrigger id="absence-type" className="col-span-3">
-                <SelectValue placeholder="Select a reason" />
+                <SelectValue placeholder="Selecione um motivo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Vacation">Vacation</SelectItem>
-                <SelectItem value="Sick Leave">Sick Leave</SelectItem>
-                <SelectItem value="Personal">Personal</SelectItem>
-                <SelectItem value="Unpaid">Unpaid Leave</SelectItem>
+                <SelectItem value="Férias">Férias</SelectItem>
+                <SelectItem value="Licença Médica">Licença Médica</SelectItem>
+                <SelectItem value="Licença Pessoal">Licença Pessoal</SelectItem>
+                <SelectItem value="Licença não remunerada">Licença não remunerada</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSubmit}>Submit Request</Button>
+          <Button variant="outline" onClick={onClose}>Cancelar</Button>
+          <Button onClick={handleSubmit}>Enviar Solicitação</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

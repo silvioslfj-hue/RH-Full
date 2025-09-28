@@ -25,17 +25,17 @@ export function TimecardManager() {
         setReformattedData(result.reformattedTimecardData)
         setReformattingRequired(result.reformattingRequired)
         toast({
-          title: 'Processing Complete',
+          title: 'Processamento Concluído',
           description: result.reformattingRequired
-            ? 'Timecard data has been successfully reformatted.'
-            : 'No reformatting was necessary for the provided data.',
+            ? 'Os dados do cartão de ponto foram reformatados com sucesso.'
+            : 'Nenhuma reformatação foi necessária para os dados fornecidos.',
         })
       } catch (error) {
-        console.error('Error reformatting timecard:', error)
+        console.error('Erro ao reformatar o cartão de ponto:', error)
         toast({
           variant: 'destructive',
-          title: 'An Error Occurred',
-          description: 'Failed to reformat timecard data. Please try again.',
+          title: 'Ocorreu um Erro',
+          description: 'Falha ao reformatar os dados do cartão de ponto. Por favor, tente novamente.',
         })
       }
     })
@@ -44,36 +44,36 @@ export function TimecardManager() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Timecard Refactoring Tool</CardTitle>
+        <CardTitle>Ferramenta de Reformatação de Cartão de Ponto</CardTitle>
         <CardDescription>
-          Paste raw timecard data below and use the AI tool to reformat it into a consistent JSON structure.
+          Cole os dados brutos do cartão de ponto abaixo e use a ferramenta de IA para reformatá-los em uma estrutura JSON consistente.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="timecard-input">Raw Timecard Data</Label>
+            <Label htmlFor="timecard-input">Dados Brutos do Cartão de Ponto</Label>
             <Textarea
               id="timecard-input"
               value={timecardInput}
               onChange={(e) => setTimecardInput(e.target.value)}
               className="h-80 font-mono text-sm"
-              placeholder='Enter or paste timecard data here... e.g., "2024-07-20: IN 09:00, OUT 17:00"'
+              placeholder='Insira ou cole os dados do cartão de ponto aqui... ex: "2024-07-20: IN 09:00, OUT 17:00"'
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="reformatted-output">Reformatted JSON Output</Label>
+            <Label htmlFor="reformatted-output">Saída JSON Reformatada</Label>
             <div className="relative">
               <Textarea
                 id="reformatted-output"
                 value={reformattedData ? JSON.stringify(JSON.parse(reformattedData), null, 2) : ''}
                 readOnly
                 className="h-80 font-mono text-sm bg-muted/50"
-                placeholder="Reformatted data will appear here..."
+                placeholder="Os dados reformatados aparecerão aqui..."
               />
               {reformattingRequired !== null && (
                 <Badge variant={reformattingRequired ? 'destructive' : 'secondary'} className="absolute top-3 right-3">
-                  {reformattingRequired ? 'Reformatting Applied' : 'No Changes'}
+                  {reformattingRequired ? 'Reformatação Aplicada' : 'Sem Alterações'}
                 </Badge>
               )}
             </div>
@@ -86,7 +86,7 @@ export function TimecardManager() {
             ) : (
               <Wand2 className="mr-2 h-4 w-4" />
             )}
-            {isPending ? 'Processing...' : 'Reformat with AI'}
+            {isPending ? 'Processando...' : 'Reformatar com IA'}
           </Button>
         </div>
       </CardContent>

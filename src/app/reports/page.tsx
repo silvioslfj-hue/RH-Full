@@ -7,8 +7,8 @@ export default function ReportsPage() {
     <AppLayout>
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold font-headline tracking-tight">Reports</h1>
-          <p className="text-muted-foreground">Analytics and insights on your workforce data.</p>
+          <h1 className="text-3xl font-bold font-headline tracking-tight">Relatórios</h1>
+          <p className="text-muted-foreground">Análises e insights sobre os dados da sua força de trabalho.</p>
         </div>
         
         <div className="grid gap-6 md:grid-cols-2">

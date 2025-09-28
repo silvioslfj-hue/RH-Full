@@ -6,12 +6,12 @@ import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import { attendanceReportData } from '@/lib/data'
 
 const chartConfig = {
-  Present: {
-    label: 'Present',
+  Presentes: {
+    label: 'Presentes',
     color: 'hsl(var(--chart-1))',
   },
-  Absent: {
-    label: 'Absent',
+  Ausentes: {
+    label: 'Ausentes',
     color: 'hsl(var(--chart-2))',
   },
 }
@@ -20,8 +20,8 @@ export function AttendanceChart() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Daily Attendance</CardTitle>
-        <CardDescription>Present vs. Absent employees over the last 7 days</CardDescription>
+        <CardTitle>Presença Diária</CardTitle>
+        <CardDescription>Funcionários presentes vs. ausentes nos últimos 7 dias</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
@@ -36,8 +36,8 @@ export function AttendanceChart() {
             />
             <YAxis />
             <Tooltip cursor={false} content={<ChartTooltipContent />} />
-            <Bar dataKey="Present" stackId="a" fill="var(--color-Present)" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="Absent" stackId="a" fill="var(--color-Absent)" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="Presentes" stackId="a" fill="var(--color-Presentes)" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="Ausentes" stackId="a" fill="var(--color-Ausentes)" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ChartContainer>
       </CardContent>

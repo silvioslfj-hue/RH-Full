@@ -7,22 +7,22 @@ import { timeOffReportData } from '@/lib/data'
 
 const chartConfig = {
   count: {
-    label: 'Count',
+    label: 'Contagem',
   },
-  Vacation: {
-    label: 'Vacation',
+  'Férias': {
+    label: 'Férias',
     color: 'hsl(var(--chart-1))',
   },
-  'Sick Leave': {
-    label: 'Sick Leave',
+  'Licença Médica': {
+    label: 'Licença Médica',
     color: 'hsl(var(--chart-2))',
   },
-  Personal: {
-    label: 'Personal',
+  'Pessoal': {
+    label: 'Pessoal',
     color: 'hsl(var(--chart-4))',
   },
-  Unpaid: {
-    label: 'Unpaid',
+  'Não Remunerada': {
+    label: 'Não Remunerada',
     color: 'hsl(var(--chart-5))',
   },
 }
@@ -31,8 +31,8 @@ export function TimeOffChart() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Time Off Distribution</CardTitle>
-        <CardDescription>Breakdown of absence types this quarter</CardDescription>
+        <CardTitle>Distribuição de Folgas</CardTitle>
+        <CardDescription>Detalhamento dos tipos de ausência neste trimestre</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
         <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[300px]">

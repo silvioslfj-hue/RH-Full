@@ -46,27 +46,27 @@ export function UserNav() {
         <DropdownMenuGroup>
           <DropdownMenuItem>
             <User className="mr-2" />
-            <span>Profile</span>
+            <span>Perfil</span>
           </DropdownMenuItem>
           <DropdownMenuItem>
             <CreditCard className="mr-2" />
-            <span>Billing</span>
+            <span>Faturamento</span>
           </DropdownMenuItem>
           <DropdownMenuItem>
             <Settings className="mr-2" />
-            <span>Settings</span>
+            <span>Configurações</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem>
           <LifeBuoy className="mr-2" />
-          <span>Support</span>
+          <span>Suporte</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href="/">
             <LogOut className="mr-2" />
-            <span>Log out</span>
+            <span>Sair</span>
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>

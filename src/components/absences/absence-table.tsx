@@ -25,7 +25,7 @@ type Absence = {
   startDate: string;
   endDate: string;
   type: string;
-  status: 'Approved' | 'Pending' | 'Denied';
+  status: 'Aprovado' | 'Pendente' | 'Negado';
 };
 
 interface AbsenceTableProps {
@@ -35,11 +35,11 @@ interface AbsenceTableProps {
 export function AbsenceTable({ data }: AbsenceTableProps) {
   const getStatusVariant = (status: Absence['status']) => {
     switch (status) {
-      case 'Approved':
+      case 'Aprovado':
         return 'default'
-      case 'Pending':
+      case 'Pendente':
         return 'secondary'
-      case 'Denied':
+      case 'Negado':
         return 'destructive'
       default:
         return 'outline'
@@ -49,30 +49,30 @@ export function AbsenceTable({ data }: AbsenceTableProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Absence Requests</CardTitle>
+        <CardTitle>Solicitações de Ausência</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Employee</TableHead>
-              <TableHead>Dates</TableHead>
-              <TableHead>Type</TableHead>
+              <TableHead>Funcionário</TableHead>
+              <TableHead>Datas</TableHead>
+              <TableHead>Tipo</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.map((absence) => (
               <TableRow key={absence.id}>
                 <TableCell className="font-medium">{absence.employee}</TableCell>
-                <TableCell>{absence.startDate} to {absence.endDate}</TableCell>
+                <TableCell>{absence.startDate} a {absence.endDate}</TableCell>
                 <TableCell>{absence.type}</TableCell>
                 <TableCell>
                   <Badge variant={getStatusVariant(absence.status)}>{absence.status}</Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  {absence.status === 'Pending' ? (
+                  {absence.status === 'Pendente' ? (
                     <div className="flex gap-2 justify-end">
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600 hover:bg-green-100 hover:text-green-700">
                         <Check className="h-4 w-4" />
@@ -85,12 +85,12 @@ export function AbsenceTable({ data }: AbsenceTableProps) {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
+                          <span className="sr-only">Abrir menu</span>
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>View Details</DropdownMenuItem>
+                        <DropdownMenuItem>Ver Detalhes</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}

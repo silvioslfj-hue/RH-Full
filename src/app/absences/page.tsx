@@ -13,7 +13,7 @@ export default function AbsencesPage() {
   const [absenceData, setAbsenceData] = useState(initialAbsenceData);
 
   const handleNewRequest = (newRequest: any) => {
-    setAbsenceData(prev => [{...newRequest, id: `ABS${(prev.length + 1).toString().padStart(3, '0')}`, status: 'Pending'}, ...prev])
+    setAbsenceData(prev => [{...newRequest, id: `ABS${(prev.length + 1).toString().padStart(3, '0')}`, status: 'Pendente'}, ...prev])
   }
 
   return (
@@ -21,12 +21,12 @@ export default function AbsencesPage() {
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold font-headline tracking-tight">Absence Management</h1>
-            <p className="text-muted-foreground">Request time off and view absence history.</p>
+            <h1 className="text-3xl font-bold font-headline tracking-tight">Gestão de Ausências</h1>
+            <p className="text-muted-foreground">Solicite folgas e visualize o histórico de ausências.</p>
           </div>
           <Button onClick={() => setIsRequestDialogOpen(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Request Time Off
+            Solicitar Folga
           </Button>
         </div>
         

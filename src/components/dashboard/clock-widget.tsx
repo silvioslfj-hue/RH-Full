@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { FacialRecognitionModal } from './facial-recognition-modal'
 import { PlayCircle, PauseCircle, Clock } from 'lucide-react'
+import { ptBR } from 'date-fns/locale'
 
 export function ClockWidget() {
   const [isClockedIn, setIsClockedIn] = useState(false)
@@ -34,11 +35,11 @@ export function ClockWidget() {
   }, [isClockedIn, timeElapsed])
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
   }
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    return date.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
   }
 
   const formatElapsedTime = (seconds: number) => {
@@ -69,7 +70,7 @@ export function ClockWidget() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-6 w-6" />
-            Time Clock
+            Relógio de Ponto
           </CardTitle>
           <CardDescription>{formatDate(currentTime)}</CardDescription>
         </CardHeader>
@@ -79,11 +80,11 @@ export function ClockWidget() {
           </div>
           <div className="text-center">
             <p className="text-muted-foreground">
-              Status: <span className={`font-semibold ${isClockedIn ? 'text-green-500' : 'text-red-500'}`}>{isClockedIn ? 'Clocked In' : 'Clocked Out'}</span>
+              Status: <span className={`font-semibold ${isClockedIn ? 'text-green-500' : 'text-red-500'}`}>{isClockedIn ? 'Entrada Registrada' : 'Saída Registrada'}</span>
             </p>
             {isClockedIn && (
               <p className="text-muted-foreground">
-                Time Elapsed: <span className="font-semibold">{formatElapsedTime(timeElapsed)}</span>
+                Tempo Decorrido: <span className="font-semibold">{formatElapsedTime(timeElapsed)}</span>
               </p>
             )}
           </div>
@@ -93,7 +94,7 @@ export function ClockWidget() {
             onClick={handleClockAction}
           >
             {isClockedIn ? <PauseCircle className="mr-2 h-5 w-5" /> : <PlayCircle className="mr-2 h-5 w-5" />}
-            {isClockedIn ? 'Clock Out' : 'Clock In'}
+            {isClockedIn ? 'Registrar Saída' : 'Registrar Entrada'}
           </Button>
         </CardContent>
       </Card>
@@ -101,6 +102,7 @@ export function ClockWidget() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={handleVerificationSuccess}
+        action={isClockedIn ? 'Saída' : 'Entrada'}
       />
     </>
   )

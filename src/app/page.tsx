@@ -22,23 +22,23 @@ export default function LoginPage() {
           <div className="flex justify-center mb-4">
             <Icons.logo className="h-10 w-10 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-headline">Welcome to RH-Full</CardTitle>
-          <CardDescription>Sign in to access your dashboard</CardDescription>
+          <CardTitle className="text-2xl font-headline">Bem-vindo ao RH-Full</CardTitle>
+          <CardDescription>Faça login para acessar seu painel</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin}>
             <div className="grid w-full items-center gap-4">
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="name@example.com" />
+                <Input id="email" type="email" placeholder="nome@exemplo.com" />
               </div>
               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" placeholder="Your password" />
+                <Label htmlFor="password">Senha</Label>
+                <Input id="password" type="password" placeholder="Sua senha" />
               </div>
             </div>
             <Button type="submit" className="w-full mt-6">
-              Sign In
+              Entrar
             </Button>
           </form>
           <div className="relative mt-6">
@@ -46,19 +46,19 @@ export default function LoginPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+              <span className="bg-card px-2 text-muted-foreground">Ou continue com</span>
             </div>
           </div>
           <Button variant="outline" className="w-full mt-6">
             <Icons.google className="mr-2 h-4 w-4" />
-            Sign in with Google
+            Entrar com Google
           </Button>
         </CardContent>
         <CardFooter className="flex justify-center text-sm">
           <p>
-            Don't have an account?{' '}
+            Não tem uma conta?{' '}
             <a href="#" className="text-primary hover:underline">
-              Sign up
+              Cadastre-se
             </a>
           </p>
         </CardFooter>

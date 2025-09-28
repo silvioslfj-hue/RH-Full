@@ -9,8 +9,8 @@ export default function DashboardPage() {
     <AppLayout>
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold font-headline tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back, Jane! Here's your overview.</p>
+          <h1 className="text-3xl font-bold font-headline tracking-tight">Painel</h1>
+          <p className="text-muted-foreground">Bem-vinda de volta, Jane! Aqui está sua visão geral.</p>
         </div>
         
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -23,7 +23,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            {/* Future content can be added here */}
+            {/* Futuro conteúdo pode ser adicionado aqui */}
         </div>
       </div>
     </AppLayout>

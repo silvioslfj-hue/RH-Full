@@ -11,10 +11,10 @@ import {
 import { LayoutDashboard, Clock, CalendarOff, BarChart3, BotMessageSquare } from 'lucide-react'
 
 const menuItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/timecards', label: 'Timecards', icon: Clock },
-  { href: '/absences', label: 'Absences', icon: CalendarOff },
-  { href: '/reports', label: 'Reports', icon: BarChart3 },
+  { href: '/dashboard', label: 'Painel', icon: LayoutDashboard },
+  { href: '/timecards', label: 'Cartões de Ponto', icon: Clock },
+  { href: '/absences', label: 'Ausências', icon: CalendarOff },
+  { href: '/reports', label: 'Relatórios', icon: BarChart3 },
 ]
 
 export function MainNav() {
