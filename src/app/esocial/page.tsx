@@ -59,33 +59,32 @@ export default function ESocialPage() {
         startTransition(async () => {
              toast({
                 title: "Geração de Dados Iniciada...",
-                description: `Gerando dados para ${selectedEvents.length} eventos.`,
+                description: `Gerando dados para ${selectedEvents.length} eventos. Apenas eventos de admissão (S-2200) serão processados nesta demo.`,
             });
             
-            // Exemplo para um evento de admissão (S-2200)
-            const admissionEvent = events.find(e => selectedEvents.includes(e.id) && e.type.startsWith('S-2200'));
-            if (admissionEvent) {
-                try {
-                    const data = await generateESocialEventData({ employeeId: 'FUNC001' }); // Usando um ID de exemplo
-                    setGeneratedData(data);
-                    setIsDataViewerOpen(true);
-                     toast({
-                        title: "Dados do Evento Gerados!",
-                        description: "Os dados estruturados para o evento S-2200 foram gerados pela IA.",
-                    });
-
-                } catch (error) {
-                     toast({
-                        variant: "destructive",
-                        title: "Erro ao Gerar Dados",
-                        description: "Não foi possível gerar os dados do evento com a IA.",
-                    });
+            for (const eventId of selectedEvents) {
+                const event = events.find(e => e.id === eventId);
+                // Nesta demo, a IA só está configurada para o evento S-2200 (Admissão)
+                if (event && event.type.startsWith('S-2200')) {
+                    try {
+                        // O 'employeeId' viria do evento, que foi gerado quando o funcionário foi cadastrado.
+                        const employeeId = event.employeeId;
+                        const data = await generateESocialEventData({ employeeId });
+                        setGeneratedData(data); // Mostra o último gerado
+                        setIsDataViewerOpen(true);
+                        toast({
+                            title: `Dados Gerados para ${event.employeeName}!`,
+                            description: `Os dados estruturados para o evento ${event.type} foram gerados pela IA.`,
+                        });
+                        // Em uma aplicação real, aqui você adicionaria o XML gerado a uma fila de envio.
+                    } catch (error) {
+                         toast({
+                            variant: "destructive",
+                            title: `Erro ao Gerar Dados para ${event.employeeName}`,
+                            description: "Não foi possível gerar os dados do evento com a IA.",
+                        });
+                    }
                 }
-            } else {
-                 toast({
-                    title: "Simulando Envio...",
-                    description: "Apenas eventos de admissão (S-2200) geram dados nesta demonstração.",
-                });
             }
         });
     }
@@ -195,7 +194,7 @@ export default function ESocialPage() {
         <Card>
              <CardHeader>
                 <CardTitle>Seleção de Eventos para Envio</CardTitle>
-                <CardDescription>Marque os eventos que você deseja gerar e enviar para o eSocial. Apenas eventos de admissão (S-2200) gerarão dados nesta demonstração.</CardDescription>
+                <CardDescription>Marque os eventos que você deseja gerar e enviar para o eSocial. A geração de dados com IA é simulada apenas para eventos de admissão (S-2200).</CardDescription>
             </CardHeader>
             <CardContent>
                 <ESocialEventsTable 

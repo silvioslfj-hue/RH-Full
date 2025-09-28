@@ -52,37 +52,25 @@ export async function generateESocialEventData(input: ESocialEventInput): Promis
   return generateESocialEventFlow(input);
 }
 
-// In a real app, this would fetch data from a database.
+// In a real app, this would fetch data from a database based on the employeeId
 const getEmployeeDataForESocial = (employeeId: string) => {
-    // This is a simulation. We're returning hardcoded data for 'FUNC001'.
-    if (employeeId === 'FUNC001') {
-        return {
-            employee: {
-                id: 'FUNC001',
-                name: 'Jane Doe',
-                email: 'jane.doe@example.com',
-                cpf: '123.456.789-00',
-                birthDate: '1990-05-20',
-                gender: 'F',
-                nationality: 'Brasileira',
-            },
-            company: {
-                name: 'RH-Full Soluções em TI',
-                cnpj: '01.234.567/0001-89',
-            },
-            contract: {
-                admissionDate: '2023-01-10',
-                salary: 7500.00,
-                workShiftId: 'JOR001'
-            },
-            workShift: {
-                id: "JOR001",
-                name: "Padrão (Seg-Sex, 8h/dia)",
-                description: "Segunda a Sexta, das 09:00 às 18:00 com 1h de intervalo."
-            }
-        };
+    // This is a simulation. We're returning hardcoded data based on the provided ID.
+    // A real app would query a database: `SELECT * FROM employees WHERE id = ${employeeId}`
+    const mockDatabase: Record<string, any> = {
+        'FUNC001': {
+            employee: { id: 'FUNC001', name: 'Carlos Andrade', email: 'carlos.andrade@example.com', cpf: '111.222.333-44', birthDate: '1985-08-15', gender: 'M', nationality: 'Brasileira' },
+            company: { name: 'RH-Full Soluções em TI', cnpj: '01.234.567/0001-89' },
+            contract: { admissionDate: '2024-07-01', salary: 5000.00, workShiftId: 'JOR001'},
+            workShift: { id: "JOR001", name: "Padrão (Seg-Sex, 8h/dia)", description: "Segunda a Sexta, das 09:00 às 18:00 com 1h de intervalo."}
+        },
+        'FUNC002': {
+             employee: { id: 'FUNC002', name: 'Mariana Costa', email: 'mariana.costa@example.com', cpf: '555.666.777-88', birthDate: '1992-11-30', gender: 'F', nationality: 'Brasileira' },
+            company: { name: 'RH-Full Soluções em TI', cnpj: '01.234.567/0001-89' },
+            contract: { admissionDate: '2024-07-01', salary: 6500.00, workShiftId: 'JOR001'},
+            workShift: { id: "JOR001", name: "Padrão (Seg-Sex, 8h/dia)", description: "Segunda a Sexta, das 09:00 às 18:00 com 1h de intervalo."}
+        }
     }
-    return null;
+    return mockDatabase[employeeId] || null;
 }
 
 
@@ -122,7 +110,7 @@ const generateESocialEventFlow = ai.defineFlow(
   },
   async ({ employeeId }) => {
     // 1. Fetch all necessary data for the employee from the database.
-    // This is a simulation. In a real app, this would be a database query.
+    // This simulates what would happen automatically after an employee is created.
     const employeeFullData = getEmployeeDataForESocial(employeeId);
 
     if (!employeeFullData) {

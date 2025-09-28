@@ -52,6 +52,7 @@ export type EsocialEvent = {
   id: string;
   type: string;
   employeeName: string;
+  employeeId: string; // The ID of the employee to fetch full data
   referenceDate: string;
   status: 'Pendente' | 'Enviado' | 'Erro';
   details: string;
@@ -185,10 +186,10 @@ export const payrollHistoryData = [
 ];
 
 export const esocialEventsData: EsocialEvent[] = [
-    { id: "EVT001", type: "S-2200 - Admissão", employeeName: "Carlos Andrade", referenceDate: "2024-07-01", status: "Pendente", details: "Admissão do novo analista de sistemas." },
-    { id: "EVT002", type: "S-2200 - Admissão", employeeName: "Mariana Costa", referenceDate: "2024-07-01", status: "Pendente", details: "Admissão da nova designer." },
-    { id: "EVT003", type: "S-2299 - Desligamento", employeeName: "Felipe Souza", referenceDate: "2024-07-15", status: "Pendente", details: "Desligamento a pedido do funcionário." },
-    { id: "EVT004", type: "S-1200 - Remuneração", employeeName: "Jane Doe", referenceDate: "2024-07-31", status: "Pendente", details: "Folha de pagamento de Julho/2024" },
-    { id: "EVT005", type: "S-1200 - Remuneração", employeeName: "John Smith", referenceDate: "2024-07-31", status: "Pendente", details: "Folha de pagamento de Julho/2024" },
-    { id: "EVT006", type: "S-1210 - Pagamentos", employeeName: "Todos", referenceDate: "2024-08-05", status: "Enviado", details: "Pagamento de salários de Julho/2024" },
+    { id: "EVT001", type: "S-2200 - Admissão", employeeName: "Carlos Andrade", employeeId: "FUNC001", referenceDate: "2024-07-01", status: "Pendente", details: "Admissão do novo analista de sistemas." },
+    { id: "EVT002", type: "S-2200 - Admissão", employeeName: "Mariana Costa", employeeId: "FUNC002", referenceDate: "2024-07-01", status: "Pendente", details: "Admissão da nova designer." },
+    { id: "EVT003", type: "S-2299 - Desligamento", employeeName: "Felipe Souza", employeeId: "FUNC003", referenceDate: "2024-07-15", status: "Pendente", details: "Desligamento a pedido do funcionário." },
+    { id: "EVT004", type: "S-1200 - Remuneração", employeeName: "Jane Doe", employeeId: "FUNC001", referenceDate: "2024-07-31", status: "Pendente", details: "Folha de pagamento de Julho/2024" },
+    { id: "EVT005", type: "S-1200 - Remuneração", employeeName: "John Smith", employeeId: "FUNC002", referenceDate: "2024-07-31", status: "Pendente", details: "Folha de pagamento de Julho/2024" },
+    { id: "EVT006", type: "S-1210 - Pagamentos", employeeName: "Todos", employeeId: "N/A", referenceDate: "2024-08-05", status: "Enviado", details: "Pagamento de salários de Julho/2024" },
 ]

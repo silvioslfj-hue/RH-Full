@@ -73,7 +73,7 @@ export function ESocialEventsTable({
             <TableHead padding="checkbox" className="w-[60px] text-center">
               <Checkbox
                 checked={isAllSelected}
-                onCheckedChange={handleSelectAll}
+                onCheckedChange={(checked) => handleSelectAll(!!checked)}
                 aria-label="Selecionar todos"
               />
             </TableHead>
