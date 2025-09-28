@@ -17,6 +17,7 @@ import type { Company } from '@/lib/data';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { KeyRound, Upload, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface CompanyDialogProps {
   isOpen: boolean;
@@ -103,68 +104,77 @@ export function CompanyDialog({ isOpen, onClose, onSave, company }: CompanyDialo
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-6 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="cnpj">CNPJ</Label>
-            <div className="flex gap-2">
-              <Input id="cnpj" value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0001-00" />
-              <Button variant="outline" onClick={handleFetchData}><Search className="mr-2 h-4 w-4" /> Consultar</Button>
-            </div>
-            <p className="text-xs text-muted-foreground">Preencha o CNPJ para buscar os dados automaticamente.</p>
-          </div>
+        <Tabs defaultValue="data" className="py-4">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="data">Dados da Empresa</TabsTrigger>
+                <TabsTrigger value="certificate">Certificado Digital</TabsTrigger>
+            </TabsList>
+            <TabsContent value="data" className="pt-6">
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="cnpj">CNPJ</Label>
+                        <div className="flex gap-2">
+                        <Input id="cnpj" value={cnpj} onChange={(e) => setCnpj(e.target.value)} placeholder="00.000.000/0001-00" />
+                        <Button variant="outline" onClick={handleFetchData}><Search className="mr-2 h-4 w-4" /> Consultar</Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Preencha o CNPJ para buscar os dados automaticamente.</p>
+                    </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="company-name">Razão Social</Label>
-            <Input id="company-name" value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="company-name">Razão Social</Label>
+                        <Input id="company-name" value={name} onChange={(e) => setName(e.target.value)} />
+                    </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="address">Endereço</Label>
-              <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="city">Cidade</Label>
-              <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="state">Estado</Label>
-              <Input id="state" value={state} onChange={(e) => setState(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="zip">CEP</Label>
-              <Input id="zip" value={zip} onChange={(e) => setZip(e.target.value)} />
-            </div>
-          </div>
-
-          <Alert>
-            <KeyRound className="h-4 w-4" />
-            <AlertTitle>Certificado Digital (A1)</AlertTitle>
-            <AlertDescription>
-              O certificado é necessário para a assinatura de documentos e relatórios fiscais, como o eSocial.
-            </AlertDescription>
-            <div className="mt-4 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="certificate-file">Arquivo do Certificado (.pfx, .p12)</Label>
-                <Input id="certificate-file" type="file" onChange={(e) => setCertificateFile(e.target.files ? e.target.files[0] : null)} accept=".pfx,.p12" />
-                 {company?.certificateFile && !certificateFile && (
-                    <p className="text-xs text-muted-foreground">Um certificado já está configurado. Envie um novo arquivo para substituí-lo.</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="certificate-password">Senha do Certificado</Label>
-                <Input id="certificate-password" type="password" value={certificatePassword} onChange={(e) => setCertificatePassword(e.target.value)} />
-              </div>
-            </div>
-          </Alert>
-        </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                        <Label htmlFor="address">Endereço</Label>
+                        <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                        <Label htmlFor="city">Cidade</Label>
+                        <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                        <Label htmlFor="state">Estado</Label>
+                        <Input id="state" value={state} onChange={(e) => setState(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                        <Label htmlFor="zip">CEP</Label>
+                        <Input id="zip" value={zip} onChange={(e) => setZip(e.target.value)} />
+                        </div>
+                    </div>
+                </div>
+            </TabsContent>
+            <TabsContent value="certificate" className="pt-6">
+                 <Alert>
+                    <KeyRound className="h-4 w-4" />
+                    <AlertTitle>Certificado Digital (A1)</AlertTitle>
+                    <AlertDescription>
+                    O certificado é necessário para a assinatura de documentos e relatórios fiscais, como o eSocial.
+                    </AlertDescription>
+                    <div className="mt-4 space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="certificate-file">Arquivo do Certificado (.pfx, .p12)</Label>
+                        <Input id="certificate-file" type="file" onChange={(e) => setCertificateFile(e.target.files ? e.target.files[0] : null)} accept=".pfx,.p12" />
+                        {company?.certificateFile && !certificateFile && (
+                            <p className="text-xs text-muted-foreground">Um certificado já está configurado ({company.certificateFile}). Envie um novo arquivo para substituí-lo.</p>
+                        )}
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="certificate-password">Senha do Certificado</Label>
+                        <Input id="certificate-password" type="password" value={certificatePassword} onChange={(e) => setCertificatePassword(e.target.value)} />
+                    </div>
+                    </div>
+                </Alert>
+            </TabsContent>
+        </Tabs>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancelar
