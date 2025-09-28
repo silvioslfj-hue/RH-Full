@@ -215,8 +215,8 @@ export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
       <Card className="h-full flex flex-col">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Video className="h-6 w-6" />
-            Reconhecimento de Ponto
+            <Clock className="h-6 w-6" />
+            Registro de Ponto
           </CardTitle>
           <CardDescription>{formatDate(currentTime)}</CardDescription>
         </CardHeader>

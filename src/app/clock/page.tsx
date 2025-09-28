@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -16,13 +15,9 @@ export default function ClockPage() {
 
   return (
     <AppLayout>
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-start">
-        <div className="md:col-span-3">
-          <ClockWidget onClockEvent={handleClockEvent} />
-        </div>
-        <div className="md:col-span-2">
-          <TodaysActivity activities={activity} />
-        </div>
+      <div className="flex flex-col gap-8">
+        <ClockWidget onClockEvent={handleClockEvent} />
+        <TodaysActivity activities={activity} />
       </div>
     </AppLayout>
   );
