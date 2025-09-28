@@ -1,25 +1,26 @@
 "use client"
 
 import { SummaryCard } from "@/components/dashboard/summary-card";
-import { Users, Clock, AlertCircle, FileCheck2 } from "lucide-react";
+import { Users, Clock, AlertCircle, FileCheck2, FileArchive } from "lucide-react";
 
 interface QuickActionsProps {
-  pendingRequestsCount: number;
+  pendingAbsenceRequestsCount: number;
+  pendingESocialEventsCount: number;
 }
 
-export function QuickActions({ pendingRequestsCount }: QuickActionsProps) {
+export function QuickActions({ pendingAbsenceRequestsCount, pendingESocialEventsCount }: QuickActionsProps) {
   const quickActionsData = [
     {
       title: "Aprovações Pendentes",
-      value: pendingRequestsCount.toString(),
+      value: pendingAbsenceRequestsCount.toString(),
       description: "Solicitações de ausência",
       icon: FileCheck2
     },
     {
-      title: "Horas Extras a Revisar",
-      value: "12.5h",
-      description: "Nesta semana",
-      icon: Clock
+      title: "Eventos eSocial",
+      value: pendingESocialEventsCount.toString(),
+      description: "Eventos pendentes de envio",
+      icon: FileArchive
     },
     {
       title: "Alertas de Ponto",

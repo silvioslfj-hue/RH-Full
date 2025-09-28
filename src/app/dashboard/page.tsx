@@ -8,8 +8,9 @@ import { TeamStatus } from "@/components/dashboard/admin/team-status";
 import { RecentAbsenceRequests } from "@/components/dashboard/admin/recent-absence-requests";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Building, Factory } from "lucide-react";
-import { absenceData as initialAbsenceData } from "@/lib/data";
+import { absenceData as initialAbsenceData, esocialEventsData } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
+import { ESocialPendingAlert } from "@/components/dashboard/admin/esocial-pending-alert";
 
 export default function DashboardPage() {
   const [company, setCompany] = useState("all");
@@ -25,7 +26,8 @@ export default function DashboardPage() {
     });
   };
 
-  const pendingRequests = absenceData.filter(a => a.status === "Pendente");
+  const pendingAbsenceRequests = absenceData.filter(a => a.status === "Pendente");
+  const pendingESocialEventsCount = esocialEventsData.filter(e => e.status === "Pendente").length;
 
 
   return (
@@ -70,11 +72,18 @@ export default function DashboardPage() {
           </div>
         </div>
         
-        <QuickActions pendingRequestsCount={pendingRequests.length} />
+        <QuickActions 
+          pendingAbsenceRequestsCount={pendingAbsenceRequests.length}
+          pendingESocialEventsCount={pendingESocialEventsCount}
+        />
+
+        {pendingESocialEventsCount > 0 && (
+          <ESocialPendingAlert count={pendingESocialEventsCount} />
+        )}
 
         <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <RecentAbsenceRequests requests={pendingRequests} onStatusChange={handleStatusChange} />
+            <RecentAbsenceRequests requests={pendingAbsenceRequests} onStatusChange={handleStatusChange} />
           </div>
           <TeamStatus />
         </div>
