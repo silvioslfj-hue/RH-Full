@@ -34,20 +34,26 @@ export const timeOffReportData = [
     { type: "Não Remunerada", count: 10, fill: "hsl(var(--chart-5))" },
 ];
 
-export const initialTimecardData = `{
-    "employeeId": "EMP123",
-    "payPeriod": "2024-07-01_2024-07-15",
-    "entries": [
-        "2024-07-08: IN 09:01, OUT 17:03",
-        "2024-07-09: 09:00 AM to 05:00 PM",
-        "2024-07-10 08:55-17:05",
-        {"date": "2024-07-11", "start": "09:05", "end": "16:58"},
-        "July 12, 2024 - 9 to 5"
-    ]
-}`;
+export const initialTimecardData = `
+Relatório de Ponto Semanal:
+
+Funcionário: João Silva, ID: 123
+- 22/07/2024: Entrada 09:03, Saída 17:05
+- 23/07/2024: 08:55 AM às 05:00 PM (Almoço 12:00-13:00)
+- 24/07/2024: 09:00-17:00
+
+Funcionária: Maria Oliveira, ID: 456
+- 22/07, das 9hr até 17hr
+- 23/07, chegou 8:50, saiu 17:02. Intervalo de 1h.
+- 24/07, médica, das 14h as 15h. expediente: 9h as 18h
+
+Anotações avulsas:
+Carlos (ID 789), 22/07: 9:15-17:15.
+`;
 
 export const todaysActivityData: ClockEvent[] = [
     { time: "09:01:12", type: "Entrada" },
     { time: "12:32:45", type: "Saída" },
     { time: "13:33:10", type: "Entrada" },
 ];
+
