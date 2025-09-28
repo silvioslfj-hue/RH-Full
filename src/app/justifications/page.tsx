@@ -11,6 +11,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Upload, X, File, Camera } from "lucide-react";
 import { DocumentScanner } from "@/components/justifications/document-scanner";
+import { PendingAdjustments } from "@/components/justifications/pending-adjustments";
+
+const pendingAdjustmentsData = [
+  {
+    id: "ADJ001",
+    date: "2024-07-03",
+    reason: "Esquecimento de marcação na saída.",
+    requester: "Carlos Souza"
+  }
+];
 
 export default function JustificationsPage() {
   const { toast } = useToast();
@@ -19,6 +29,16 @@ export default function JustificationsPage() {
   const [reason, setReason] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [pendingAdjustments, setPendingAdjustments] = useState(pendingAdjustmentsData);
+
+
+  const handleJustify = (adjustment: typeof pendingAdjustmentsData[0]) => {
+    setJustificationType("time-correction");
+    setDate(adjustment.date);
+    setReason(`Referente ao ajuste solicitado pelo gestor ${adjustment.requester}: ${adjustment.reason}\n\n`);
+    document.getElementById('reason')?.focus();
+  };
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +51,10 @@ export default function JustificationsPage() {
     setDate("");
     setReason("");
     setFile(null);
+
+    if (reason.includes("Referente ao ajuste")) {
+      setPendingAdjustments(prev => prev.filter(p => !reason.includes(p.reason)));
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,6 +83,14 @@ export default function JustificationsPage() {
           <h1 className="text-3xl font-bold font-headline tracking-tight">Justificativas e Solicitações</h1>
           <p className="text-muted-foreground">Envie atestados, solicite correções de ponto ou justifique suas ausências.</p>
         </div>
+        
+        {pendingAdjustments.length > 0 && (
+          <PendingAdjustments
+            adjustments={pendingAdjustments}
+            onJustify={handleJustify}
+          />
+        )}
+
 
         <Card>
           <CardHeader>
