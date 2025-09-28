@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -130,7 +131,7 @@ export default function JustificationsPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                     <Label htmlFor="file-upload">Anexar Documento</Label>
-                    <Button variant="outline" size="sm" onClick={() => setIsScannerOpen(true)}>
+                    <Button variant="outline" size="sm" type="button" onClick={() => setIsScannerOpen(true)}>
                         <Camera className="mr-2 h-4 w-4" />
                         Escanear
                     </Button>
