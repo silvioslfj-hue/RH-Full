@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { reformatTimecard } from "@/ai/flows/timecard-refactoring";
 import {
   Card,
@@ -141,6 +142,63 @@ function AITool() {
   );
 }
 
+const dummyTimeSheet = [
+    { day: "01/07", date: "Seg", entries: "09:01 - 12:30, 13:31 - 18:05", worked: "08:03", balance: "+0:03", status: "ok" },
+    { day: "02/07", date: "Ter", entries: "08:58 - 12:35, 13:30 - 18:01", worked: "08:08", balance: "+0:08", status: "ok" },
+    { day: "03/07", date: "Qua", entries: "09:10 - 12:40, 13:45 - 18:15", worked: "08:00", balance: "+0:00", status: "warning", issue: "Atraso de 10min" },
+    { day: "04/07", date: "Qui", entries: "Ausência Justificada", worked: "00:00", balance: "-8:00", status: "info", issue: "Licença Médica" },
+    { day: "05/07", date: "Sex", entries: "Férias", worked: "00:00", balance: "N/A", status: "info", issue: "Férias" },
+];
+
+function InconsistentEntries({ entries, onAdjust }: { entries: any[], onAdjust: (entry: any) => void }) {
+    return (
+        <Card className="border-destructive/50">
+            <CardHeader>
+                <div className="flex items-center gap-3">
+                    <AlertTriangle className="h-5 w-5 text-destructive" />
+                    <div>
+                        <CardTitle>Marcações com Inconsistência</CardTitle>
+                        <CardDescription className="text-destructive/90">
+                           As seguintes marcações precisam de sua atenção.
+                        </CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead className="w-[120px]">Dia</TableHead>
+                            <TableHead>Marcações</TableHead>
+                            <TableHead>Ocorrência</TableHead>
+                            <TableHead className="text-right">Ação</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                     <TableBody>
+                        {entries.map((row, index) => (
+                            <TableRow key={index} className="bg-destructive/5 hover:bg-destructive/10">
+                                <TableCell>
+                                    <div className="font-medium">{row.day}</div>
+                                    <div className="text-sm text-muted-foreground">{row.date}</div>
+                                </TableCell>
+                                <TableCell className="font-mono">{row.entries}</TableCell>
+                                <TableCell>
+                                    <Badge variant="destructive">{row.issue}</Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                     <Button size="sm" variant="outline" onClick={() => onAdjust(row)}>
+                                        Ajustar
+                                     </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
+    )
+}
+
 function TimeSheetManager() {
     const { toast } = useToast();
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -149,14 +207,17 @@ function TimeSheetManager() {
     });
     const [isAdjustmentDialogOpen, setIsAdjustmentDialogOpen] = useState(false);
 
+    const { inconsistentEntries, consistentEntries } = useMemo(() => {
+        return dummyTimeSheet.reduce((acc, entry) => {
+            if (entry.status === 'warning') {
+                acc.inconsistentEntries.push(entry);
+            } else {
+                acc.consistentEntries.push(entry);
+            }
+            return acc;
+        }, { inconsistentEntries: [] as any[], consistentEntries: [] as any[] });
+    }, []);
 
-  const dummyTimeSheet = [
-    { day: "01/07", date: "Seg", entries: "09:01 - 12:30, 13:31 - 18:05", worked: "08:03", balance: "+0:03", status: "ok" },
-    { day: "02/07", date: "Ter", entries: "08:58 - 12:35, 13:30 - 18:01", worked: "08:08", balance: "+0:08", status: "ok" },
-    { day: "03/07", date: "Qua", entries: "09:10 - 12:40, 13:45 - 18:15", worked: "08:00", balance: "+0:00", status: "warning", issue: "Atraso de 10min" },
-    { day: "04/07", date: "Qui", entries: "Ausência Justificada", worked: "00:00", balance: "-8:00", status: "info", issue: "Licença Médica" },
-    { day: "05/07", date: "Sex", entries: "Férias", worked: "00:00", balance: "N/A", status: "info", issue: "Férias" },
-  ]
 
   const handleApprove = () => {
     toast({
@@ -173,13 +234,18 @@ function TimeSheetManager() {
     setIsAdjustmentDialogOpen(false);
   };
 
+  const openAdjustmentForEntry = (entry: any) => {
+    // This could pre-fill the adjustment dialog in a real app
+    setIsAdjustmentDialogOpen(true);
+  }
+
   return (
     <>
      <Card>
       <CardHeader>
         <CardTitle>Espelho de Ponto</CardTitle>
         <CardDescription>
-          Selecione o funcionário e o período para visualizar e gerenciar o cartão de ponto.
+          Selecione o funcionário e o período para visualizar e gerenciar os registros de ponto.
         </CardDescription>
         <div className="flex flex-col md:flex-row items-center gap-4 pt-4">
             <Select>
@@ -239,41 +305,48 @@ function TimeSheetManager() {
             </Button>
         </div>
       </CardHeader>
-      <CardContent>
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead className="w-[120px]">Dia</TableHead>
-                    <TableHead>Marcações</TableHead>
-                    <TableHead>Horas Trab.</TableHead>
-                    <TableHead>Saldo Dia</TableHead>
-                    <TableHead>Ocorrência</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {dummyTimeSheet.map((row, index) => (
-                    <TableRow key={index}>
-                        <TableCell>
-                            <div className="font-medium">{row.day}</div>
-                            <div className="text-sm text-muted-foreground">{row.date}</div>
-                        </TableCell>
-                        <TableCell className="font-mono">{row.entries}</TableCell>
-                        <TableCell className="font-mono">{row.worked}</TableCell>
-                        <TableCell className={`font-mono font-semibold ${row.balance.startsWith('+') ? 'text-green-600' : row.balance.startsWith('-') ? 'text-red-600' : ''}`}>
-                            {row.balance}
-                        </TableCell>
-                        <TableCell>
-                            {row.issue && <Badge variant={row.status === 'warning' ? 'destructive' : 'secondary'}>{row.issue}</Badge>}
-                        </TableCell>
+      <CardContent className="space-y-6">
+        {inconsistentEntries.length > 0 && (
+            <InconsistentEntries entries={inconsistentEntries} onAdjust={openAdjustmentForEntry} />
+        )}
+        
+        <div>
+            <h3 className="text-lg font-medium mb-2">Registros Válidos</h3>
+            <Table className="border rounded-lg">
+                <TableHeader>
+                    <TableRow>
+                        <TableHead className="w-[120px]">Dia</TableHead>
+                        <TableHead>Marcações</TableHead>
+                        <TableHead>Horas Trab.</TableHead>
+                        <TableHead>Saldo Dia</TableHead>
+                        <TableHead>Ocorrência</TableHead>
                     </TableRow>
-                ))}
-            </TableBody>
-        </Table>
+                </TableHeader>
+                <TableBody>
+                    {consistentEntries.map((row, index) => (
+                        <TableRow key={index}>
+                            <TableCell>
+                                <div className="font-medium">{row.day}</div>
+                                <div className="text-sm text-muted-foreground">{row.date}</div>
+                            </TableCell>
+                            <TableCell className="font-mono">{row.entries}</TableCell>
+                            <TableCell className="font-mono">{row.worked}</TableCell>
+                            <TableCell className={`font-mono font-semibold ${row.balance.startsWith('+') ? 'text-green-600' : row.balance.startsWith('-') ? 'text-red-600' : ''}`}>
+                                {row.balance}
+                            </TableCell>
+                            <TableCell>
+                                {row.issue && <Badge variant={row.status === 'warning' ? 'destructive' : 'secondary'}>{row.issue}</Badge>}
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
       </CardContent>
        <div className="flex items-center justify-end gap-4 p-6 border-t">
           <Button variant="outline" onClick={() => setIsAdjustmentDialogOpen(true)}>
             <AlertTriangle className="mr-2 h-4 w-4" />
-            Solicitar Ajuste
+            Solicitar Ajuste Geral
           </Button>
           <Button onClick={handleApprove}>
             <CheckCircle className="mr-2 h-4 w-4" />

@@ -110,8 +110,8 @@ export function MainNav() {
           <SidebarGroup>
             <SidebarGroupLabel>Ponto Eletrônico</SidebarGroupLabel>
              <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={pathname.startsWith('/timecards')} tooltip={{ children: 'Cartões de Ponto' }}>
-                <Link href='/timecards' onClick={handleLinkClick}><Clock /><span>Cartões de Ponto</span></Link>
+              <SidebarMenuButton asChild isActive={pathname.startsWith('/timecards')} tooltip={{ children: 'Registro de Ponto' }}>
+                <Link href='/timecards' onClick={handleLinkClick}><Clock /><span>Registro de Ponto</span></Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarGroup>
