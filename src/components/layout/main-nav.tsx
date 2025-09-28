@@ -21,15 +21,15 @@ const adminMenuItems = [
 const collaboratorMenuItems = [
   { href: '/clock', label: 'Registro de Ponto', icon: Hourglass },
   { href: '/justifications', label: 'Justificativas', icon: FileCheck },
+  { href: '/my-reports', label: 'Meus Relatórios', icon: BarChart3 },
   { href: '/absences', label: 'Minhas Ausências', icon: CalendarOff },
-  { href: '/reports', label: 'Meus Relatórios', icon: BarChart3 },
   { href: '/proofs', label: 'Comprovantes', icon: Receipt },
   { href: '/payslips', label: 'Holerites', icon: Wallet },
   { href: '/income-reports', label: 'Informe de Rendimentos', icon: FileText },
 ]
 
-const adminPaths = ['/dashboard', '/timecards'];
-const collaboratorPaths = ['/clock', '/proofs', '/justifications', '/payslips', '/income-reports'];
+const adminPaths = ['/dashboard', '/timecards', '/reports'];
+const collaboratorPaths = ['/clock', '/proofs', '/justifications', '/payslips', '/income-reports', '/my-reports'];
 
 export function MainNav() {
   const pathname = usePathname()
@@ -42,7 +42,7 @@ export function MainNav() {
     menuItems = adminMenuItems;
   } else if (collaboratorPaths.some(path => pathname.startsWith(path))) {
     menuItems = collaboratorMenuItems;
-  } else if (pathname.startsWith('/absences') || pathname.startsWith('/reports')) {
+  } else if (pathname.startsWith('/absences')) {
     // Para rotas compartilhadas, precisaríamos de uma lógica de perfil de usuário real.
     // Como protótipo, assumimos que o menu do colaborador é o padrão aqui.
     menuItems = collaboratorMenuItems;

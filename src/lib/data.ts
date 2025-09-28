@@ -34,8 +34,7 @@ export const timeOffReportData = [
     { type: "Não Remunerada", count: 10, fill: "hsl(var(--chart-5))" },
 ];
 
-export const initialTimecardData = `
-Relatório de Ponto Semanal:
+export const initialTimecardData = `Exemplo de dados de vários funcionários em formatos diferentes:
 
 Funcionário: João Silva, ID: 123
 - 22/07/2024: Entrada 09:03, Saída 17:05
@@ -45,10 +44,11 @@ Funcionário: João Silva, ID: 123
 Funcionária: Maria Oliveira, ID: 456
 - 22/07, das 9hr até 17hr
 - 23/07, chegou 8:50, saiu 17:02. Intervalo de 1h.
-- 24/07, médica, das 14h as 15h. expediente: 9h as 18h
+- 24/07, atestado médico, ausente das 14h as 15h, trabalhou no resto do dia (9h às 18h).
 
-Anotações avulsas:
-Carlos (ID 789), 22/07: 9:15-17:15.
+Anotações avulsas de Carlos (ID 789)
+- 22/07: 9:15-17:15.
+- 23/07: Chegou 15 min atrasado.
 `;
 
 export const todaysActivityData: ClockEvent[] = [
@@ -57,3 +57,24 @@ export const todaysActivityData: ClockEvent[] = [
     { time: "13:33:10", type: "Entrada" },
 ];
 
+export const personalTimeReportData = {
+    workedHours: "128h 30m",
+    timeBank: "12h 45m",
+    timeBankChange: "+2h 15m este mês",
+    timeBankChangeType: "positive",
+};
+
+export const lateAverageData = [
+    { month: "Jan", "Média de Atraso": 2.5 },
+    { month: "Fev", "Média de Atraso": 3.1 },
+    { month: "Mar", "Média de Atraso": 1.8 },
+    { month: "Abr", "Média de Atraso": 4.2 },
+    { month: "Mai", "Média de Atraso": 1.5 },
+    { month: "Jun", "Média de Atraso": 2.0 },
+];
+
+export const personalTimeOffData = [
+    { type: "Férias", count: 10, fill: "hsl(var(--chart-1))" },
+    { type: "Licença Médica", count: 2, fill: "hsl(var(--chart-2))" },
+    { type: "Pessoal", count: 0, fill: "hsl(var(--chart-4))" },
+];
