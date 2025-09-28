@@ -1,0 +1,19 @@
+rules_version = '2';
+
+// Regras de segurança para o Firebase Storage
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Regra para a pasta de certificados: Ninguém pode ler ou escrever a partir do cliente.
+    // Apenas o seu backend (usando o Admin SDK) terá permissão para acessar estes arquivos.
+    match /certs/{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    // Regra geral para outros arquivos: Permite leitura e escrita para usuários autenticados.
+    // Você pode ajustar esta regra conforme necessário para sua aplicação.
+    // Por exemplo, permitir que um usuário leia apenas os seus próprios arquivos.
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
