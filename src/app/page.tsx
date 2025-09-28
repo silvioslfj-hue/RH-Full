@@ -13,7 +13,7 @@ function CollaboratorLoginForm() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push('/dashboard');
+    router.push('/clock');
   };
 
   return (

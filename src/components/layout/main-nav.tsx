@@ -8,10 +8,11 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar'
-import { LayoutDashboard, Clock, CalendarOff, BarChart3, BotMessageSquare } from 'lucide-react'
+import { LayoutDashboard, Clock, CalendarOff, BarChart3, BotMessageSquare, Hourglass } from 'lucide-react'
 
 const menuItems = [
-  { href: '/dashboard', label: 'Painel', icon: LayoutDashboard },
+  { href: '/clock', label: 'Registro de Ponto', icon: Hourglass },
+  { href: '/dashboard', label: 'Resumo', icon: LayoutDashboard },
   { href: '/timecards', label: 'Cartões de Ponto', icon: Clock },
   { href: '/absences', label: 'Ausências', icon: CalendarOff },
   { href: '/reports', label: 'Relatórios', icon: BarChart3 },
