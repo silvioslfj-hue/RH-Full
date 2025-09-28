@@ -48,6 +48,15 @@ export type Employee = {
     avatar?: string;
 }
 
+export type EsocialEvent = {
+  id: string;
+  type: string;
+  employeeName: string;
+  referenceDate: string;
+  status: 'Pendente' | 'Enviado' | 'Erro';
+  details: string;
+};
+
 
 export const summaryData = [
     { title: "Horas Esta Semana", value: "32.5", change: "+5.2%", changeType: "positive" },
@@ -174,3 +183,12 @@ export const payrollHistoryData = [
   { id: "HIST004", competence: "Junho/2024", employeeId: "FUNC002", employeeName: "John Smith", grossSalary: 8000.00, netSalary: 6050.20, status: "Finalizado" },
   { id: "HIST005", competence: "Junho/2024", employeeId: "FUNC003", employeeName: "Alice Johnson", grossSalary: 6000.00, netSalary: 4850.00, status: "Finalizado" },
 ];
+
+export const esocialEventsData: EsocialEvent[] = [
+    { id: "EVT001", type: "S-2200 - Admissão", employeeName: "Carlos Andrade", referenceDate: "2024-07-01", status: "Pendente", details: "Admissão do novo analista de sistemas." },
+    { id: "EVT002", type: "S-2200 - Admissão", employeeName: "Mariana Costa", referenceDate: "2024-07-01", status: "Pendente", details: "Admissão da nova designer." },
+    { id: "EVT003", type: "S-2299 - Desligamento", employeeName: "Felipe Souza", referenceDate: "2024-07-15", status: "Pendente", details: "Desligamento a pedido do funcionário." },
+    { id: "EVT004", type: "S-1200 - Remuneração", employeeName: "Jane Doe", referenceDate: "2024-07-31", status: "Pendente", details: "Folha de pagamento de Julho/2024" },
+    { id: "EVT005", type: "S-1200 - Remuneração", employeeName: "John Smith", referenceDate: "2024-07-31", status: "Pendente", details: "Folha de pagamento de Julho/2024" },
+    { id: "EVT006", type: "S-1210 - Pagamentos", employeeName: "Todos", referenceDate: "2024-08-05", status: "Enviado", details: "Pagamento de salários de Julho/2024" },
+]

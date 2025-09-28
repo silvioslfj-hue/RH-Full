@@ -12,12 +12,15 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { KeyRound, Settings, Send, Building, Search, UserPlus, UserMinus, FileText } from "lucide-react";
+import { KeyRound, Settings, Send, Building, Search, UserPlus, UserMinus, FileText, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { companyData } from "@/lib/data";
+import { companyData, esocialEventsData } from "@/lib/data";
 import { Input } from "@/components/ui/input";
+import { ESocialEventsTable } from "@/components/esocial/esocial-events-table";
+import { useState, useTransition } from "react";
+import type { EsocialEvent } from "@/lib/data";
 
 const pendingEvents = {
     admissions: 2,
@@ -27,12 +30,43 @@ const pendingEvents = {
 
 export default function ESocialPage() {
     const { toast } = useToast();
+    const [isSending, startTransition] = useTransition();
+    const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
+    const [events, setEvents] = useState<EsocialEvent[]>(esocialEventsData);
+
 
     const handleSendEvents = () => {
-        toast({
-            title: "Envio em Simulação",
-            description: "Os eventos do eSocial seriam gerados e enviados para a API do governo neste momento.",
-        })
+        if(selectedEvents.length === 0) {
+            toast({
+                variant: "destructive",
+                title: "Nenhum Evento Selecionado",
+                description: "Selecione ao menos um evento para gerar o envio.",
+            });
+            return;
+        }
+
+        startTransition(() => {
+             toast({
+                title: "Envio em Simulação Iniciado...",
+                description: `Gerando e enviando ${selectedEvents.length} eventos para o eSocial.`,
+            });
+
+            // Simula o processamento
+            setTimeout(() => {
+                setEvents(prev => 
+                    prev.map(event => 
+                        selectedEvents.includes(event.id) 
+                            ? { ...event, status: 'Enviado' } 
+                            : event
+                    )
+                );
+                setSelectedEvents([]);
+                toast({
+                    title: "Envio Concluído!",
+                    description: "Os eventos selecionados foram enviados com sucesso.",
+                });
+            }, 2500);
+        });
     }
 
   return (
@@ -135,11 +169,28 @@ export default function ESocialPage() {
                     </CardContent>
                 </Card>
             </CardContent>
-             <CardFooter className="flex-col items-stretch gap-4 sm:flex-row sm:justify-end">
-                <Button variant="outline">Ver Detalhes dos Eventos</Button>
-                 <Button onClick={handleSendEvents}>
-                    <Send className="mr-2 h-4 w-4"/>
-                    Gerar e Enviar Eventos para o eSocial
+        </Card>
+
+        <Card>
+             <CardHeader>
+                <CardTitle>Seleção de Eventos para Envio</CardTitle>
+                <CardDescription>Marque os eventos que você deseja gerar e enviar para o eSocial.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ESocialEventsTable 
+                    data={events}
+                    selectedEvents={selectedEvents}
+                    onSelectedEventsChange={setSelectedEvents}
+                />
+            </CardContent>
+            <CardFooter className="flex-col items-stretch gap-4 sm:flex-row sm:justify-end">
+                 <Button onClick={handleSendEvents} disabled={isSending || selectedEvents.length === 0}>
+                    {isSending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                    ) : (
+                        <Send className="mr-2 h-4 w-4"/>
+                    )}
+                    {isSending ? `Enviando ${selectedEvents.length} eventos...` : `Gerar e Enviar ${selectedEvents.length} Eventos`}
                 </Button>
             </CardFooter>
         </Card>
