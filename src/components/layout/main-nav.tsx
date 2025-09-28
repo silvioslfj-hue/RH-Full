@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   useSidebar
 } from '@/components/ui/sidebar'
-import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText, FileArchive, Settings, Users, Calculator, History } from 'lucide-react'
+import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText, FileArchive, Settings, Users, Calculator, History, PieChart } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 const adminMenuItems = [
@@ -19,6 +19,7 @@ const adminMenuItems = [
   { href: '/timecards', label: 'Cartões de Ponto', icon: Clock },
   { href: '/payroll', label: 'Processar Folha', icon: Calculator },
   { href: '/payroll-history', label: 'Histórico de Folhas', icon: History },
+  { href: '/payroll-reports', label: 'Relatórios de Folha', icon: PieChart },
   { href: '/absences', label: 'Ausências', icon: CalendarOff },
   { href: '/reports', label: 'Relatórios', icon: BarChart3 },
   { href: '/fiscal-files', label: 'Arquivos Fiscais', icon: FileArchive },
@@ -35,7 +36,7 @@ const collaboratorMenuItems = [
   { href: '/income-reports', label: 'Informe de Rendimentos', icon: FileText },
 ]
 
-const adminPaths = ['/dashboard', '/timecards', '/reports', '/fiscal-files', '/settings', '/employees', '/payroll', '/payroll-history'];
+const adminPaths = ['/dashboard', '/timecards', '/reports', '/fiscal-files', '/settings', '/employees', '/payroll', '/payroll-history', '/payroll-reports'];
 
 export function MainNav() {
   const pathname = usePathname();
