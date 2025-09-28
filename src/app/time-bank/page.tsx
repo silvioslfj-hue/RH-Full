@@ -10,12 +10,13 @@ import { Button } from "@/components/ui/button";
 import { TimeBankExpiryAlert } from "@/components/dashboard/admin/time-bank-expiry-alert";
 import { timeBankData as initialTimeBankData, companyData, unitData, employeeData } from "@/lib/data";
 import { TimeBankTable } from "@/components/time-bank/time-bank-table";
+import type { TimeBankEntry } from "@/lib/data";
 
 export default function TimeBankPage() {
   const [timeBankData, setTimeBankData] = useState(initialTimeBankData);
   
-  const expiringCount = useMemo(() => {
-    return timeBankData.filter(item => item.status === 'Crítico' || item.status === 'Atenção').length;
+  const expiringEntries = useMemo(() => {
+    return timeBankData.filter(item => item.status === 'Crítico' || item.status === 'Atenção');
   }, [timeBankData]);
 
   return (
@@ -26,8 +27,8 @@ export default function TimeBankPage() {
           <p className="text-muted-foreground">Monitore e gerencie o saldo de horas dos colaboradores.</p>
         </div>
 
-        {expiringCount > 0 && (
-            <TimeBankExpiryAlert count={expiringCount} />
+        {expiringEntries.length > 0 && (
+            <TimeBankExpiryAlert count={expiringEntries.length} data={expiringEntries} />
         )}
 
         <Card>
