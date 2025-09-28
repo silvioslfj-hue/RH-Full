@@ -42,6 +42,7 @@ export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
   }, [])
 
   useEffect(() => {
+    let stream: MediaStream | null = null;
     const getPermissions = async () => {
       // Get Location
       navigator.geolocation.getCurrentPosition(
@@ -57,7 +58,7 @@ export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
       
       // Get Camera
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
         setHasCameraPermission(true);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -77,9 +78,14 @@ export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
     getPermissions();
 
     return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
+      if (stream) {
         stream.getTracks().forEach(track => track.stop());
+      }
+      if (videoRef.current && videoRef.current.srcObject) {
+        // Double check to stop tracks
+        const currentStream = videoRef.current.srcObject as MediaStream;
+        currentStream.getTracks().forEach(track => track.stop());
+        videoRef.current.srcObject = null;
       }
     }
   }, [toast]);
