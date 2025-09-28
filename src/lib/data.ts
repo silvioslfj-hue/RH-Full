@@ -17,6 +17,15 @@ export const absenceData = [
   { id: "ABS006", employee: "Fiona Garcia", startDate: "2024-08-12", endDate: "2024-08-12", type: "Pessoal", status: "Pendente" },
 ];
 
+export const teamStatusData = [
+  { name: "Alice Johnson", status: "Trabalhando", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d" },
+  { name: "Bob Williams", status: "Trabalhando", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026705d" },
+  { name: "Charlie Brown", status: "De folga", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026706d" },
+  { name: "Diana Miller", status: "Em pausa", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026707d" },
+  { name: "Ethan Hunt", status: "Ausente (Licença Médica)", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026708d" },
+];
+
+
 export const attendanceReportData = [
   { date: "Jul 15", Presentes: 95, Ausentes: 5 },
   { date: "Jul 16", Presentes: 98, Ausentes: 2 },
