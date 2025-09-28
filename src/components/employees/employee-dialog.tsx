@@ -258,6 +258,10 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
                         <Label htmlFor="admissionDate">Data de Admissão</Label>
                         <Input id="admissionDate" type="date" />
                     </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="startDate">Data de Início</Label>
+                        <Input id="startDate" type="date" />
+                    </div>
                  </div>
             </TabsContent>
             
@@ -423,5 +427,7 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
     </Dialog>
   );
 }
+
+    
 
     
