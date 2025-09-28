@@ -85,58 +85,37 @@ function AdminLoginForm() {
   );
 }
 
-const systemModules = [
-    { id: 'payroll', label: 'Folha de Pagamento' },
-    { id: 'time-tracking', label: 'Ponto Eletrônico' },
-    { id: 'recruitment', label: 'Recrutamento (Assistente de Vagas)' },
-    { id: 'esocial', label: 'eSocial e Fiscal' },
-    { id: 'reports', label: 'Relatórios Gerenciais' },
-    { id: 'absences', label: 'Gestão de Ausências' },
-]
+function SuperAdminLoginForm() {
+  const router = useRouter();
 
-function SuperAdminPanel() {
-    return (
-        <Card className="border-red-500/50">
-            <CardHeader>
-                <CardTitle>Painel do Super Administrador</CardTitle>
-                <CardDescription>Gerencie os administradores e os módulos do sistema.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                <div>
-                    <h3 className="font-semibold text-lg mb-2">Cadastrar Novo Administrador</h3>
-                    <div className="space-y-4">
-                        <div className="space-y-1.5">
-                            <Label htmlFor="admin-name">Nome</Label>
-                            <Input id="admin-name" placeholder="Nome do administrador" />
-                        </div>
-                         <div className="space-y-1.5">
-                            <Label htmlFor="admin-email">Email</Label>
-                            <Input id="admin-email" type="email" placeholder="email@empresa.com" />
-                        </div>
-                        <Button className="w-full">Cadastrar Novo Administrador</Button>
-                    </div>
-                </div>
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (typeof window !== 'undefined') {
+      // No futuro, aqui haveria uma verificação de 'super-admin'
+      window.sessionStorage.setItem('userRole', 'admin');
+    }
+    router.push('/dashboard');
+  };
 
-                <Separator />
-
-                <div>
-                    <h3 className="font-semibold text-lg mb-2">Módulos do Sistema</h3>
-                    <div className="space-y-3">
-                        {systemModules.map(module => (
-                            <div key={module.id} className="flex items-center space-x-2">
-                                <Checkbox id={module.id} defaultChecked />
-                                <Label htmlFor={module.id} className="font-normal">{module.label}</Label>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </CardContent>
-            <CardFooter>
-                 <Button className="w-full" variant="outline">Salvar Configurações de Módulos</Button>
-            </CardFooter>
-        </Card>
-    );
+  return (
+    <form onSubmit={handleLogin}>
+      <div className="grid w-full items-center gap-4">
+        <div className="flex flex-col space-y-1.5">
+          <Label htmlFor="super-admin-email">Email</Label>
+          <Input id="super-admin-email" type="email" placeholder="super.admin@empresa.com" />
+        </div>
+        <div className="flex flex-col space-y-1.5">
+          <Label htmlFor="super-admin-password">Senha</Label>
+          <Input id="super-admin-password" type="password" placeholder="Sua senha de Super Admin" />
+        </div>
+      </div>
+      <Button type="submit" className="w-full mt-6">
+        Entrar como Super Admin
+      </Button>
+    </form>
+  );
 }
+
 
 export default function LoginPage() {
   return (
@@ -168,7 +147,7 @@ export default function LoginPage() {
             </TabsContent>
             <TabsContent value="super-admin">
               <div className="p-4 pt-6">
-                <SuperAdminPanel />
+                <SuperAdminLoginForm />
               </div>
             </TabsContent>
           </Tabs>
