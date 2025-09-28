@@ -54,7 +54,7 @@ export type EsocialEvent = {
   employeeName: string;
   employeeId: string; // The ID of the employee to fetch full data
   referenceDate: string;
-  status: 'Pendente' | 'Enviado' | 'Erro';
+  status: 'Pendente' | 'Enviado' | 'Erro' | 'Rejeitado';
   details: string;
 };
 
@@ -193,3 +193,5 @@ export const esocialEventsData: EsocialEvent[] = [
     { id: "EVT005", type: "S-1200 - Remuneração", employeeName: "Mariana Costa", employeeId: "FUNC002", referenceDate: "2024-07-31", status: "Pendente", details: "Folha de pagamento de Julho/2024" },
     { id: "EVT006", type: "S-1210 - Pagamentos", employeeName: "Todos", employeeId: "N/A", referenceDate: "2024-08-05", status: "Enviado", details: "Pagamento de salários de Julho/2024" },
 ]
+
+    

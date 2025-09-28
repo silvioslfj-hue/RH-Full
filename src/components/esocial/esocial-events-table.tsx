@@ -17,28 +17,35 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { MoreHorizontal, Ban, Trash2, FileJson } from "lucide-react";
 import type { EsocialEvent } from "@/lib/data";
 
 interface ESocialEventsTableProps {
   data: EsocialEvent[];
   selectedEvents: string[];
   onSelectedEventsChange: (ids: string[]) => void;
+  onReject: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
 export function ESocialEventsTable({ 
     data, 
     selectedEvents,
-    onSelectedEventsChange
+    onSelectedEventsChange,
+    onReject,
+    onDelete,
 }: ESocialEventsTableProps) {
     
-  const isAllSelected = data.length > 0 && selectedEvents.length === data.filter(d => d.status === 'Pendente').length;
+  const pendingEvents = data.filter(d => d.status === 'Pendente');
+  const isAllSelected = pendingEvents.length > 0 && selectedEvents.length === pendingEvents.length;
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      onSelectedEventsChange(data.filter(d => d.status === 'Pendente').map(d => d.id));
+      onSelectedEventsChange(pendingEvents.map(d => d.id));
     } else {
       onSelectedEventsChange([]);
     }
@@ -60,6 +67,8 @@ export function ESocialEventsTable({
         return "default";
       case "Erro":
         return "destructive";
+      case "Rejeitado":
+        return "outline";
       default:
         return "outline";
     }
@@ -74,7 +83,8 @@ export function ESocialEventsTable({
               <Checkbox
                 checked={isAllSelected}
                 onCheckedChange={(checked) => handleSelectAll(!!checked)}
-                aria-label="Selecionar todos"
+                aria-label="Selecionar todos os eventos pendentes"
+                disabled={pendingEvents.length === 0}
               />
             </TableHead>
             <TableHead>Tipo de Evento</TableHead>
@@ -85,44 +95,104 @@ export function ESocialEventsTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((event) => (
-            <TableRow key={event.id} data-state={selectedEvents.includes(event.id) && "selected"}>
-              <TableCell padding="checkbox" className="text-center">
-                <Checkbox
-                  checked={selectedEvents.includes(event.id)}
-                  onCheckedChange={(checked) => handleSelectOne(event.id, !!checked)}
-                  aria-label={`Selecionar evento ${event.id}`}
-                  disabled={event.status !== 'Pendente'}
-                />
-              </TableCell>
-              <TableCell className="font-medium">{event.type}</TableCell>
-              <TableCell>{event.employeeName}</TableCell>
-              <TableCell>{event.referenceDate}</TableCell>
-              <TableCell>
-                <Badge variant={getStatusVariant(event.status)}>
-                  {event.status}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Abrir menu</span>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Ver detalhes XML</DropdownMenuItem>
-                    {event.status === "Erro" && (
-                        <DropdownMenuItem className="text-destructive">Ver erro</DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+          {data.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="h-24 text-center">
+                Nenhum evento encontrado para esta competência.
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            data.map((event) => (
+              <TableRow key={event.id} data-state={selectedEvents.includes(event.id) && "selected"}>
+                <TableCell padding="checkbox" className="text-center">
+                  <Checkbox
+                    checked={selectedEvents.includes(event.id)}
+                    onCheckedChange={(checked) => handleSelectOne(event.id, !!checked)}
+                    aria-label={`Selecionar evento ${event.id}`}
+                    disabled={event.status !== 'Pendente'}
+                  />
+                </TableCell>
+                <TableCell className="font-medium">{event.type}</TableCell>
+                <TableCell>{event.employeeName}</TableCell>
+                <TableCell>{event.referenceDate}</TableCell>
+                <TableCell>
+                  <Badge variant={getStatusVariant(event.status)}>
+                    {event.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Abrir menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>
+                        <FileJson className="mr-2 h-4 w-4" />
+                        Ver detalhes XML
+                      </DropdownMenuItem>
+                      {event.status === "Erro" && (
+                          <DropdownMenuItem className="text-destructive">Ver erro</DropdownMenuItem>
+                      )}
+                      {(event.status === 'Pendente' || event.status === 'Erro') && (
+                          <>
+                          <DropdownMenuSeparator />
+                           <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                  <Ban className="mr-2 h-4 w-4" />
+                                  Rejeitar Evento
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Rejeitar este evento?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta ação marcará o evento como "Rejeitado" e o removerá da fila de envio. Ele permanecerá no histórico para fins de auditoria. Você tem certeza?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => onReject(event.id)}>Sim, Rejeitar</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+
+                           <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 focus:text-red-600">
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Excluir Evento
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Excluir este evento permanentemente?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta ação não pode ser desfeita. O evento será removido para sempre e não aparecerá em relatórios futuros. Considere "Rejeitar" se precisar manter um registro.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => onDelete(event.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                    Sim, Excluir
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            )))}
         </TableBody>
       </Table>
     </div>
   );
 }
+
+    

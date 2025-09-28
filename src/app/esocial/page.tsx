@@ -113,6 +113,24 @@ export default function ESocialPage() {
         });
     }
 
+    const handleDeleteEvent = (eventId: string) => {
+        setEvents(prev => prev.filter(e => e.id !== eventId));
+        setSelectedEvents(prev => prev.filter(id => id !== eventId));
+        toast({
+            title: "Evento Excluído",
+            description: "O evento foi removido permanentemente da fila.",
+        });
+    }
+
+    const handleRejectEvent = (eventId: string) => {
+        setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: 'Rejeitado' } : e));
+        setSelectedEvents(prev => prev.filter(id => id !== eventId));
+        toast({
+            title: "Evento Rejeitado",
+            description: "O evento foi marcado como rejeitado e não será enviado.",
+        });
+    }
+
   return (
     <AppLayout>
       <div className="space-y-8">
@@ -235,6 +253,8 @@ export default function ESocialPage() {
                     data={events}
                     selectedEvents={selectedEvents}
                     onSelectedEventsChange={setSelectedEvents}
+                    onDelete={handleDeleteEvent}
+                    onReject={handleRejectEvent}
                 />
             </CardContent>
             <CardFooter className="flex-col items-stretch gap-4 sm:flex-row sm:justify-end">
@@ -266,3 +286,5 @@ export default function ESocialPage() {
     </AppLayout>
   );
 }
+
+    
