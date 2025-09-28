@@ -29,23 +29,17 @@ const collaboratorMenuItems = [
 ]
 
 const adminPaths = ['/dashboard', '/timecards', '/reports'];
-const collaboratorPaths = ['/clock', '/proofs', '/justifications', '/payslips', '/income-reports', '/my-reports'];
 
 export function MainNav() {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar();
 
-  const isAdminRoute = adminPaths.some(path => pathname.startsWith(path)) || (pathname.startsWith('/absences') && !collaboratorPaths.some(path => pathname.startsWith(path)));
-  let menuItems;
+  // A rota de administrador é qualquer uma que comece com os caminhos de admin.
+  // Qualquer outra rota (incluindo '/absences' quando não originada de um admin) será considerada de colaborador.
+  // Esta é uma simplificação para o protótipo.
+  const isAdminRoute = adminPaths.some(path => pathname.startsWith(path));
   
-  if (isAdminRoute) {
-    menuItems = adminMenuItems;
-  } else {
-    // Para rotas compartilhadas como /absences, precisamos de uma lógica mais robusta.
-    // Por agora, se não for uma rota admin específica, assumimos que é colaborador.
-    menuItems = collaboratorMenuItems;
-  }
-
+  const menuItems = isAdminRoute ? adminMenuItems : collaboratorMenuItems;
 
   const handleLinkClick = () => {
     setOpenMobile(false);
