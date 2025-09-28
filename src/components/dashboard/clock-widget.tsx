@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { PlayCircle, PauseCircle, Clock, MapPin, Loader2, CheckCircle, Video, VideoOff } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
+import { ClockConfirmationDialog } from './clock-confirmation-dialog'
+import { useRouter } from 'next/navigation'
 
 export type ClockEvent = {
   time: string;
@@ -26,8 +28,10 @@ export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
   const [timeElapsed, setTimeElapsed] = useState(0)
   const [location, setLocation] = useState<GeolocationCoordinates | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const [isConfirmationDialogOpen, setIsConfirmationDialogOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -128,7 +132,8 @@ export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
     if (newStatus) { // Clocking in
       setTimeElapsed(0)
     }
-    // If clocking out, timeElapsed just stops.
+
+    setIsConfirmationDialogOpen(true);
   }
 
   const handleClockAction = () => {
@@ -138,8 +143,8 @@ export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
         setTimeout(() => {
             setStatus('success');
             handleVerificationSuccess();
-            // Reset to scanning after a while
-            setTimeout(() => setStatus('scanning'), 2000);
+            // Reset to scanning after a while - this will be quick before dialog
+            setTimeout(() => setStatus('scanning'), 200);
         }, 2000);
     } else {
         toast({
@@ -149,6 +154,11 @@ export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
         });
     }
   }
+
+  const handleLogout = () => {
+    setIsConfirmationDialogOpen(false);
+    router.push('/');
+  };
   
   const renderCameraContent = () => {
     if (hasCameraPermission === null) {
@@ -178,7 +188,7 @@ export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
                 </div>
             )
         case 'success':
-            return (
+             return (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-green-500/90 text-white z-10">
                     <CheckCircle className="w-16 h-16" />
                     <p className="mt-4 text-lg font-semibold">Ponto Registrado!</p>
@@ -192,48 +202,54 @@ export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
 
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Video className="h-6 w-6" />
-          Reconhecimento de Ponto
-        </CardTitle>
-        <CardDescription>{formatDate(currentTime)}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex-grow flex flex-col items-center justify-center gap-4">
-        <div className="w-full max-w-md aspect-video bg-slate-900 rounded-lg flex items-center justify-center overflow-hidden relative">
-            {renderCameraContent()}
-            <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
-        </div>
-        <div className="text-5xl font-bold font-mono tracking-wider">
-          {formatTime(currentTime)}
-        </div>
-        <div className="text-center">
-          <p className="text-muted-foreground">
-            Status: <span className={`font-semibold ${isClockedIn ? 'text-green-500' : 'text-red-500'}`}>{isClockedIn ? 'Entrada Registrada' : 'Saída Registrada'}</span>
-          </p>
-          {isClockedIn && (
+    <>
+      <Card className="h-full flex flex-col">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Video className="h-6 w-6" />
+            Reconhecimento de Ponto
+          </CardTitle>
+          <CardDescription>{formatDate(currentTime)}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex-grow flex flex-col items-center justify-center gap-4">
+          <div className="w-full max-w-md aspect-video bg-slate-900 rounded-lg flex items-center justify-center overflow-hidden relative">
+              {renderCameraContent()}
+              <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
+          </div>
+          <div className="text-5xl font-bold font-mono tracking-wider">
+            {formatTime(currentTime)}
+          </div>
+          <div className="text-center">
             <p className="text-muted-foreground">
-              Tempo Decorrido: <span className="font-semibold">{formatElapsedTime(timeElapsed)}</span>
+              Status: <span className={`font-semibold ${isClockedIn ? 'text-green-500' : 'text-red-500'}`}>{isClockedIn ? 'Entrada Registrada' : 'Saída Registrada'}</span>
             </p>
-          )}
-           {location && (
-            <p className="text-muted-foreground text-xs flex items-center gap-1 mt-2">
-              <MapPin className="h-3 w-3" />
-              {`Localização: ${location.latitude.toFixed(2)}, ${location.longitude.toFixed(2)}`}
-            </p>
-          )}
-        </div>
-        <Button
-          size="lg"
-          className={`w-48 transition-all duration-300 ${isClockedIn ? 'bg-accent text-accent-foreground hover:bg-accent/90' : 'bg-primary text-primary-foreground'}`}
-          onClick={handleClockAction}
-          disabled={status === 'verifying' || status === 'success' || hasCameraPermission !== true}
-        >
-          {isClockedIn ? <PauseCircle className="mr-2 h-5 w-5" /> : <PlayCircle className="mr-2 h-5 w-5" />}
-          {isClockedIn ? 'Registrar Saída' : 'Registrar Entrada'}
-        </Button>
-      </CardContent>
-    </Card>
+            {isClockedIn && (
+              <p className="text-muted-foreground">
+                Tempo Decorrido: <span className="font-semibold">{formatElapsedTime(timeElapsed)}</span>
+              </p>
+            )}
+            {location && (
+              <p className="text-muted-foreground text-xs flex items-center gap-1 mt-2">
+                <MapPin className="h-3 w-3" />
+                {`Localização: ${location.latitude.toFixed(2)}, ${location.longitude.toFixed(2)}`}
+              </p>
+            )}
+          </div>
+          <Button
+            size="lg"
+            className={`w-48 transition-all duration-300 ${isClockedIn ? 'bg-accent text-accent-foreground hover:bg-accent/90' : 'bg-primary text-primary-foreground'}`}
+            onClick={handleClockAction}
+            disabled={status === 'verifying' || status === 'success' || hasCameraPermission !== true}
+          >
+            {isClockedIn ? <PauseCircle className="mr-2 h-5 w-5" /> : <PlayCircle className="mr-2 h-5 w-5" />}
+            {isClockedIn ? 'Registrar Saída' : 'Registrar Entrada'}
+          </Button>
+        </CardContent>
+      </Card>
+      <ClockConfirmationDialog
+        isOpen={isConfirmationDialogOpen}
+        onConfirm={handleLogout}
+      />
+    </>
   )
 }
