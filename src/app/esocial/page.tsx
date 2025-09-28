@@ -16,11 +16,10 @@ import { KeyRound, Settings, Send, Building, Search, UserPlus, UserMinus, FileTe
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { companyData, esocialEventsData as initialEsocialEventsData } from "@/lib/data";
+import type { Company, EsocialEvent } from "@/lib/data";
 import { Input } from "@/components/ui/input";
 import { ESocialEventsTable } from "@/components/esocial/esocial-events-table";
-import { useState, useTransition, useMemo } from "react";
-import type { EsocialEvent } from "@/lib/data";
+import { useState, useTransition, useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -30,27 +29,48 @@ import {
 } from "@/components/ui/dialog";
 import { generateESocialEventData } from "@/ai/flows/esocial-event-flow";
 import { generateContractChangeData } from "@/ai/flows/contract-change-flow";
+import { db } from "@/lib/firebaseClient";
+import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
 
 
 export default function ESocialPage() {
     const { toast } = useToast();
     const [isSending, startTransition] = useTransition();
     const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
-    const [events, setEvents] = useState<EsocialEvent[]>(initialEsocialEventsData);
+    const [events, setEvents] = useState<EsocialEvent[]>([]);
+    const [companies, setCompanies] = useState<Company[]>([]);
     const [isDataViewerOpen, setIsDataViewerOpen] = useState(false);
     const [generatedData, setGeneratedData] = useState<object | null>(null);
     const [dataViewerTitle, setDataViewerTitle] = useState('');
 
     const [competenceFilter, setCompetenceFilter] = useState("2024-07");
-    const [companyFilter, setCompanyFilter] = useState("01.234.567/0001-89");
+    const [companyFilter, setCompanyFilter] = useState("all");
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [eventsSnapshot, companiesSnapshot] = await Promise.all([
+                    getDocs(collection(db, "esocialEvents")),
+                    getDocs(collection(db, "companies")),
+                ]);
+                setEvents(eventsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EsocialEvent)));
+                setCompanies(companiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Company)));
+            } catch (error) {
+                console.error("Error fetching eSocial data:", error);
+                toast({ variant: "destructive", title: "Erro ao buscar eventos do eSocial." });
+            }
+        };
+        fetchData();
+    }, [toast]);
+
 
     const filteredEvents = useMemo(() => {
         return events.filter(e => {
             const eventDate = new Date(e.referenceDate);
             const [year, month] = competenceFilter.split('-');
             const competenceMatch = eventDate.getFullYear() === parseInt(year) && (eventDate.getMonth() + 1) === parseInt(month);
-            // In a real app, company would be an ID. Here we simulate it based on employee ID for demo purposes.
-            const companyMatch = companyFilter === 'all' || (companyFilter === '01.234.567/0001-89' ? ['FUNC001', 'FUNC003', 'FUNC005'].includes(e.employeeId) : ['FUNC002'].includes(e.employeeId));
+            // This filtering logic might need to be improved based on how company is linked to an employee
+            const companyMatch = companyFilter === 'all' // || e.companyId === companyFilter;
             return competenceMatch && companyMatch;
         });
     }, [events, competenceFilter, companyFilter]);
@@ -111,7 +131,8 @@ export default function ESocialPage() {
                             title: `Dados Gerados para ${event.employeeName}!`,
                             description: `Os dados estruturados para o evento ${event.type} foram gerados pela IA.`,
                         });
-                        // Mark as sent for demo purposes
+                        
+                        await updateDoc(doc(db, "esocialEvents", eventId), { status: 'Enviado' });
                         setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: 'Enviado' } : e));
                         setSelectedEvents(prev => prev.filter(id => id !== eventId));
 
@@ -125,28 +146,39 @@ export default function ESocialPage() {
                         title: `Erro ao Gerar Dados para ${event.employeeName}`,
                         description: `Não foi possível gerar os dados do evento ${event.type} com a IA.`,
                     });
+                     await updateDoc(doc(db, "esocialEvents", eventId), { status: 'Erro' });
                      setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: 'Erro' } : e));
                 }
             }
         });
     }
 
-    const handleDeleteEvent = (eventId: string) => {
-        setEvents(prev => prev.filter(e => e.id !== eventId));
-        setSelectedEvents(prev => prev.filter(id => id !== eventId));
-        toast({
-            title: "Evento Excluído",
-            description: "O evento foi removido permanentemente da fila.",
-        });
+    const handleDeleteEvent = async (eventId: string) => {
+        try {
+            await deleteDoc(doc(db, "esocialEvents", eventId));
+            setEvents(prev => prev.filter(e => e.id !== eventId));
+            setSelectedEvents(prev => prev.filter(id => id !== eventId));
+            toast({
+                title: "Evento Excluído",
+                description: "O evento foi removido permanentemente da fila.",
+            });
+        } catch (error) {
+            toast({ variant: "destructive", title: "Erro ao excluir evento." });
+        }
     }
 
-    const handleRejectEvent = (eventId: string) => {
-        setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: 'Rejeitado' } : e));
-        setSelectedEvents(prev => prev.filter(id => id !== eventId));
-        toast({
-            title: "Evento Rejeitado",
-            description: "O evento foi marcado como rejeitado e não será enviado.",
-        });
+    const handleRejectEvent = async (eventId: string) => {
+        try {
+            await updateDoc(doc(db, "esocialEvents", eventId), { status: 'Rejeitado' });
+            setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: 'Rejeitado' } : e));
+            setSelectedEvents(prev => prev.filter(id => id !== eventId));
+            toast({
+                title: "Evento Rejeitado",
+                description: "O evento foi marcado como rejeitado e não será enviado.",
+            });
+        } catch (error) {
+             toast({ variant: "destructive", title: "Erro ao rejeitar evento." });
+        }
     }
 
     const handleResetFilters = () => {
@@ -196,8 +228,8 @@ export default function ESocialPage() {
                              <SelectItem value="all">
                                 Todas as Empresas
                             </SelectItem>
-                            {companyData.map(c => (
-                                <SelectItem key={c.id} value={c.cnpj}>
+                            {companies.map(c => (
+                                <SelectItem key={c.id} value={c.id}>
                                     {c.name} - {c.cnpj}
                                 </SelectItem>
                             ))}
@@ -316,3 +348,5 @@ export default function ESocialPage() {
     </AppLayout>
   );
 }
+
+    

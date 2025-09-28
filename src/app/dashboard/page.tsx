@@ -1,36 +1,66 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { QuickActions } from "@/components/dashboard/admin/quick-actions";
 import { TeamStatus } from "@/components/dashboard/admin/team-status";
 import { RecentAbsenceRequests } from "@/components/dashboard/admin/recent-absence-requests";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Building, Factory } from "lucide-react";
-import { absenceData as initialAbsenceData, esocialEventsData, employeeData } from "@/lib/data";
+import type { Absence, EsocialEvent, Employee } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { ESocialPendingAlert } from "@/components/dashboard/admin/esocial-pending-alert";
 import { TimeBankExpiryAlert } from "@/components/dashboard/admin/time-bank-expiry-alert";
+import { db } from "@/lib/firebaseClient";
+import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 
 export default function DashboardPage() {
   const [company, setCompany] = useState("all");
   const [unit, setUnit] = useState("all");
-  const [absenceData, setAbsenceData] = useState(initialAbsenceData);
+  const [absenceData, setAbsenceData] = useState<Absence[]>([]);
+  const [esocialEvents, setEsocialEvents] = useState<EsocialEvent[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const { toast } = useToast();
 
-  const handleStatusChange = (id: string, status: 'Aprovado' | 'Negado') => {
-    setAbsenceData(prev => prev.map(item => item.id === id ? { ...item, status } : item));
-    toast({
-        title: `Solicitação ${status === 'Aprovado' ? 'Aprovada' : 'Negada'}`,
-        description: `A solicitação de ausência foi marcada como "${status}".`,
-    });
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [absencesSnapshot, esocialEventsSnapshot, employeesSnapshot] = await Promise.all([
+          getDocs(collection(db, "absences")),
+          getDocs(collection(db, "esocialEvents")),
+          getDocs(collection(db, "employees")),
+        ]);
+        setAbsenceData(absencesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Absence)));
+        setEsocialEvents(esocialEventsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EsocialEvent)));
+        setEmployees(employeesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee)));
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        toast({ variant: "destructive", title: "Erro ao buscar dados para o painel." });
+      }
+    };
+    fetchData();
+  }, [toast]);
+
+  const handleStatusChange = async (id: string, status: 'Aprovado' | 'Negado') => {
+    const absenceRef = doc(db, "absences", id);
+    try {
+      await updateDoc(absenceRef, { status });
+      setAbsenceData(prev => prev.map(item => item.id === id ? { ...item, status } : item));
+      toast({
+          title: `Solicitação ${status === 'Aprovado' ? 'Aprovada' : 'Negada'}`,
+          description: `A solicitação de ausência foi marcada como "${status}".`,
+      });
+    } catch (error) {
+      console.error("Error updating absence status:", error);
+      toast({ variant: "destructive", title: "Erro ao atualizar status." });
+    }
   };
 
   const pendingAbsenceRequests = absenceData.filter(a => a.status === "Pendente");
-  const pendingESocialEventsCount = esocialEventsData.filter(e => e.status === "Pendente").length;
-  const activeEmployeesCount = employeeData.filter(e => e.status === "Ativo").length;
-  const timecardAlertsCount = 2; // Valor simulado para alertas de ponto
+  const pendingESocialEventsCount = esocialEvents.filter(e => e.status === "Pendente").length;
+  const activeEmployeesCount = employees.filter(e => e.status === "Ativo").length;
+  const timecardAlertsCount = 0; // Valor simulado para alertas de ponto
 
 
   return (
@@ -96,3 +126,5 @@ export default function DashboardPage() {
     </AppLayout>
   );
 }
+
+    

@@ -59,6 +59,15 @@ export type Employee = {
     avatar?: string;
 }
 
+export type Absence = {
+    id: string;
+    employee: string;
+    startDate: string;
+    endDate: string;
+    type: string;
+    status: 'Aprovado' | 'Pendente' | 'Negado';
+};
+
 export type EsocialEvent = {
   id: string;
   type: string;
@@ -259,3 +268,6 @@ export const disciplinaryData: DisciplinaryAction[] = [];
 
 
 
+
+
+    

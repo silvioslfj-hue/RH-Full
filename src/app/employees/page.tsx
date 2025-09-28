@@ -8,8 +8,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { PlusCircle, FileDown, Search, Building, MapPin } from "lucide-react";
 import { EmployeesTable } from "@/components/employees/employees-table";
 import { EmployeeDialog } from "@/components/employees/employee-dialog";
-import { employeeData as initialEmployeeData, unitData, roleData, workShiftData, companyData, esocialEventsData } from "@/lib/data";
-import type { Employee, EsocialEvent } from "@/lib/data";
+import type { Employee, EsocialEvent, Unit, Role, Company } from "@/lib/data";
 import { ContractChangeDialog } from "@/components/employees/contract-change-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -18,22 +17,64 @@ import { TerminationDialog } from "@/components/employees/termination-dialog";
 import { generateTerminationData } from "@/ai/flows/termination-flow";
 import { VacationDialog } from "@/components/employees/vacation-dialog";
 import { generateVacationData } from "@/ai/flows/vacation-flow";
-
+import { db } from "@/lib/firebaseClient";
+import { collection, getDocs, addDoc, setDoc, doc } from "firebase/firestore";
 
 export default function EmployeesPage() {
     const { toast } = useToast();
-    const [employees, setEmployees] = useState(initialEmployeeData);
+    const [employees, setEmployees] = useState<Employee[]>([]);
     const [isEmployeeDialogOpen, setIsEmployeeDialogOpen] = useState(false);
     const [isContractChangeDialogOpen, setIsContractChangeDialogOpen] = useState(false);
     const [isTerminationDialogOpen, setIsTerminationDialogOpen] = useState(false);
     const [isVacationDialogOpen, setIsVacationDialogOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
-    const [events, setEvents] = useState<EsocialEvent[]>(esocialEventsData);
+    const [events, setEvents] = useState<EsocialEvent[]>([]);
     const [isProcessing, startTransition] = useTransition();
 
     const [nameFilter, setNameFilter] = useState('');
     const [companyFilter, setCompanyFilter] = useState('all');
     const [unitFilter, setUnitFilter] = useState('all');
+
+    // States for settings data
+    const [companies, setCompanies] = useState<Company[]>([]);
+    const [units, setUnits] = useState<Unit[]>([]);
+    const [roles, setRoles] = useState<Role[]>([]);
+    const [workShifts, setWorkShifts] = useState<any[]>([]); // Assuming workShifts are also in settings
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [
+                    employeesSnapshot, 
+                    companiesSnapshot, 
+                    unitsSnapshot, 
+                    rolesSnapshot, 
+                    workShiftsSnapshot,
+                    esocialEventsSnapshot
+                ] = await Promise.all([
+                    getDocs(collection(db, "employees")),
+                    getDocs(collection(db, "companies")),
+                    getDocs(collection(db, "units")),
+                    getDocs(collection(db, "roles")),
+                    getDocs(collection(db, "workShifts")),
+                    getDocs(collection(db, "esocialEvents"))
+                ]);
+
+                setEmployees(employeesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee)));
+                setCompanies(companiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Company)));
+                setUnits(unitsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Unit)));
+                setRoles(rolesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Role)));
+                setWorkShifts(workShiftsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                setEvents(esocialEventsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EsocialEvent)));
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                toast({ variant: "destructive", title: "Erro ao carregar dados do Firestore." });
+            }
+        };
+        fetchData();
+    }, [toast]);
+
 
     const filteredEmployees = useMemo(() => {
         return employees.filter(employee => {
@@ -54,14 +95,24 @@ export default function EmployeesPage() {
         setIsEmployeeDialogOpen(false);
     };
 
-    const handleSaveEmployee = (employee: Employee) => {
-        if (editingEmployee) {
-            setEmployees(employees.map(e => e.id === employee.id ? employee : e));
-        } else {
-            const newEmployee = { ...employee, id: `FUNC${(employees.length + 1).toString().padStart(3, '0')}` };
-            setEmployees([...employees, newEmployee]);
+    const handleSaveEmployee = async (employeeData: any) => {
+        try {
+            if (editingEmployee) {
+                const docRef = doc(db, "employees", editingEmployee.id);
+                await setDoc(docRef, employeeData, { merge: true });
+                setEmployees(employees.map(e => e.id === editingEmployee.id ? { ...e, ...employeeData } : e));
+                toast({ title: "Colaborador atualizado com sucesso!" });
+            } else {
+                const docRef = await addDoc(collection(db, "employees"), employeeData);
+                const newEmployee = { ...employeeData, id: docRef.id };
+                setEmployees([...employees, newEmployee]);
+                toast({ title: "Colaborador adicionado com sucesso!" });
+            }
+            handleCloseEmployeeDialog();
+        } catch (error) {
+            console.error("Error saving employee:", error);
+            toast({ variant: "destructive", title: "Erro ao salvar colaborador." });
         }
-        handleCloseEmployeeDialog();
     };
 
     const handleOpenDeactivateDialog = (employee: Employee) => {
@@ -79,32 +130,40 @@ export default function EmployeesPage() {
         setIsVacationDialogOpen(true);
     };
 
-    const handleContractChange = (changeData: { newSalary?: number; newRole?: string }) => {
+    const handleContractChange = async (changeData: { newSalary?: number; newRole?: string }) => {
         if (!editingEmployee) return;
 
-        setEmployees(employees.map(e => e.id === editingEmployee.id ? { 
-            ...e, 
-            role: changeData.newRole || e.role,
-        } : e));
+        try {
+            const updatedEmployee = { 
+                ...editingEmployee, 
+                role: changeData.newRole || editingEmployee.role,
+            };
+            await setDoc(doc(db, "employees", editingEmployee.id), { role: updatedEmployee.role }, { merge: true });
+            setEmployees(employees.map(e => e.id === editingEmployee.id ? updatedEmployee : e));
 
-        const newEvent: EsocialEvent = {
-            id: `EVT${(events.length + 1).toString().padStart(3, '0')}`,
-            type: "S-2206 - Alteração Contratual",
-            employeeId: editingEmployee.id,
-            employeeName: editingEmployee.name,
-            referenceDate: new Date().toISOString().split('T')[0],
-            status: "Pendente",
-            details: `Alteração de contrato: ${changeData.newRole ? `Novo cargo: ${changeData.newRole}` : ''} ${changeData.newSalary ? `Novo salário: R$ ${changeData.newSalary}` : ''}`
-        };
-        console.log("Novo evento eSocial gerado:", newEvent);
-        
-        toast({
-            title: "Evento eSocial Gerado!",
-            description: "Um evento S-2206 (Alteração Contratual) foi adicionado à fila de envio do eSocial."
-        })
+            const newEventData: Omit<EsocialEvent, 'id'> = {
+                type: "S-2206 - Alteração Contratual",
+                employeeId: editingEmployee.id,
+                employeeName: editingEmployee.name,
+                referenceDate: new Date().toISOString().split('T')[0],
+                status: "Pendente",
+                details: `Alteração de contrato: ${changeData.newRole ? `Novo cargo: ${changeData.newRole}` : ''} ${changeData.newSalary ? `Novo salário: R$ ${changeData.newSalary}` : ''}`
+            };
 
-        setIsContractChangeDialogOpen(false);
-        setEditingEmployee(null);
+            const eventDocRef = await addDoc(collection(db, "esocialEvents"), newEventData);
+            setEvents(prev => [...prev, { ...newEventData, id: eventDocRef.id }]);
+            
+            toast({
+                title: "Evento eSocial Gerado!",
+                description: "Um evento S-2206 (Alteração Contratual) foi adicionado à fila de envio do eSocial."
+            });
+
+            setIsContractChangeDialogOpen(false);
+            setEditingEmployee(null);
+        } catch (error) {
+            console.error("Error handling contract change:", error);
+            toast({ variant: "destructive", title: "Erro ao processar alteração contratual." });
+        }
     }
     
     const handleTermination = (terminationData: { reasonCode: string, terminationDate: string }) => {
@@ -123,11 +182,11 @@ export default function EmployeesPage() {
                     reasonCode: terminationData.reasonCode,
                     terminationDate: terminationData.terminationDate,
                 });
-
+                
+                await setDoc(doc(db, "employees", editingEmployee.id), { status: 'Inativo' }, { merge: true });
                 setEmployees(employees.map(e => e.id === editingEmployee!.id ? { ...e, status: 'Inativo' } : e));
 
-                const newEvent: EsocialEvent = {
-                    id: `EVT${(events.length + 1).toString().padStart(3, '0')}`,
+                const newEventData: Omit<EsocialEvent, 'id'> = {
                     type: "S-2299 - Desligamento",
                     employeeId: editingEmployee.id,
                     employeeName: editingEmployee.name,
@@ -135,8 +194,8 @@ export default function EmployeesPage() {
                     status: "Pendente",
                     details: `Rescisão contratual. Motivo: ${terminationData.reasonCode}. Verbas: R$ ${result.terminationPaySummary.severancePay.toFixed(2)}`
                 };
-                // Simula adicionar o evento à lista global de eventos
-                setEvents(prev => [...prev, newEvent]);
+                const eventDocRef = await addDoc(collection(db, "esocialEvents"), newEventData);
+                setEvents(prev => [...prev, { ...newEventData, id: eventDocRef.id }]);
 
                 toast({
                     title: "Rescisão Processada com Sucesso!",
@@ -172,10 +231,10 @@ export default function EmployeesPage() {
                     reasonCode: vacationData.reasonCode,
                 });
 
+                await setDoc(doc(db, "employees", editingEmployee.id), { status: 'Férias' }, { merge: true });
                 setEmployees(employees.map(e => e.id === editingEmployee.id ? { ...e, status: 'Férias' } : e));
                 
-                const newEvent: EsocialEvent = {
-                    id: `EVT${(events.length + 1).toString().padStart(3, '0')}`,
+                const newEventData: Omit<EsocialEvent, 'id'> = {
                     type: "S-2230 - Afastamento Temporário",
                     employeeId: editingEmployee.id,
                     employeeName: editingEmployee.name,
@@ -183,7 +242,8 @@ export default function EmployeesPage() {
                     status: "Pendente",
                     details: `Início do afastamento por férias de ${vacationData.startDate} a ${vacationData.endDate}.`
                 };
-                setEvents(prev => [...prev, newEvent]);
+                const eventDocRef = await addDoc(collection(db, "esocialEvents"), newEventData);
+                setEvents(prev => [...prev, { ...newEventData, id: eventDocRef.id }]);
 
                 toast({
                     title: "Férias Programadas e Evento Gerado!",
@@ -245,7 +305,7 @@ export default function EmployeesPage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">Todas as Empresas</SelectItem>
-                                    {companyData.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                                    {companies.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                             <Select value={unitFilter} onValueChange={setUnitFilter}>
@@ -257,7 +317,7 @@ export default function EmployeesPage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">Todas as Unidades</SelectItem>
-                                    {unitData.map(u => <SelectItem key={u.id} value={u.name}>{u.name}</SelectItem>)}
+                                    {units.map(u => <SelectItem key={u.id} value={u.name}>{u.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -288,10 +348,10 @@ export default function EmployeesPage() {
                 onClose={handleCloseEmployeeDialog}
                 onSave={handleSaveEmployee}
                 employee={editingEmployee}
-                units={unitData}
-                roles={roleData}
-                workShifts={workShiftData}
-                companies={companyData}
+                units={units}
+                roles={roles}
+                workShifts={workShifts}
+                companies={companies}
             />
             
              <ContractChangeDialog
@@ -299,7 +359,7 @@ export default function EmployeesPage() {
                 onClose={() => setIsContractChangeDialogOpen(false)}
                 onSave={handleContractChange}
                 employee={editingEmployee}
-                roles={roleData}
+                roles={roles}
             />
             
             <TerminationDialog
@@ -320,3 +380,5 @@ export default function EmployeesPage() {
         </AppLayout>
     );
 }
+
+    
