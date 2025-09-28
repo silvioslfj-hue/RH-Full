@@ -20,10 +20,10 @@ const adminMenuItems = [
 
 const collaboratorMenuItems = [
   { href: '/clock', label: 'Registro de Ponto', icon: Hourglass },
+  { href: '/justifications', label: 'Justificativas', icon: FileCheck },
   { href: '/absences', label: 'Minhas Ausências', icon: CalendarOff },
   { href: '/reports', label: 'Meus Relatórios', icon: BarChart3 },
   { href: '/proofs', label: 'Comprovantes', icon: Receipt },
-  { href: '/justifications', label: 'Justificativas', icon: FileCheck },
 ]
 
 const adminPaths = ['/dashboard', '/timecards'];
