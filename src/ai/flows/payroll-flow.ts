@@ -16,8 +16,8 @@ import { timeBankData } from '@/lib/data';
 const PayrollInputSchema = z.object({
   employeeName: z.string().describe('The name of the employee.'),
   grossSalary: z.number().describe('The base gross salary of the employee for the month.'),
-  hoursWorked: z.number().describe('Total hours worked in the month.'),
-  overtimeHours: z.number().describe('Total overtime hours worked in the month.'),
+  normalOvertimeHours: z.number().optional().describe('Total overtime hours worked on regular days.'),
+  holidayOvertimeHours: z.number().optional().describe('Total overtime hours worked on Sundays and holidays.'),
   overtimeAction: z.enum(['pay', 'bank']).describe('What to do with the overtime hours: pay them or add to time bank.'),
   benefits: z.object({
     valeTransporte: z.number().optional().describe('Value of transportation benefit to be deducted.'),
@@ -29,7 +29,7 @@ export type PayrollInput = z.infer<typeof PayrollInputSchema>;
 const PayrollOutputSchema = z.object({
   grossSalary: z.number().describe('The base gross salary for the month.'),
   earnings: z.array(z.object({
-    name: z.string().describe('Name of the earning (e.g., "Horas Extras", "Horas Banco Pagas").'),
+    name: z.string().describe('Name of the earning (e.g., "Horas Extras (50%)", "Horas Banco Pagas").'),
     value: z.number().describe('Value of the earning.'),
   })).describe('List of all earnings (proventos).'),
   deductions: z.array(z.object({
@@ -85,23 +85,24 @@ const prompt = ai.definePrompt({
     1.  **SEMPRE** comece usando a ferramenta \`getTimeBankStatus\` para verificar se o funcionário tem horas do banco de horas próximas do vencimento.
     2.  **Cenário 1: HÁ horas a expirar.**
         - Se a ferramenta retornar \`hasExpiringHours: true\`, você DEVE pagar essas horas.
-        - Calcule o valor dessas horas (com acréscimo de 50%, como horas extras) e adicione-as aos proventos (earnings) com o nome "Horas Banco Pagas".
-        - O pagamento dessas horas do banco é PRIORITÁRIO. As horas extras normais do mês (\`overtimeHours\`) devem ser direcionadas para o banco de horas (ignorando o parâmetro \`overtimeAction\`).
+        - Calcule o valor dessas horas (com acréscimo de 50%) e adicione-as aos proventos com o nome "Horas Banco Pagas".
+        - O pagamento dessas horas do banco é PRIORITÁRIO. Todas as horas extras do mês (normais e de feriado) devem ser direcionadas para o banco de horas (ignorando o parâmetro \`overtimeAction\`).
     3.  **Cenário 2: NÃO HÁ horas a expirar.**
         - Se a ferramenta retornar \`hasExpiringHours: false\`, prossiga com o cálculo padrão das horas extras do mês, respeitando o parâmetro \`overtimeAction\` ('pay' ou 'bank').
         
     **Informações do Funcionário:**
     - Nome: {{{employeeName}}}
     - Salário Bruto: R$ {{{grossSalary}}}
-    - Horas Trabalhadas: {{{hoursWorked}}}
-    - Horas Extras do Mês: {{{overtimeHours}}}
+    - Horas Extras Normais: {{{normalOvertimeHours}}}
+    - Horas Extras (Domingos/Feriados): {{{holidayOvertimeHours}}}
     - Ação para Horas Extras (se não houver horas de banco a pagar): {{{overtimeAction}}}
     - Benefícios (descontos): Vale Transporte (R$ {{{benefits.valeTransporte}}}), Vale Refeição (R$ {{{benefits.valeRefeicao}}})
 
     **Regras Gerais de Cálculo:**
     - A base para cálculo da hora é o salário bruto para uma jornada de 220 horas mensais.
-    - Horas extras ou horas do banco pagas têm um acréscimo de 50%.
-    - **Salário de Contribuição:** (salário bruto + valor das horas extras pagas + valor das horas do banco pagas).
+    - Horas extras normais ou horas do banco pagas têm um acréscimo de 50%.
+    - Horas extras em domingos e feriados têm um acréscimo de 100%. Crie um item de provento separado "Horas Extras (100%)" para elas.
+    - **Salário de Contribuição:** (salário bruto + valor de todas as horas extras pagas + valor das horas do banco pagas).
     - **Descontos (deductions):**
         a.  **INSS:** Calcule com base no salário de contribuição (tabela progressiva).
         b.  **IRRF:** Calcule com base em (Salário de Contribuição - INSS).
@@ -124,4 +125,3 @@ const generatePayrollFlow = ai.defineFlow(
     return output!;
   }
 );
-

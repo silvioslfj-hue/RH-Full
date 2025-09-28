@@ -88,13 +88,14 @@ export default function PayrollPage() {
 
             try {
                 // Simulação de busca de dados do ponto
-                const overtimeHours = Math.floor(Math.random() * 10) + 2; // Ex: entre 2 e 12 horas extras
+                const normalOvertimeHours = Math.floor(Math.random() * 10);
+                const holidayOvertimeHours = Math.random() > 0.7 ? Math.floor(Math.random() * 8) : 0; // 30% de chance de ter horas extras de feriado
 
                 const input: PayrollInput = {
                     employeeName: employee.name,
                     grossSalary: employee.grossSalary,
-                    hoursWorked: 160, // Exemplo
-                    overtimeHours: overtimeHours,
+                    normalOvertimeHours,
+                    holidayOvertimeHours,
                     overtimeAction: globalOvertimeAction, // Usa a configuração global
                     benefits: {
                         valeTransporte: 150,
