@@ -91,6 +91,7 @@ export type PayrollHistory = {
 
 export type Invoice = {
     id: string;
+    employeeId: string;
     competence: string;
     amount: number;
     uploadDate: string;
@@ -280,3 +281,4 @@ export const disciplinaryData: DisciplinaryAction[] = [];
     
 
     
+

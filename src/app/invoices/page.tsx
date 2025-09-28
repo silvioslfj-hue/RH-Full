@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,17 +10,36 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, X, File as FileIcon } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { invoicesData as initialInvoicesData, type Invoice } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
+import { db } from "@/lib/firebaseClient";
+import { collection, addDoc, getDocs, query, orderBy } from "firebase/firestore";
+import type { Invoice } from "@/lib/data";
 
 export default function InvoicesPage() {
   const { toast } = useToast();
   const [competence, setCompetence] = useState("");
   const [amount, setAmount] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [invoices, setInvoices] = useState(initialInvoicesData);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchInvoices = async () => {
+        try {
+            // Em um app real, seria filtrado pelo ID do usuário logado.
+            const q = query(collection(db, "invoices"), orderBy("uploadDate", "desc"));
+            const querySnapshot = await getDocs(q);
+            const fetchedInvoices = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Invoice));
+            setInvoices(fetchedInvoices);
+        } catch (error) {
+            console.error("Error fetching invoices:", error);
+            toast({ variant: "destructive", title: "Erro ao buscar notas fiscais." });
+        }
+    };
+    fetchInvoices();
+  }, [toast]);
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!competence || !amount || !file) {
         toast({
@@ -31,25 +50,35 @@ export default function InvoicesPage() {
         return;
     }
 
-    const newInvoice: Invoice = {
-        id: `NF${(invoices.length + 1).toString().padStart(3, '0')}`,
-        competence,
-        amount: parseFloat(amount),
-        fileName: file.name,
-        uploadDate: new Date().toISOString().split('T')[0],
-        status: "Enviado",
-    };
+    try {
+        const newInvoiceData: Omit<Invoice, 'id'> = {
+            // Em um app real, o ID viria do usuário autenticado
+            employeeId: "user_pj_demo", 
+            competence,
+            amount: parseFloat(amount),
+            fileName: file.name,
+            uploadDate: new Date().toISOString().split('T')[0],
+            status: "Enviado",
+        };
 
-    setInvoices(prev => [newInvoice, ...prev]);
+        const docRef = await addDoc(collection(db, "invoices"), newInvoiceData);
+        const newInvoice = { ...newInvoiceData, id: docRef.id };
+        
+        setInvoices(prev => [newInvoice, ...prev]);
 
-    toast({
-      title: "Nota Fiscal Enviada",
-      description: "Sua nota fiscal foi enviada para processamento.",
-    });
-    // Reset form
-    setCompetence("");
-    setAmount("");
-    setFile(null);
+        toast({
+          title: "Nota Fiscal Enviada",
+          description: "Sua nota fiscal foi enviada para processamento.",
+        });
+        // Reset form
+        setCompetence("");
+        setAmount("");
+        setFile(null);
+
+    } catch (error) {
+        console.error("Error submitting invoice:", error);
+        toast({ variant: "destructive", title: "Erro ao enviar nota fiscal." });
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
