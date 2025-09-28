@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -142,9 +143,11 @@ export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
         // Simulate a verification process
         setTimeout(() => {
             setStatus('success');
-            handleVerificationSuccess();
-            // Reset to scanning after a while - this will be quick before dialog
-            setTimeout(() => setStatus('scanning'), 200);
+            setTimeout(() => {
+              handleVerificationSuccess();
+              // Reset to scanning after a while - this will be quick before dialog
+              setTimeout(() => setStatus('scanning'), 200);
+            }, 1000)
         }, 2000);
     } else {
         toast({
