@@ -11,7 +11,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import type { PayrollOutput } from './payroll-flow';
 
 const PayslipGenerationInputSchema = z.object({
   company: z.object({
@@ -46,7 +45,7 @@ export async function generatePayslipContent(input: PayslipGenerationInput): Pro
 
 const prompt = ai.definePrompt({
   name: 'payslipGenerationPrompt',
-  input: { schema: PayslipGenerationInputSchema },
+  input: { schema: z.any() },
   output: { schema: PayslipGenerationOutputSchema },
   prompt: `
     Você é um especialista do departamento de pessoal e sua tarefa é gerar o conteúdo de um holerite (recibo de pagamento) de forma clara e profissional, usando um layout de texto simples.
