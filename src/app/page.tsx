@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Icons } from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
 
 function CollaboratorLoginForm() {
   const router = useRouter();
@@ -83,9 +85,62 @@ function AdminLoginForm() {
   );
 }
 
+const systemModules = [
+    { id: 'payroll', label: 'Folha de Pagamento' },
+    { id: 'time-tracking', label: 'Ponto Eletrônico' },
+    { id: 'recruitment', label: 'Recrutamento (Assistente de Vagas)' },
+    { id: 'esocial', label: 'eSocial e Fiscal' },
+    { id: 'reports', label: 'Relatórios Gerenciais' },
+    { id: 'absences', label: 'Gestão de Ausências' },
+]
+
+function SuperAdminPanel() {
+    return (
+        <Card className="border-red-500/50">
+            <CardHeader>
+                <CardTitle>Painel do Super Administrador</CardTitle>
+                <CardDescription>Gerencie os administradores e os módulos do sistema.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div>
+                    <h3 className="font-semibold text-lg mb-2">Cadastrar Novo Administrador</h3>
+                    <div className="space-y-4">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="admin-name">Nome</Label>
+                            <Input id="admin-name" placeholder="Nome do administrador" />
+                        </div>
+                         <div className="space-y-1.5">
+                            <Label htmlFor="admin-email">Email</Label>
+                            <Input id="admin-email" type="email" placeholder="email@empresa.com" />
+                        </div>
+                        <Button className="w-full">Cadastrar Novo Administrador</Button>
+                    </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                    <h3 className="font-semibold text-lg mb-2">Módulos do Sistema</h3>
+                    <div className="space-y-3">
+                        {systemModules.map(module => (
+                            <div key={module.id} className="flex items-center space-x-2">
+                                <Checkbox id={module.id} defaultChecked />
+                                <Label htmlFor={module.id} className="font-normal">{module.label}</Label>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </CardContent>
+            <CardFooter>
+                 <Button className="w-full" variant="outline">Salvar Configurações de Módulos</Button>
+            </CardFooter>
+        </Card>
+    );
+}
+
 export default function LoginPage() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="flex items-center justify-center min-h-screen bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -113,7 +168,7 @@ export default function LoginPage() {
             </TabsContent>
             <TabsContent value="super-admin">
               <div className="p-4 pt-6">
-                <AdminLoginForm />
+                <SuperAdminPanel />
               </div>
             </TabsContent>
           </Tabs>
