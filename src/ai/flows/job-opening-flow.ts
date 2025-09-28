@@ -5,27 +5,12 @@
  * @fileOverview An AI agent for generating job opening materials.
  * 
  * - generateJobOpening - Generates a job description, interview questions, and skills.
- * - JobOpeningInput - The input type for the function.
- * - JobOpeningOutput - The return type for the function.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
+import { JobOpeningInputSchema, JobOpeningOutputSchema, type JobOpeningInput, type JobOpeningOutput } from '@/lib/data';
 
-export const JobOpeningInputSchema = z.object({
-  role: z.string().describe('The job title for which to generate the materials (e.g., "Senior AI Developer").'),
-});
-export type JobOpeningInput = z.infer<typeof JobOpeningInputSchema>;
-
-export const JobOpeningOutputSchema = z.object({
-  description: z.string().describe('A complete and attractive job description, including responsibilities, qualifications, and benefits. Format using Markdown.'),
-  interviewQuestions: z.array(z.object({
-    category: z.string().describe('The category of the question (e.g., "Technical", "Behavioral").'),
-    question: z.string().describe('The interview question.'),
-  })).describe('A list of suggested interview questions.'),
-  requiredSkills: z.array(z.string()).describe('A list of essential skills and competencies for the role.'),
-});
-export type JobOpeningOutput = z.infer<typeof JobOpeningOutputSchema>;
 
 export async function generateJobOpening(input: JobOpeningInput): Promise<JobOpeningOutput> {
   return generateJobOpeningFlow(input);
