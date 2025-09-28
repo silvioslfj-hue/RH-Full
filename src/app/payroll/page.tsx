@@ -252,7 +252,7 @@ export default function PayrollPage() {
                     ) : (
                         <Calculator className="mr-2 h-4 w-4" />
                     )}
-                    {isProcessing ? "Processando..." : "Processar Folha com IA"}
+                    {isProcessing ? "Processando..." : "Processar Folha"}
                 </Button>
             </div>
           </CardContent>
