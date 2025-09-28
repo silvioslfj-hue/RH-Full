@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Shield, SlidersHorizontal, UserPlus } from 'lucide-react';
 import { Icons } from '@/components/icons';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 
 const modules = [
     { id: "payroll", label: "Folha de Pagamento" },
@@ -81,59 +83,65 @@ export default function SuperAdminPage() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <UserPlus className="h-5 w-5" />
-                                Cadastrar Novo Administrador
-                            </CardTitle>
-                            <CardDescription>Crie o primeiro acesso para um novo administrador do sistema.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="admin-name">Nome Completo</Label>
-                                <Input id="admin-name" placeholder="Nome do novo administrador" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="admin-email">Email (Login)</Label>
-                                <Input id="admin-email" type="email" placeholder="email@empresa.com" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="admin-password">Senha Inicial</Label>
-                                <Input id="admin-password" type="password" placeholder="Defina uma senha forte" />
-                            </div>
-                        </CardContent>
-                        <CardFooter>
-                            <Button onClick={handleCreateAdmin}>
-                                <UserPlus className="mr-2 h-4 w-4" />
-                                Criar Administrador
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                     <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <SlidersHorizontal className="h-5 w-5" />
-                                Gerenciamento de Módulos
-                            </CardTitle>
-                            <CardDescription>Habilite ou desabilite os módulos principais do sistema para todos os usuários.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {modules.map((module) => (
-                                <div key={module.id} className="flex items-center space-x-2">
-                                    <Checkbox id={module.id} defaultChecked />
-                                    <Label htmlFor={module.id} className="font-normal">
-                                        {module.label}
-                                    </Label>
+                <Tabs defaultValue="admins">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="admins"><UserPlus className="mr-2 h-4 w-4" /> Cadastro de Administradores</TabsTrigger>
+                        <TabsTrigger value="modules"><SlidersHorizontal className="mr-2 h-4 w-4" /> Gerenciamento de Módulos</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="admins" className="pt-6">
+                         <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    Cadastrar Novo Administrador
+                                </CardTitle>
+                                <CardDescription>Crie o primeiro acesso para um novo administrador do sistema.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="admin-name">Nome Completo</Label>
+                                    <Input id="admin-name" placeholder="Nome do novo administrador" />
                                 </div>
-                            ))}
-                        </CardContent>
-                         <CardFooter>
-                            <Button onClick={handleModulesChange}>Salvar Configuração de Módulos</Button>
-                        </CardFooter>
-                    </Card>
-                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="admin-email">Email (Login)</Label>
+                                    <Input id="admin-email" type="email" placeholder="email@empresa.com" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="admin-password">Senha Inicial</Label>
+                                    <Input id="admin-password" type="password" placeholder="Defina uma senha forte" />
+                                </div>
+                            </CardContent>
+                            <CardFooter>
+                                <Button onClick={handleCreateAdmin}>
+                                    <UserPlus className="mr-2 h-4 w-4" />
+                                    Criar Administrador
+                                </Button>
+                            </CardFooter>
+                        </Card>
+                    </TabsContent>
+                    <TabsContent value="modules" className="pt-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    Gerenciamento de Módulos
+                                </CardTitle>
+                                <CardDescription>Habilite ou desabilite os módulos principais do sistema para todos os usuários.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {modules.map((module) => (
+                                    <div key={module.id} className="flex items-center space-x-2">
+                                        <Checkbox id={module.id} defaultChecked />
+                                        <Label htmlFor={module.id} className="font-normal">
+                                            {module.label}
+                                        </Label>
+                                    </div>
+                                ))}
+                            </CardContent>
+                            <CardFooter>
+                                <Button onClick={handleModulesChange}>Salvar Configuração de Módulos</Button>
+                            </CardFooter>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             </div>
         </SuperAdminLayout>
     )
