@@ -88,22 +88,41 @@ export default function PayrollPage() {
             await new Promise(resolve => setTimeout(resolve, 1500)); // Simula a verificação
 
             try {
-                // Simulação de busca de dados do ponto
-                const normalOvertimeHours = Math.floor(Math.random() * 10);
-                const holidayOvertimeHours = Math.random() > 0.7 ? Math.floor(Math.random() * 8) : 0; // 30% de chance de ter horas extras de feriado
+                let input: PayrollInput;
 
-                const input: PayrollInput = {
-                    employeeName: employee.name,
-                    contractType: employee.contractType,
-                    grossSalary: employee.grossSalary,
-                    normalOvertimeHours,
-                    holidayOvertimeHours,
-                    overtimeAction: globalOvertimeAction,
-                    benefits: {
-                        valeTransporte: 150,
-                        valeRefeicao: 440,
-                    }
-                };
+                if (employee.contractType === 'CLT') {
+                    // Simulação de busca de dados do ponto para CLT
+                    const normalOvertimeHours = Math.floor(Math.random() * 10);
+                    const holidayOvertimeHours = Math.random() > 0.7 ? Math.floor(Math.random() * 8) : 0; // 30% de chance
+                    
+                    input = {
+                        employeeName: employee.name,
+                        contractType: employee.contractType,
+                        grossSalary: employee.grossSalary,
+                        normalOvertimeHours,
+                        holidayOvertimeHours,
+                        overtimeAction: globalOvertimeAction,
+                        benefits: {
+                            valeTransporte: 150,
+                            valeRefeicao: 440,
+                        }
+                    };
+                } else { // PJ
+                    // Simulação de dias trabalhados para PJ
+                    const contractedWorkDays = 22;
+                    const actualWorkedDays = Math.random() > 0.6 ? contractedWorkDays + Math.floor(Math.random() * 3) : contractedWorkDays; // 40% chance de dias extras
+
+                     input = {
+                        employeeName: employee.name,
+                        contractType: employee.contractType,
+                        grossSalary: employee.grossSalary,
+                        contractedWorkDays,
+                        actualWorkedDays,
+                        overtimeAction: 'pay', // Irrelevante para PJ, mas o schema exige
+                        benefits: {}
+                    };
+                }
+
 
                 const result = await generatePayroll(input);
 
@@ -228,7 +247,7 @@ export default function PayrollPage() {
           <CardHeader>
             <CardTitle>Processar Folha de Pagamento</CardTitle>
             <CardDescription>
-              Selecione a competência e inicie o processamento. A IA irá verificar o tipo de contrato, pagar automaticamente o banco de horas a vencer para CLTs e tratará as horas extras conforme a configuração global do sistema.
+              Selecione a competência e inicie o processamento. A IA irá verificar o tipo de contrato (CLT/PJ), pagar automaticamente o banco de horas a vencer (CLT) e calcular dias extras (PJ) conforme as regras do sistema.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

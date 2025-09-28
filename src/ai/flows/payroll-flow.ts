@@ -17,9 +17,13 @@ const PayrollInputSchema = z.object({
   employeeName: z.string().describe('The name of the employee.'),
   contractType: z.enum(['CLT', 'PJ']).describe('The type of contract (CLT or PJ).'),
   grossSalary: z.number().describe('The base gross salary of the employee for the month.'),
-  normalOvertimeHours: z.number().optional().describe('Total overtime hours worked on regular days.'),
-  holidayOvertimeHours: z.number().optional().describe('Total overtime hours worked on Sundays and holidays.'),
-  overtimeAction: z.enum(['pay', 'bank']).describe('What to do with the overtime hours: pay them or add to time bank.'),
+  // CLT specific fields
+  normalOvertimeHours: z.number().optional().describe('Total overtime hours worked on regular days (for CLT).'),
+  holidayOvertimeHours: z.number().optional().describe('Total overtime hours worked on Sundays and holidays (for CLT).'),
+  overtimeAction: z.enum(['pay', 'bank']).describe('What to do with the overtime hours for CLT employees: pay them or add to time bank.'),
+  // PJ specific fields
+  contractedWorkDays: z.number().optional().describe('Number of contracted work days for the month (for PJ).'),
+  actualWorkedDays: z.number().optional().describe('Number of actual days worked in the month (for PJ).'),
   benefits: z.object({
     valeTransporte: z.number().optional().describe('Value of transportation benefit to be deducted.'),
     valeRefeicao: z.number().optional().describe('Value of meal benefit to be deducted.'),
@@ -30,7 +34,7 @@ export type PayrollInput = z.infer<typeof PayrollInputSchema>;
 const PayrollOutputSchema = z.object({
   grossSalary: z.number().describe('The base gross salary for the month.'),
   earnings: z.array(z.object({
-    name: z.string().describe('Name of the earning (e.g., "Horas Extras (50%)", "Horas Banco Pagas").'),
+    name: z.string().describe('Name of the earning (e.g., "Horas Extras (50%)", "Pagamento por Dias Adicionais").'),
     value: z.number().describe('Value of the earning.'),
   })).describe('List of all earnings (proventos).'),
   deductions: z.array(z.object({
@@ -84,10 +88,12 @@ const prompt = ai.definePrompt({
 
     **Regra Principal: Distinção de Contrato**
     - Se \`contractType\` for **"PJ"**:
-      - O salário bruto é a base.
-      - As horas extras (tanto normais quanto de feriado) devem ser tratadas como "Serviços Adicionais". Calcule o valor dessas horas com base em um valor/hora de (salário bruto / 160) e adicione como um provento chamado "Pagamento por Serviços Adicionais". NÃO aplique percentuais de 50% ou 100%.
-      - Não há descontos de INSS, IRRF, nem FGTS.
-      - O salário líquido será o salário bruto mais o valor dos serviços adicionais.
+      - O salário bruto é a base. Não há descontos de INSS, IRRF, nem FGTS.
+      - Verifique se 'actualWorkedDays' é maior que 'contractedWorkDays'.
+      - Se for, calcule o valor dos dias extras. O valor de um dia é (salário bruto / dias contratados).
+      - Adicione o valor total dos dias extras como um provento chamado "Pagamento por Dias Adicionais".
+      - Ignore completamente os campos de horas extras ('normalOvertimeHours', 'holidayOvertimeHours') para PJ.
+      - O salário líquido será o salário bruto mais o valor dos dias adicionais.
     - Se \`contractType\` for **"CLT"**: Prossiga com o cálculo detalhado abaixo.
 
     **Processo de Cálculo para CLT:**
@@ -100,13 +106,7 @@ const prompt = ai.definePrompt({
         - Se a ferramenta retornar \`hasExpiringHours: false\`, prossiga com o cálculo padrão das horas extras do mês, respeitando o parâmetro \`overtimeAction\` ('pay' ou 'bank').
         
     **Informações do Funcionário:**
-    - Nome: {{{employeeName}}}
-    - Tipo de Contrato: {{{contractType}}}
-    - Salário Bruto: R$ {{{grossSalary}}}
-    - Horas Extras Normais: {{{normalOvertimeHours}}}
-    - Horas Extras (Domingos/Feriados): {{{holidayOvertimeHours}}}
-    - Ação para Horas Extras (se aplicável): {{{overtimeAction}}}
-    - Benefícios (descontos): Vale Transporte (R$ {{{benefits.valeTransporte}}}), Vale Refeição (R$ {{{benefits.valeRefeicao}}})
+    {{{json input}}}
 
     **Regras Gerais de Cálculo (Apenas para CLT):**
     - A base para cálculo da hora é o salário bruto para uma jornada de 220 horas mensais.
