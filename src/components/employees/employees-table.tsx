@@ -52,6 +52,7 @@ export function EmployeesTable({ data, onEdit, onDelete }: EmployeesTableProps) 
       <TableHeader>
         <TableRow>
           <TableHead>Nome</TableHead>
+          <TableHead>Empresa</TableHead>
           <TableHead>Cargo</TableHead>
           <TableHead>Unidade</TableHead>
           <TableHead>Status</TableHead>
@@ -73,6 +74,7 @@ export function EmployeesTable({ data, onEdit, onDelete }: EmployeesTableProps) 
                     </div>
                 </div>
             </TableCell>
+            <TableCell>{employee.company}</TableCell>
             <TableCell>{employee.role}</TableCell>
             <TableCell>{employee.unit}</TableCell>
             <TableCell>

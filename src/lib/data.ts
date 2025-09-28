@@ -41,6 +41,7 @@ export type Employee = {
     id: string;
     name: string;
     email: string;
+    company: string;
     role: string;
     unit: string;
     status: 'Ativo' | 'Inativo' | 'Férias';
@@ -160,10 +161,10 @@ export const workShiftData: WorkShift[] = [
 ];
 
 export const employeeData: Employee[] = [
-    { id: "FUNC001", name: "Jane Doe", email: "jane.doe@example.com", role: "Desenvolvedor Front-end", unit: "Matriz São Paulo", status: "Ativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d" },
-    { id: "FUNC002", name: "John Smith", email: "john.smith@example.com", role: "Desenvolvedor Back-end", unit: "Filial Rio de Janeiro", status: "Ativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026705d" },
-    { id: "FUNC003", name: "Alice Johnson", email: "alice.johnson@example.com", role: "Designer de Produto", unit: "Matriz São Paulo", status: "Férias", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026706d" },
-    { id: "FUNC004", name: "Robert Brown", email: "robert.brown@example.com", role: "Analista de RH", unit: "Escritório Belo Horizonte", status: "Inativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026707d" },
+    { id: "FUNC001", name: "Jane Doe", email: "jane.doe@example.com", company: "RH-Full Soluções em TI", role: "Desenvolvedor Front-end", unit: "Matriz São Paulo", status: "Ativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d" },
+    { id: "FUNC002", name: "John Smith", email: "john.smith@example.com", company: "InovaTech Consultoria", role: "Desenvolvedor Back-end", unit: "Filial Rio de Janeiro", status: "Ativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026705d" },
+    { id: "FUNC003", name: "Alice Johnson", email: "alice.johnson@example.com", company: "RH-Full Soluções em TI", role: "Designer de Produto", unit: "Matriz São Paulo", status: "Férias", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026706d" },
+    { id: "FUNC004", name: "Robert Brown", email: "robert.brown@example.com", company: "InovaTech Consultoria", role: "Analista de RH", unit: "Escritório Belo Horizonte", status: "Inativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026707d" },
 ]
 
 export const payrollHistoryData = [

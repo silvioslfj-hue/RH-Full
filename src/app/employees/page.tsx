@@ -8,7 +8,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { PlusCircle, FileDown } from "lucide-react";
 import { EmployeesTable } from "@/components/employees/employees-table";
 import { EmployeeDialog } from "@/components/employees/employee-dialog";
-import { employeeData as initialEmployeeData, unitData, roleData, workShiftData } from "@/lib/data";
+import { employeeData as initialEmployeeData, unitData, roleData, workShiftData, companyData } from "@/lib/data";
 import type { Employee } from "@/lib/data";
 
 export default function EmployeesPage() {
@@ -83,6 +83,7 @@ export default function EmployeesPage() {
                 units={unitData}
                 roles={roleData}
                 workShifts={workShiftData}
+                companies={companyData}
             />
         </AppLayout>
     );

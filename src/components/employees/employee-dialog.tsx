@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { Employee, Unit, Role, WorkShift } from '@/lib/data';
+import type { Employee, Unit, Role, WorkShift, Company } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Switch } from '../ui/switch';
@@ -29,15 +29,17 @@ interface EmployeeDialogProps {
   units: Unit[];
   roles: Role[];
   workShifts: WorkShift[];
+  companies: Company[];
 }
 
-export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles, workShifts }: EmployeeDialogProps) {
+export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles, workShifts, companies }: EmployeeDialogProps) {
     const { toast } = useToast();
     const [isFetchingZip, setIsFetchingZip] = useState(false);
     
     // States for all form fields
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [company, setCompany] = useState('');
     const [role, setRole] = useState('');
     const [unit, setUnit] = useState('');
     const [status, setStatus] = useState<Employee['status']>('Ativo');
@@ -58,6 +60,7 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
     if (employee) {
       setName(employee.name);
       setEmail(employee.email);
+      setCompany(employee.company);
       setRole(employee.role);
       setUnit(employee.unit);
       setStatus(employee.status);
@@ -66,6 +69,7 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
       // Reset form for new employee
       setName('');
       setEmail('');
+      setCompany('');
       setRole('');
       setUnit('');
       setStatus('Ativo');
@@ -133,6 +137,7 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
       id: employee?.id,
       name,
       email,
+      company,
       role,
       unit,
       status
@@ -223,6 +228,15 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
             <TabsContent value="professional" className="mt-0">
                  <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                     <div className="space-y-2">
+                        <Label htmlFor="company">Empresa</Label>
+                         <Select value={company} onValueChange={setCompany}>
+                            <SelectTrigger><SelectValue placeholder="Selecione uma empresa..." /></SelectTrigger>
+                            <SelectContent>
+                                {companies.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
                         <Label htmlFor="role">Cargo</Label>
                          <Select value={role} onValueChange={setRole}>
                             <SelectTrigger><SelectValue placeholder="Selecione um cargo..." /></SelectTrigger>
@@ -232,7 +246,7 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
                         </Select>
                     </div>
                      <div className="space-y-2">
-                        <Label htmlFor="unit">Unidade</Label>
+                        <Label htmlFor="unit">Unidade (Local de Trabalho)</Label>
                         <Select value={unit} onValueChange={setUnit}>
                             <SelectTrigger><SelectValue placeholder="Selecione uma unidade..." /></SelectTrigger>
                             <SelectContent>
@@ -439,9 +453,3 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
     </Dialog>
   );
 }
-
-    
-
-    
-
-    
