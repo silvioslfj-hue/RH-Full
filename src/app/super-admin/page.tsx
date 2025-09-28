@@ -11,15 +11,23 @@ import { useToast } from '@/hooks/use-toast';
 import { LogOut, Shield, SlidersHorizontal, UserPlus } from 'lucide-react';
 import { Icons } from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 
 
-const modules = [
-    { id: "payroll", label: "Folha de Pagamento" },
-    { id: "time-tracking", label: "Ponto Eletrônico e Banco de Horas" },
+const collaboratorModules = [
+    { id: "time-tracking-collab", label: "Registro de Ponto e Justificativas" },
+    { id: "reports-collab", label: "Meus Relatórios e Holerites" },
+    { id: "absences-collab", label: "Solicitação de Ausências" },
+];
+
+const adminModules = [
+    { id: "people-management", label: "Gestão de Pessoas (Colaboradores, Ausências)" },
     { id: "recruitment", label: "Recrutamento (Assistente de Vagas)" },
-    { id: "compliance", label: "Conformidade Fiscal (eSocial, Arquivos)" },
-    { id: "reports", label: "Relatórios Gerenciais" },
-    { id: "disciplinary", label: "Ações Disciplinares" },
+    { id: "payroll", label: "Folha de Pagamento (Processamento, Histórico, Relatórios)" },
+    { id: "time-management", label: "Ponto Eletrônico (Espelho de Ponto, Banco de Horas)" },
+    { id: "compliance", label: "Conformidade Fiscal (eSocial, Arquivos Fiscais)" },
+    { id: "management-reports", label: "Relatórios Gerenciais" },
+    { id: "system-settings", label: "Configurações do Sistema" },
 ];
 
 function SuperAdminLayout({ children }: { children: React.ReactNode }) {
@@ -126,15 +134,34 @@ export default function SuperAdminPage() {
                                 </CardTitle>
                                 <CardDescription>Habilite ou desabilite os módulos principais do sistema para todos os usuários.</CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                {modules.map((module) => (
-                                    <div key={module.id} className="flex items-center space-x-2">
-                                        <Checkbox id={module.id} defaultChecked />
-                                        <Label htmlFor={module.id} className="font-normal">
-                                            {module.label}
-                                        </Label>
+                            <CardContent className="space-y-6">
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">Módulos do Administrador</h3>
+                                    <div className="space-y-3">
+                                        {adminModules.map((module) => (
+                                            <div key={module.id} className="flex items-center space-x-2">
+                                                <Checkbox id={module.id} defaultChecked />
+                                                <Label htmlFor={module.id} className="font-normal">
+                                                    {module.label}
+                                                </Label>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
+                                </div>
+                                <Separator />
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">Módulos do Colaborador</h3>
+                                    <div className="space-y-3">
+                                        {collaboratorModules.map((module) => (
+                                            <div key={module.id} className="flex items-center space-x-2">
+                                                <Checkbox id={module.id} defaultChecked />
+                                                <Label htmlFor={module.id} className="font-normal">
+                                                    {module.label}
+                                                </Label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </CardContent>
                             <CardFooter>
                                 <Button onClick={handleModulesChange}>Salvar Configuração de Módulos</Button>
