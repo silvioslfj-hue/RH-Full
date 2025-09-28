@@ -1,14 +1,14 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { PlusCircle, Building, Briefcase, Clock, MapPin, UserCircle, Calculator, Shield, UserPlus, SlidersHorizontal } from "lucide-react";
+import { PlusCircle, Building, Briefcase, Clock, MapPin, UserCircle, Calculator } from "lucide-react";
 import { UnitsTable } from "@/components/settings/units-table";
 import { UnitDialog } from "@/components/settings/unit-dialog";
 import { RolesTable } from "@/components/settings/roles-table";
@@ -23,21 +23,9 @@ import { unitData as initialUnitData, roleData as initialRoleData, companyData a
 import type { Unit, Role, Company, WorkShift, Manager } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-
-const modules = [
-    { id: "payroll", label: "Folha de Pagamento" },
-    { id: "time-tracking", label: "Ponto Eletrônico e Banco de Horas" },
-    { id: "recruitment", label: "Recrutamento (Assistente de Vagas)" },
-    { id: "compliance", label: "Conformidade Fiscal (eSocial, Arquivos)" },
-    { id: "reports", label: "Relatórios Gerenciais" },
-    { id: "disciplinary", label: "Ações Disciplinares" },
-];
 
 export default function SettingsPage() {
     const { toast } = useToast();
-    const [isSuperAdmin, setIsSuperAdmin] = useState(false);
     
     const [units, setUnits] = useState(initialUnitData);
     const [roles, setRoles] = useState(initialRoleData);
@@ -60,31 +48,12 @@ export default function SettingsPage() {
     const [overtimeAction, setOvertimeAction] = useState("pay");
     const [pjExtraDaysAction, setPjExtraDaysAction] = useState("pay");
 
-    useEffect(() => {
-        const role = window.sessionStorage.getItem('userRole');
-        setIsSuperAdmin(role === 'super-admin');
-    }, []);
-
 
     const handleSavePayrollSettings = () => {
         toast({
             title: "Configurações Salvas",
             description: "As configurações da folha de pagamento foram atualizadas.",
         })
-    }
-
-    const handleCreateAdmin = () => {
-        toast({
-            title: "Administrador Convidado",
-            description: "Um convite foi enviado para o email informado para que o novo administrador configure sua senha."
-        });
-    }
-
-    const handleModulesChange = () => {
-        toast({
-            title: "Módulos Atualizados",
-            description: "A configuração de módulos do sistema foi salva com sucesso."
-        });
     }
 
     // Unit Handlers
@@ -206,13 +175,7 @@ export default function SettingsPage() {
         </div>
 
         <Tabs defaultValue="companies">
-            <TabsList className={cn("grid w-full", isSuperAdmin ? "grid-cols-7" : "grid-cols-6")}>
-                {isSuperAdmin && (
-                    <TabsTrigger value="super-admin">
-                        <Shield className="mr-2" />
-                        Super Admin
-                    </TabsTrigger>
-                )}
+            <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="companies">
                     <Building className="mr-2" />
                     Empresas
@@ -238,60 +201,6 @@ export default function SettingsPage() {
                     Folha de Pagamento
                 </TabsTrigger>
             </TabsList>
-            
-            {isSuperAdmin && (
-                 <TabsContent value="super-admin" className="pt-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <UserPlus className="h-5 w-5" />
-                                    Cadastro de Administradores
-                                </CardTitle>
-                                <CardDescription>Adicione novos usuários administradores ao sistema.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="admin-name">Nome Completo</Label>
-                                    <Input id="admin-name" placeholder="Nome do novo administrador" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="admin-email">Email</Label>
-                                    <Input id="admin-email" type="email" placeholder="email@empresa.com" />
-                                </div>
-                            </CardContent>
-                            <CardFooter>
-                                <Button onClick={handleCreateAdmin}>
-                                    <UserPlus className="mr-2 h-4 w-4" />
-                                    Convidar Administrador
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                         <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <SlidersHorizontal className="h-5 w-5" />
-                                    Gerenciamento de Módulos
-                                </CardTitle>
-                                <CardDescription>Habilite ou desabilite os módulos principais do sistema.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {modules.map((module) => (
-                                    <div key={module.id} className="flex items-center space-x-2">
-                                        <Checkbox id={module.id} defaultChecked />
-                                        <Label htmlFor={module.id} className="font-normal">
-                                            {module.label}
-                                        </Label>
-                                    </div>
-                                ))}
-                            </CardContent>
-                             <CardFooter>
-                                <Button onClick={handleModulesChange}>Salvar Módulos</Button>
-                            </CardFooter>
-                        </Card>
-                    </div>
-                </TabsContent>
-            )}
 
             <TabsContent value="companies" className="pt-6">
                  <Card>

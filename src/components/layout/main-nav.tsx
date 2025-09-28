@@ -44,13 +44,10 @@ export function MainNav() {
   const timeBankExpiringCount = timeBankData.filter(e => e.status === 'Crítico' || e.status === 'Atenção').length;
 
   useEffect(() => {
-    // Lógica para determinar o contexto do usuário (admin vs. colaborador)
-    // Para o protótipo, usaremos o sessionStorage para simular o estado de login
     const role = window.sessionStorage.getItem('userRole');
     const contract = window.sessionStorage.getItem('userContractType') as 'CLT' | 'PJ' | null;
-    
-    if (adminPaths.some(p => pathname.startsWith(p))) {
-        window.sessionStorage.setItem('userRole', 'admin');
+
+    if (role === 'admin' && adminPaths.some(p => pathname.startsWith(p))) {
         setIsAdminView(true);
     } else {
         setIsAdminView(false);
@@ -58,15 +55,6 @@ export function MainNav() {
              setUserContractType(contract || 'CLT');
         }
     }
-    
-    // Simulação de troca de usuário PJ
-    if (pathname === '/clock') {
-       // Suponha que um login específico defina isso.
-       // Se o usuário 'Mariana Costa' (PJ) fizesse login, isso seria setado.
-       // Para este demo, vamos simular que qualquer um pode ser PJ.
-       // window.sessionStorage.setItem('userContractType', 'PJ');
-    }
-    
   }, [pathname]);
 
 

@@ -9,8 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Icons } from '@/components/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Separator } from '@/components/ui/separator';
 
 function CollaboratorLoginForm() {
   const router = useRouter();
@@ -22,7 +20,7 @@ function CollaboratorLoginForm() {
       window.sessionStorage.setItem('userRole', 'collaborator');
       // Simulação para diferenciar CLT e PJ
       if (accessCode === 'PJ') {
-         window.sessionStorage.setItem('userContractType', 'PJ');
+         window.sessionstorage.setItem('userContractType', 'PJ');
       } else {
          window.sessionStorage.setItem('userContractType', 'CLT');
       }
@@ -93,7 +91,7 @@ function SuperAdminLoginForm() {
     if (typeof window !== 'undefined') {
       window.sessionStorage.setItem('userRole', 'super-admin');
     }
-    router.push('/dashboard');
+    router.push('/super-admin');
   };
 
   return (
