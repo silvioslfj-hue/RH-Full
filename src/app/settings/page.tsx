@@ -9,8 +9,10 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Building, Briefcase, Clock, MapPin } from "lucide-react";
 import { UnitsTable } from "@/components/settings/units-table";
 import { UnitDialog } from "@/components/settings/unit-dialog";
-import { unitData as initialUnitData } from "@/lib/data";
-import type { Unit } from "@/lib/data";
+import { RolesTable } from "@/components/settings/roles-table";
+import { RoleDialog } from "@/components/settings/role-dialog";
+import { unitData as initialUnitData, roleData as initialRoleData } from "@/lib/data";
+import type { Unit, Role } from "@/lib/data";
 
 function CompaniesTab() {
     return (
@@ -31,31 +33,6 @@ function CompaniesTab() {
                 <div className="text-center text-muted-foreground py-8">
                     <Building className="mx-auto h-12 w-12" />
                     <p className="mt-4">O gerenciamento de empresas será implementado em breve.</p>
-                </div>
-            </CardContent>
-        </Card>
-    )
-}
-
-function RolesTab() {
-    return (
-        <Card>
-            <CardHeader>
-                 <div className="flex justify-between items-start">
-                    <div>
-                        <CardTitle>Cargos</CardTitle>
-                        <CardDescription>Defina os cargos utilizados na sua organização.</CardDescription>
-                    </div>
-                     <Button>
-                        <PlusCircle className="mr-2" />
-                        Adicionar Cargo
-                    </Button>
-                </div>
-            </CardHeader>
-            <CardContent>
-                 <div className="text-center text-muted-foreground py-8">
-                    <Briefcase className="mx-auto h-12 w-12" />
-                    <p className="mt-4">O gerenciamento de cargos será implementado em breve.</p>
                 </div>
             </CardContent>
         </Card>
@@ -90,17 +67,20 @@ function WorkShiftsTab() {
 
 export default function SettingsPage() {
     const [units, setUnits] = useState(initialUnitData);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [roles, setRoles] = useState(initialRoleData);
+    const [isUnitDialogOpen, setIsUnitDialogOpen] = useState(false);
+    const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
     const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
+    const [editingRole, setEditingRole] = useState<Role | null>(null);
 
-    const handleOpenDialog = (unit: Unit | null = null) => {
+    const handleOpenUnitDialog = (unit: Unit | null = null) => {
         setEditingUnit(unit);
-        setIsDialogOpen(true);
+        setIsUnitDialogOpen(true);
     };
 
-    const handleCloseDialog = () => {
+    const handleCloseUnitDialog = () => {
         setEditingUnit(null);
-        setIsDialogOpen(false);
+        setIsUnitDialogOpen(false);
     };
 
     const handleSaveUnit = (unit: Unit) => {
@@ -109,11 +89,34 @@ export default function SettingsPage() {
         } else {
             setUnits([...units, { ...unit, id: `UN${(units.length + 1).toString().padStart(3, '0')}` }]);
         }
-        handleCloseDialog();
+        handleCloseUnitDialog();
     };
 
     const handleDeleteUnit = (id: string) => {
         setUnits(units.filter(u => u.id !== id));
+    };
+
+    const handleOpenRoleDialog = (role: Role | null = null) => {
+        setEditingRole(role);
+        setIsRoleDialogOpen(true);
+    };
+
+    const handleCloseRoleDialog = () => {
+        setEditingRole(null);
+        setIsRoleDialogOpen(false);
+    };
+
+    const handleSaveRole = (role: Role) => {
+        if (editingRole) {
+            setRoles(roles.map(r => r.id === role.id ? role : r));
+        } else {
+            setRoles([...roles, { ...role, id: `CAR${(roles.length + 1).toString().padStart(3, '0')}` }]);
+        }
+        handleCloseRoleDialog();
+    };
+
+    const handleDeleteRole = (id: string) => {
+        setRoles(roles.filter(r => r.id !== id));
     };
 
 
@@ -161,7 +164,7 @@ export default function SettingsPage() {
                                 <CardTitle>Unidades (Locais de Trabalho)</CardTitle>
                                 <CardDescription>Gerencie os endereços e locais onde seus colaboradores trabalham.</CardDescription>
                             </div>
-                            <Button onClick={() => handleOpenDialog()}>
+                            <Button onClick={() => handleOpenUnitDialog()}>
                                 <PlusCircle className="mr-2" />
                                 Adicionar Unidade
                             </Button>
@@ -170,7 +173,7 @@ export default function SettingsPage() {
                     <CardContent>
                         <UnitsTable 
                             data={units} 
-                            onEdit={handleOpenDialog} 
+                            onEdit={handleOpenUnitDialog} 
                             onDelete={handleDeleteUnit} 
                         />
                     </CardContent>
@@ -178,7 +181,27 @@ export default function SettingsPage() {
             </TabsContent>
             
             <TabsContent value="roles" className="pt-6">
-                <RolesTab />
+                 <Card>
+                    <CardHeader>
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <CardTitle>Cargos</CardTitle>
+                                <CardDescription>Defina os cargos e os níveis hierárquicos da sua organização.</CardDescription>
+                            </div>
+                            <Button onClick={() => handleOpenRoleDialog()}>
+                                <PlusCircle className="mr-2" />
+                                Adicionar Cargo
+                            </Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <RolesTable 
+                            data={roles} 
+                            onEdit={handleOpenRoleDialog} 
+                            onDelete={handleDeleteRole} 
+                        />
+                    </CardContent>
+                </Card>
             </TabsContent>
 
             <TabsContent value="work-shifts" className="pt-6">
@@ -188,10 +211,16 @@ export default function SettingsPage() {
       </div>
 
        <UnitDialog
-            isOpen={isDialogOpen}
-            onClose={handleCloseDialog}
+            isOpen={isUnitDialogOpen}
+            onClose={handleCloseUnitDialog}
             onSave={handleSaveUnit}
             unit={editingUnit}
+        />
+        <RoleDialog
+            isOpen={isRoleDialogOpen}
+            onClose={handleCloseRoleDialog}
+            onSave={handleSaveRole}
+            role={editingRole}
         />
     </AppLayout>
   );

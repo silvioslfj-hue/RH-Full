@@ -10,6 +10,13 @@ export type Unit = {
     zip: string;
 }
 
+export type Role = {
+    id: string;
+    name: string;
+    department: string;
+    description: string;
+}
+
 export const summaryData = [
     { title: "Horas Esta Semana", value: "32.5", change: "+5.2%", changeType: "positive" },
     { title: "Próxima Folga", value: "2 dias", change: "Próximo: 25 de Julho", changeType: "neutral" },
@@ -101,4 +108,11 @@ export const unitData: Unit[] = [
     { id: "UN001", name: "Matriz São Paulo", address: "Av. Paulista, 1100", city: "São Paulo", state: "SP", zip: "01310-100" },
     { id: "UN002", name: "Filial Rio de Janeiro", address: "Av. Rio Branco, 1", city: "Rio de Janeiro", state: "RJ", zip: "20090-003" },
     { id: "UN003", name: "Escritório Belo Horizonte", address: "Av. Afonso Pena, 4000", city: "Belo Horizonte", state: "MG", zip: "30130-009" },
+]
+
+export const roleData: Role[] = [
+    { id: "CAR001", name: "Desenvolvedor Front-end", department: "Tecnologia", description: "Desenvolve a interface do usuário e a experiência do cliente." },
+    { id: "CAR002", name: "Desenvolvedor Back-end", department: "Tecnologia", description: "Gerencia a lógica do servidor, banco de dados e APIs." },
+    { id: "CAR003", name: "Designer de Produto", department: "Produto", description: "Cria a experiência do usuário e o design visual dos produtos." },
+    { id: "CAR004", name: "Analista de RH", department: "Recursos Humanos", description: "Gerencia o recrutamento, a folha de pagamento e as relações com os funcionários." },
 ]
