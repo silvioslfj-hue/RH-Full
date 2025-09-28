@@ -51,6 +51,9 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
     const [city, setCity] = useState('');
     const [state, setState] = useState('');
 
+    // Contract states
+    const [optsForVT, setOptsForVT] = useState(false);
+
   useEffect(() => {
     if (employee) {
       setName(employee.name);
@@ -73,6 +76,7 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
       setNeighborhood('');
       setCity('');
       setState('');
+      setOptsForVT(false);
     }
   }, [employee, isOpen]);
 
@@ -346,10 +350,18 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
 
                 <div className="space-y-4">
                     <h3 className="font-medium text-foreground">Benefícios</h3>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                        <div className="flex items-center space-x-2">
-                            <Switch id="vt" />
-                            <Label htmlFor="vt">Opta por Vale Transporte (VT)</Label>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-4 items-start">
+                        <div className="space-y-4">
+                            <div className="flex items-center space-x-2">
+                                <Switch id="vt" checked={optsForVT} onCheckedChange={setOptsForVT} />
+                                <Label htmlFor="vt">Opta por Vale Transporte (VT)</Label>
+                            </div>
+                             {optsForVT && (
+                                <div className="space-y-2 pl-2">
+                                    <Label htmlFor="vt-value">Valor diário do VT</Label>
+                                    <Input id="vt-value" type="number" placeholder="Ex: 8.80"/>
+                                </div>
+                            )}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="vr">Valor Diário do Vale Refeição (VR)</Label>
@@ -427,6 +439,8 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
     </Dialog>
   );
 }
+
+    
 
     
 
