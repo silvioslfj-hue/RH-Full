@@ -11,3 +11,4 @@ import '@/ai/flows/payslip-generation-flow.ts';
 import '@/ai/flows/income-report-flow.ts';
 import '@/ai/flows/job-opening-flow.ts';
 import '@/ai/flows/termination-flow.ts';
+import '@/ai/flows/vacation-flow.ts';

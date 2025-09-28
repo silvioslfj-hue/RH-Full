@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TerminationDialog } from "@/components/employees/termination-dialog";
 import { generateTerminationData } from "@/ai/flows/termination-flow";
 import { VacationDialog } from "@/components/employees/vacation-dialog";
+import { generateVacationData } from "@/ai/flows/vacation-flow";
 
 
 export default function EmployeesPage() {
@@ -154,20 +155,50 @@ export default function EmployeesPage() {
         });
     }
 
-    const handleScheduleVacation = (vacationData: { startDate: string, endDate: string }) => {
+    const handleScheduleVacation = (vacationData: { startDate: string, endDate: string, reasonCode: string }) => {
         if (!editingEmployee) return;
         
-        setEmployees(employees.map(e => e.id === editingEmployee.id ? { ...e, status: 'Férias' } : e));
+        startTransition(async () => {
+            setIsVacationDialogOpen(false);
+            toast({
+                title: "Processando Férias...",
+                description: `Aguarde enquanto a IA gera o evento eSocial para ${editingEmployee.name}.`
+            });
+            try {
+                 await generateVacationData({
+                    employeeId: editingEmployee.id,
+                    startDate: vacationData.startDate,
+                    endDate: vacationData.endDate,
+                    reasonCode: vacationData.reasonCode,
+                });
 
-        toast({
-            title: "Férias Programadas!",
-            description: `O status de ${editingEmployee.name} foi alterado para "Férias" de ${vacationData.startDate} a ${vacationData.endDate}.`
+                setEmployees(employees.map(e => e.id === editingEmployee.id ? { ...e, status: 'Férias' } : e));
+                
+                const newEvent: EsocialEvent = {
+                    id: `EVT${(events.length + 1).toString().padStart(3, '0')}`,
+                    type: "S-2230 - Afastamento Temporário",
+                    employeeId: editingEmployee.id,
+                    employeeName: editingEmployee.name,
+                    referenceDate: vacationData.startDate,
+                    status: "Pendente",
+                    details: `Início do afastamento por férias de ${vacationData.startDate} a ${vacationData.endDate}.`
+                };
+                setEvents(prev => [...prev, newEvent]);
+
+                toast({
+                    title: "Férias Programadas e Evento Gerado!",
+                    description: `O status de ${editingEmployee.name} foi alterado e o evento S-2230 foi adicionado à fila do eSocial.`
+                });
+            } catch (error) {
+                 toast({
+                    variant: "destructive",
+                    title: "Erro ao Programar Férias",
+                    description: "Não foi possível gerar o evento S-2230 para as férias com a IA."
+                });
+            } finally {
+                setEditingEmployee(null);
+            }
         });
-
-        // Aqui poderia ser gerado o evento S-2230 do eSocial
-        
-        setIsVacationDialogOpen(false);
-        setEditingEmployee(null);
     }
 
     return (
@@ -284,6 +315,7 @@ export default function EmployeesPage() {
                 onClose={() => setIsVacationDialogOpen(false)}
                 onSave={handleScheduleVacation}
                 employee={editingEmployee}
+                isProcessing={isProcessing}
             />
         </AppLayout>
     );
