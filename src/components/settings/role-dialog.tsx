@@ -51,7 +51,7 @@ export function RoleDialog({ isOpen, onClose, onSave, role }: RoleDialogProps) {
   };
 
   const title = role ? 'Editar Cargo' : 'Adicionar Novo Cargo';
-  const description = role
+  const dialogDescription = role
     ? 'Altere as informações do cargo abaixo.'
     : 'Preencha os detalhes do novo cargo.';
 
@@ -60,7 +60,7 @@ export function RoleDialog({ isOpen, onClose, onSave, role }: RoleDialogProps) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
