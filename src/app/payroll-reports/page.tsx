@@ -28,6 +28,7 @@ import {
   PlusCircle,
   LucideIcon
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface SummaryCardProps {
     title: string;
@@ -50,6 +51,7 @@ function SummaryCard({ title, value, icon: Icon }: SummaryCardProps) {
 }
 
 export default function PayrollReportsPage() {
+    const { toast } = useToast();
 
     const summaryData = [
         { title: "Total Vale Alimentação (VA)", value: "R$ 15.750,00", icon: Grape },
@@ -57,6 +59,13 @@ export default function PayrollReportsPage() {
         { title: "Total Vale Refeição (VR)", value: "R$ 23.100,00", icon: Utensils },
         { title: "Total Horas Extras (R$)", value: "R$ 8.750,00", icon: PlusCircle },
     ];
+    
+    const handleApplyFilters = () => {
+        toast({
+            title: "Filtros Aplicados",
+            description: "Os relatórios de folha de pagamento foram atualizados com os filtros selecionados.",
+        });
+    }
 
   return (
     <AppLayout>
@@ -114,7 +123,7 @@ export default function PayrollReportsPage() {
                         </Select>
                     </div>
                     <div className="flex items-end">
-                        <Button className="w-full">
+                        <Button className="w-full" onClick={handleApplyFilters}>
                             <Search className="mr-2 h-4 w-4" />
                             Aplicar Filtros
                         </Button>
