@@ -91,8 +91,7 @@ function SuperAdminLoginForm() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (typeof window !== 'undefined') {
-      // No futuro, aqui haveria uma verificação de 'super-admin'
-      window.sessionStorage.setItem('userRole', 'admin');
+      window.sessionStorage.setItem('userRole', 'super-admin');
     }
     router.push('/dashboard');
   };
