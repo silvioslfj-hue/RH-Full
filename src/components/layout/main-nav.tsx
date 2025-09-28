@@ -13,7 +13,7 @@ import {
   SidebarGroupLabel,
   SidebarMenuBadge
 } from '@/components/ui/sidebar'
-import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText, FileArchive, Settings, Users, Calculator, History, PieChart, Briefcase } from 'lucide-react'
+import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText, FileArchive, Settings, Users, Calculator, History, PieChart, Briefcase, Bank } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { absenceData, timeSheetData } from '@/lib/data'
 
