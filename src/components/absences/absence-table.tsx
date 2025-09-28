@@ -19,15 +19,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog"
+import type { Absence } from "@/lib/data"
 
-type Absence = {
-  id: string;
-  employee: string;
-  startDate: string;
-  endDate: string;
-  type: string;
-  status: 'Aprovado' | 'Pendente' | 'Negado';
-};
 
 interface AbsenceTableProps {
   data: Absence[];
@@ -112,7 +105,9 @@ export function AbsenceTable({ data, isAdmin, onStatusChange, onCancelRequest }:
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Voltar</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => onCancelRequest?.(absence.id)}>Sim, Cancelar</AlertDialogAction>
+                                  <AlertDialogAction onClick={() => onCancelRequest?.(absence.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                    Sim, Cancelar
+                                  </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>

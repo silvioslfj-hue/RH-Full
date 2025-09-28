@@ -6,18 +6,19 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import { AbsenceTable } from "@/components/absences/absence-table";
 import { RequestAbsenceDialog } from "@/components/absences/request-absence-dialog";
-import { absenceData as initialAbsenceData } from "@/lib/data";
 import { PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { db } from "@/lib/firebaseClient";
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import type { Absence } from "@/lib/data";
 
 // Assume-se que o usuário logado é 'Jane Doe' para o protótipo.
 const loggedInUser = "Jane Doe";
 
 export default function AbsencesPage() {
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
-  const [absenceData, setAbsenceData] = useState(initialAbsenceData);
+  const [absenceData, setAbsenceData] = useState<Absence[]>([]);
   const [isAdminView, setIsAdminView] = useState(false);
   const { toast } = useToast();
 
@@ -25,26 +26,65 @@ export default function AbsencesPage() {
     // No mundo real, a verificação do papel do usuário viria de um contexto de autenticação
     const role = window.sessionStorage.getItem('userRole');
     setIsAdminView(role === 'admin');
-  }, []);
 
-  const handleNewRequest = (newRequest: any) => {
-    setAbsenceData(prev => [{...newRequest, id: `ABS${(prev.length + 1).toString().padStart(3, '0')}`, status: 'Pendente'}, ...prev])
+    const fetchAbsences = async () => {
+        try {
+            const querySnapshot = await getDocs(collection(db, "absences"));
+            const absences = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Absence));
+            setAbsenceData(absences);
+        } catch (error) {
+            console.error("Error fetching absences: ", error);
+            toast({ variant: "destructive", title: "Erro ao buscar dados de ausências." });
+        }
+    }
+    fetchAbsences();
+
+  }, [toast]);
+
+  const handleNewRequest = async (newRequest: Omit<Absence, 'id' | 'status'>) => {
+    try {
+      const docRef = await addDoc(collection(db, "absences"), {
+        ...newRequest,
+        status: 'Pendente',
+      });
+      setAbsenceData(prev => [{ ...newRequest, id: docRef.id, status: 'Pendente' }, ...prev]);
+      toast({
+          title: "Solicitação Enviada",
+          description: "Sua solicitação de ausência foi enviada para aprovação.",
+      });
+    } catch (error) {
+       console.error("Error adding absence: ", error);
+       toast({ variant: "destructive", title: "Erro ao enviar solicitação." });
+    }
   }
   
-  const handleStatusChange = (id: string, status: 'Aprovado' | 'Negado') => {
-    setAbsenceData(prev => prev.map(item => item.id === id ? { ...item, status } : item));
-    toast({
-        title: `Solicitação ${status === 'Aprovado' ? 'Aprovada' : 'Negada'}`,
-        description: `A solicitação de ausência foi marcada como "${status}".`,
-    });
+  const handleStatusChange = async (id: string, status: 'Aprovado' | 'Negado') => {
+    try {
+      const absenceRef = doc(db, "absences", id);
+      await updateDoc(absenceRef, { status });
+      setAbsenceData(prev => prev.map(item => item.id === id ? { ...item, status } : item));
+      toast({
+          title: `Solicitação ${status === 'Aprovado' ? 'Aprovada' : 'Negada'}`,
+          description: `A solicitação de ausência foi marcada como "${status}".`,
+      });
+    } catch (error) {
+      console.error("Error updating absence status: ", error);
+      toast({ variant: "destructive", title: "Erro ao atualizar status." });
+    }
   };
 
-  const handleCancelRequest = (id: string) => {
-    setAbsenceData(prev => prev.filter(item => item.id !== id));
-    toast({
-        title: "Solicitação Cancelada",
-        description: "Sua solicitação de ausência foi cancelada.",
-    });
+  const handleCancelRequest = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "absences", id));
+      setAbsenceData(prev => prev.filter(item => item.id !== id));
+      toast({
+          title: "Solicitação Cancelada",
+          description: "Sua solicitação de ausência foi cancelada.",
+      });
+    } catch (error) {
+       console.error("Error cancelling absence request: ", error);
+       toast({ variant: "destructive", title: "Erro ao cancelar solicitação." });
+    }
   }
   
   const pageTitle = isAdminView ? "Gestão de Ausências" : "Minhas Ausências";
