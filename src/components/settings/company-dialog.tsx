@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { getFunctions, httpsCallable } from "firebase/functions";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { Company } from '@/lib/data';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
-import { KeyRound, Upload, Search, File as FileIcon, X } from 'lucide-react';
+import { KeyRound, Upload, Search, File as FileIcon, X, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -36,6 +37,7 @@ export function CompanyDialog({ isOpen, onClose, onSave, company }: CompanyDialo
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const [certificatePassword, setCertificatePassword] = useState('');
   const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (company) {
@@ -61,7 +63,6 @@ export function CompanyDialog({ isOpen, onClose, onSave, company }: CompanyDialo
   }, [company, isOpen]);
 
   const handleFetchData = () => {
-    // Simulação de busca de dados pelo CNPJ
     toast({
       title: "Buscando dados...",
       description: `Buscando informações para o CNPJ: ${cnpj}`,
@@ -93,9 +94,11 @@ export function CompanyDialog({ isOpen, onClose, onSave, company }: CompanyDialo
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    setIsSaving(true);
+    const companyId = company ? company.id : `comp_${Date.now()}`; // Simplistic ID generation for new companies
     const companyData: Company = {
-      id: company ? company.id : '', // ID será gerado no pai para novas empresas
+      id: companyId,
       name,
       cnpj,
       address,
@@ -104,11 +107,35 @@ export function CompanyDialog({ isOpen, onClose, onSave, company }: CompanyDialo
       zip,
       certificateFile: certificateFile?.name || company?.certificateFile,
     };
-    onSave(companyData);
-    toast({
-        title: `Empresa ${company ? 'Atualizada' : 'Adicionada'}`,
-        description: `A empresa ${name} foi salva com sucesso.`,
-    });
+    
+    try {
+        // Step 1: Save the main company data (this is passed to the parent component)
+        onSave(companyData);
+
+        // Step 2: If a new password was provided, call the Cloud Function to save it
+        if (certificatePassword) {
+            toast({ title: "Salvando senha do certificado..." });
+            const functions = getFunctions();
+            const setupSecrets = httpsCallable(functions, 'setupCompanySecrets');
+            await setupSecrets({ companyId: companyId, certificatePassword: certificatePassword });
+            toast({ title: "Senha do certificado salva com segurança!" });
+        }
+
+        toast({
+            title: `Empresa ${company ? 'Atualizada' : 'Adicionada'}`,
+            description: `A empresa ${name} foi salva com sucesso.`,
+        });
+        
+    } catch(error) {
+        console.error("Error saving company or secret:", error);
+        toast({
+            variant: "destructive",
+            title: "Erro ao Salvar",
+            description: "Não foi possível salvar a empresa ou a senha do certificado."
+        });
+    } finally {
+        setIsSaving(false);
+    }
   };
 
   const title = company ? 'Editar Empresa' : 'Adicionar Nova Empresa';
@@ -171,11 +198,11 @@ export function CompanyDialog({ isOpen, onClose, onSave, company }: CompanyDialo
                     <KeyRound className="h-4 w-4" />
                     <AlertTitle>Certificado Digital (A1)</AlertTitle>
                     <AlertDescription>
-                    O certificado é necessário para a assinatura de documentos e relatórios fiscais, como o eSocial.
+                    O certificado e a senha são necessários para a assinatura de documentos e relatórios fiscais, como o eSocial. A senha será salva de forma segura no Secret Manager.
                     </AlertDescription>
                     <div className="mt-4 space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="certificate-file">Arquivo do Certificado</Label>
+                        <Label htmlFor="certificate-file">Arquivo do Certificado (.pfx, .p12)</Label>
                          {certificateFile ? (
                           <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-3">
                             <div className="flex items-center gap-2">
@@ -204,17 +231,20 @@ export function CompanyDialog({ isOpen, onClose, onSave, company }: CompanyDialo
                       </div>
                       <div className="space-y-2">
                           <Label htmlFor="certificate-password">Senha do Certificado</Label>
-                          <Input id="certificate-password" type="password" value={certificatePassword} onChange={(e) => setCertificatePassword(e.target.value)} />
+                          <Input id="certificate-password" type="password" value={certificatePassword} onChange={(e) => setCertificatePassword(e.target.value)} placeholder="Digite a senha para salvar" />
                       </div>
                     </div>
                 </Alert>
             </TabsContent>
         </Tabs>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={isSaving}>
             Cancelar
           </Button>
-          <Button onClick={handleSubmit}>Salvar</Button>
+          <Button onClick={handleSubmit} disabled={isSaving}>
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
+            {isSaving ? "Salvando..." : "Salvar"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

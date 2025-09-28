@@ -1,3 +1,4 @@
+
 /**
  * Import function triggers from their respective submodules:
  *
@@ -117,15 +118,15 @@ export const transmitirEventoESocial = onCall(async (request) => {
         const xmlString = "<xml>Simulated XML content</xml>"; // Placeholder
 
         // 5. Fetch Certificate and Sign the XML
-        const certName = `certs/${companyId}.pfx`;
-        const secretName = `CERT_PASS_${companyId}`;
-        logger.info(`Fetching certificate ${certName} and secret ${secretName}`, { eventId });
+        const certSecretName = `CERT_PASS_${companyId}`;
+        logger.info(`Fetching certificate for company ${companyId} and secret ${certSecretName}`, { eventId });
         
         // TODO: Implement logic to download certificate from Firebase Storage.
+        // const certName = `certs/${companyId}.pfx`;
         // const certBuffer = await admin.storage().bucket().file(certName).download();
         
         // Fetch the certificate password from Secret Manager
-        const certPassword = await getSecret(secretName);
+        const certPassword = await getSecret(certSecretName);
         
         // TODO: Implement logic to sign the XML
         // const signedXml = signXml(xmlString, certBuffer, certPassword);
@@ -154,5 +155,72 @@ export const transmitirEventoESocial = onCall(async (request) => {
         } else {
             throw new HttpsError("internal", `Ocorreu um erro inesperado ao processar o evento ${eventId}.`);
         }
+    }
+});
+
+
+/**
+ * Creates or updates a secret in Google Cloud Secret Manager for a company's certificate.
+ */
+export const setupCompanySecrets = onCall(async (request) => {
+    // 1. Authentication and Authorization
+    if (!request.auth) {
+        throw new HttpsError("unauthenticated", "A função deve ser chamada por um usuário autenticado.");
+    }
+    // TODO: Verify if the user is an admin.
+
+    const { companyId, certificatePassword } = request.data;
+    if (!companyId || !certificatePassword) {
+        throw new HttpsError("invalid-argument", "O ID da empresa e a senha do certificado são obrigatórios.");
+    }
+
+    const projectId = process.env.GCLOUD_PROJECT;
+    if (!projectId) {
+        throw new HttpsError("internal", "Google Cloud project ID not available.");
+    }
+
+    const secretName = `CERT_PASS_${companyId}`;
+    const parent = `projects/${projectId}`;
+    const secretPath = `${parent}/secrets/${secretName}`;
+
+    try {
+        logger.info(`Setting up secret for company: ${companyId}`);
+
+        // Check if the secret already exists
+        try {
+            await secretManagerClient.getSecret({ name: secretPath });
+            logger.info(`Secret ${secretName} already exists. Adding new version.`);
+        } catch (error: any) {
+            if (error.code === 5) { // NOT_FOUND
+                logger.info(`Secret ${secretName} not found. Creating it.`);
+                // Create the secret with replication policy
+                await secretManagerClient.createSecret({
+                    parent: parent,
+                    secretId: secretName,
+                    secret: {
+                        replication: {
+                            automatic: {},
+                        },
+                    },
+                });
+            } else {
+                throw error; // Re-throw other errors
+            }
+        }
+
+        // Add the new secret version
+        const [version] = await secretManagerClient.addSecretVersion({
+            parent: secretPath,
+            payload: {
+                data: Buffer.from(certificatePassword, 'utf8'),
+            },
+        });
+
+        logger.info(`Added secret version ${version.name}`);
+        return { success: true, message: `Senha do certificado para ${companyId} salva com sucesso.` };
+
+    } catch (error) {
+        logger.error(`Failed to set up secret for company ${companyId}`, error);
+        throw new HttpsError("internal", "Não foi possível salvar a senha do certificado.");
     }
 });
