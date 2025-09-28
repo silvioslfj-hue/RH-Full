@@ -11,6 +11,7 @@ import { Building, Factory } from "lucide-react";
 import { absenceData as initialAbsenceData, esocialEventsData, employeeData } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { ESocialPendingAlert } from "@/components/dashboard/admin/esocial-pending-alert";
+import { TimeBankExpiryAlert } from "@/components/dashboard/admin/time-bank-expiry-alert";
 
 export default function DashboardPage() {
   const [company, setCompany] = useState("all");
@@ -30,6 +31,7 @@ export default function DashboardPage() {
   const pendingESocialEventsCount = esocialEventsData.filter(e => e.status === "Pendente").length;
   const activeEmployeesCount = employeeData.filter(e => e.status === "Ativo").length;
   const timecardAlertsCount = 2; // Valor simulado para alertas de ponto
+  const timeBankExpiringCount = 5; // Valor simulado para banco de horas
 
 
   return (
@@ -83,6 +85,10 @@ export default function DashboardPage() {
 
         {pendingESocialEventsCount > 0 && (
           <ESocialPendingAlert count={pendingESocialEventsCount} />
+        )}
+        
+        {timeBankExpiringCount > 0 && (
+          <TimeBankExpiryAlert count={timeBankExpiringCount} />
         )}
 
         <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
