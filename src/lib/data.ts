@@ -1,6 +1,8 @@
 
+
 import type { ClockEvent } from "@/components/dashboard/clock-widget";
 import type { PayrollOutput } from "@/ai/flows/payroll-flow";
+import { z } from 'zod';
 
 export type Unit = {
     id: string;
@@ -75,6 +77,33 @@ export type PayrollHistory = {
   status: "Finalizado" | "Pendente";
   payrollData?: PayrollOutput;
 };
+
+// Types for payslip generation
+export const PayslipGenerationInputSchema = z.object({
+  company: z.object({
+    name: z.string().describe("Nome da empresa empregadora."),
+    cnpj: z.string().describe("CNPJ da empresa empregadora."),
+  }),
+  employee: z.object({
+    name: z.string().describe("Nome do funcionário."),
+    role: z.string().describe("Cargo do funcionário."),
+  }),
+  competence: z.string().describe("Mês/Ano de referência da folha (ex: Julho/2024)."),
+  payrollData: z.object({
+    grossSalary: z.number(),
+    earnings: z.array(z.object({ name: z.string(), value: z.number() })),
+    deductions: z.array(z.object({ name: z.string(), value: z.number() })),
+    totalEarnings: z.number(),
+    totalDeductions: z.number(),
+    netSalary: z.number(),
+  }),
+});
+export type PayslipGenerationInput = z.infer<typeof PayslipGenerationInputSchema>;
+
+export const PayslipGenerationOutputSchema = z.object({
+  payslipContent: z.string().describe('O conteúdo textual completo do holerite, formatado para exibição e com quebras de linha (\\n).'),
+});
+export type PayslipGenerationOutput = z.infer<typeof PayslipGenerationOutputSchema>;
 
 
 export const summaryData = [

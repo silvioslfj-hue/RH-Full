@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, Eye, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { generatePayslipContent, type PayslipGenerationInput } from "@/ai/flows/payslip-generation-flow";
+import { generatePayslipContent } from "@/ai/flows/payslip-generation-flow";
 import { PayslipViewerDialog } from "@/components/payroll/payslip-viewer-dialog";
 import { payrollHistoryData as dummyPayslips } from "@/lib/data";
-import type { PayrollHistory as PayslipType } from "@/lib/data";
+import type { PayrollHistory as PayslipType, PayslipGenerationInput } from "@/lib/data";
 
 
 export default function PayslipsPage() {
@@ -57,6 +57,7 @@ export default function PayslipsPage() {
             setIsViewerOpen(true);
 
         } catch (error) {
+            console.error(error);
             toast({
                 variant: "destructive",
                 title: "Erro ao Gerar Holerite",

@@ -5,38 +5,11 @@
  * @fileOverview An AI agent to generate the content of a payslip.
  * 
  * - generatePayslipContent - Generates the text content for an employee's payslip.
- * - PayslipGenerationInput - The input type for the function.
- * - PayslipGenerationOutput - The return type for the function.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-
-const PayslipGenerationInputSchema = z.object({
-  company: z.object({
-    name: z.string().describe("Nome da empresa empregadora."),
-    cnpj: z.string().describe("CNPJ da empresa empregadora."),
-  }),
-  employee: z.object({
-    name: z.string().describe("Nome do funcionário."),
-    role: z.string().describe("Cargo do funcionário."),
-  }),
-  competence: z.string().describe("Mês/Ano de referência da folha (ex: Julho/2024)."),
-  payrollData: z.object({
-    grossSalary: z.number(),
-    earnings: z.array(z.object({ name: z.string(), value: z.number() })),
-    deductions: z.array(z.object({ name: z.string(), value: z.number() })),
-    totalEarnings: z.number(),
-    totalDeductions: z.number(),
-    netSalary: z.number(),
-  }),
-});
-export type PayslipGenerationInput = z.infer<typeof PayslipGenerationInputSchema>;
-
-const PayslipGenerationOutputSchema = z.object({
-  payslipContent: z.string().describe('O conteúdo textual completo do holerite, formatado para exibição e com quebras de linha (\\n).'),
-});
-export type PayslipGenerationOutput = z.infer<typeof PayslipGenerationOutputSchema>;
+import { PayslipGenerationInput, PayslipGenerationInputSchema, PayslipGenerationOutput, PayslipGenerationOutputSchema } from '@/lib/data';
 
 
 export async function generatePayslipContent(input: PayslipGenerationInput): Promise<PayslipGenerationOutput> {
