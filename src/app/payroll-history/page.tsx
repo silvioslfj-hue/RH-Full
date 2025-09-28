@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,13 +35,66 @@ import {
   User,
   FileText,
   Download,
+  Loader2
 } from "lucide-react";
-import { employeeData, payrollHistoryData as initialHistory } from "@/lib/data";
+import { employeeData, payrollHistoryData as initialHistory, type PayrollHistory as PayrollHistoryType } from "@/lib/data";
+import { PayslipViewerDialog } from "@/components/payroll/payslip-viewer-dialog";
+import { generatePayslipContent, type PayslipGenerationInput } from "@/ai/flows/payslip-generation-flow";
+import { useToast } from "@/hooks/use-toast";
 
-type PayrollHistory = (typeof initialHistory)[0];
 
 export default function PayrollHistoryPage() {
-  const [history, setHistory] = useState<PayrollHistory[]>(initialHistory);
+  const { toast } = useToast();
+  const [history, setHistory] = useState<PayrollHistoryType[]>(initialHistory);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [payslipContent, setPayslipContent] = useState("");
+  const [selectedPayslipData, setSelectedPayslipData] = useState<PayrollHistoryType | null>(null);
+  const [isGenerating, startTransition] = useTransition();
+
+  const handleViewPayslip = (item: PayrollHistoryType) => {
+    startTransition(async () => {
+        setSelectedPayslipData(item);
+        toast({
+            title: "Gerando Holerite...",
+            description: `Aguarde enquanto a IA prepara o holerite de ${item.employeeName}.`
+        });
+        
+        try {
+            // Em um app real, os dados detalhados do payroll viriam do `item`
+            const detailedPayrollData = {
+                 grossSalary: item.grossSalary,
+                 earnings: [
+                    { name: "Horas Extras", value: item.grossSalary * 0.1 }, // Simulação
+                 ],
+                 deductions: [
+                    { name: "INSS", value: item.grossSalary * 0.11 }, // Simulação
+                    { name: "IRRF", value: item.grossSalary * 0.07 }, // Simulação
+                 ],
+                 totalEarnings: item.grossSalary + (item.grossSalary * 0.1),
+                 totalDeductions: (item.grossSalary * 0.11) + (item.grossSalary * 0.07),
+                 netSalary: item.netSalary
+            };
+
+            const input: PayslipGenerationInput = {
+                company: { name: "RH-Full Soluções em TI", cnpj: "01.234.567/0001-89" },
+                employee: { name: item.employeeName, role: "Desenvolvedor" },
+                competence: item.competence,
+                payrollData: detailedPayrollData
+            }
+
+            const result = await generatePayslipContent(input);
+            setPayslipContent(result.payslipContent);
+            setIsViewerOpen(true);
+
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Erro ao Gerar Holerite",
+                description: "Não foi possível gerar o documento. Tente novamente."
+            });
+        }
+    });
+  }
 
   return (
     <AppLayout>
@@ -91,7 +144,7 @@ export default function PayrollHistoryPage() {
                           <Factory className="h-4 w-4 text-muted-foreground" />
                           <SelectValue placeholder="Todas" />
                         </div>
-                    </SelectTrigger>
+                    </Trigger>
                     <SelectContent>
                         <SelectItem value="all">Todas as Unidades</SelectItem>
                         <SelectItem value="sp">São Paulo - SP</SelectItem>
@@ -161,8 +214,12 @@ export default function PayrollHistoryPage() {
                                     <Badge className="bg-green-600 hover:bg-green-700">{item.status}</Badge>
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    <Button variant="ghost" size="sm">
-                                        <FileText className="mr-2 h-4 w-4" />
+                                    <Button variant="ghost" size="sm" onClick={() => handleViewPayslip(item)} disabled={isGenerating && selectedPayslipData?.id === item.id}>
+                                        {isGenerating && selectedPayslipData?.id === item.id ? (
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <FileText className="mr-2 h-4 w-4" />
+                                        )}
                                         Ver Holerite
                                     </Button>
                                 </TableCell>
@@ -174,6 +231,15 @@ export default function PayrollHistoryPage() {
         </Card>
 
       </div>
+      {selectedPayslipData && (
+        <PayslipViewerDialog
+            isOpen={isViewerOpen}
+            onClose={() => setIsViewerOpen(false)}
+            content={payslipContent}
+            employeeName={selectedPayslipData.employeeName}
+            competence={selectedPayslipData.competence}
+        />
+      )}
     </AppLayout>
   );
 }

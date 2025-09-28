@@ -1,5 +1,6 @@
 
 import type { ClockEvent } from "@/components/dashboard/clock-widget";
+import type { PayrollOutput } from "@/ai/flows/payroll-flow";
 
 export type Unit = {
     id: string;
@@ -62,6 +63,17 @@ export type EsocialEvent = {
   referenceDate: string;
   status: 'Pendente' | 'Enviado' | 'Erro' | 'Rejeitado';
   details: string;
+};
+
+export type PayrollHistory = {
+  id: string;
+  competence: string;
+  employeeId: string;
+  employeeName: string;
+  grossSalary: number;
+  netSalary: number;
+  status: "Finalizado" | "Pendente";
+  payrollData?: PayrollOutput;
 };
 
 
@@ -189,7 +201,7 @@ export const employeeData: Employee[] = [
     { id: "FUNC004", name: "Robert Brown", email: "robert.brown@example.com", company: "InovaTech Consultoria", role: "Analista de RH", unit: "Escritório Belo Horizonte", status: "Inativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026707d" },
 ]
 
-export const payrollHistoryData = [
+export const payrollHistoryData: PayrollHistory[] = [
   { id: "HIST001", competence: "Julho/2024", employeeId: "FUNC001", employeeName: "Jane Doe", grossSalary: 7500.00, netSalary: 5890.50, status: "Finalizado" },
   { id: "HIST002", competence: "Julho/2024", employeeId: "FUNC002", employeeName: "John Smith", grossSalary: 8200.00, netSalary: 6210.80, status: "Finalizado" },
   { id: "HIST003", competence: "Junho/2024", employeeId: "FUNC001", employeeName: "Jane Doe", grossSalary: 7500.00, netSalary: 5890.50, status: "Finalizado" },
