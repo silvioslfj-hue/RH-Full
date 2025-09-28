@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -16,6 +17,7 @@ const PayrollInputSchema = z.object({
   grossSalary: z.number().describe('The base gross salary of the employee for the month.'),
   hoursWorked: z.number().describe('Total hours worked in the month.'),
   overtimeHours: z.number().describe('Total overtime hours worked in the month.'),
+  overtimeAction: z.enum(['pay', 'bank']).describe('What to do with the overtime hours: pay them or add to time bank.'),
   benefits: z.object({
     valeTransporte: z.number().optional().describe('Value of transportation benefit to be deducted.'),
     valeRefeicao: z.number().optional().describe('Value of meal benefit to be deducted.'),
@@ -56,13 +58,16 @@ const prompt = ai.definePrompt({
     - Salário Bruto: R$ {{{grossSalary}}}
     - Horas Trabalhadas: {{{hoursWorked}}}
     - Horas Extras: {{{overtimeHours}}}
+    - Ação para Horas Extras: {{{overtimeAction}}} (se 'pay', pague as horas extras; se 'bank', adicione ao banco de horas e não pague no holerite)
     - Benefícios (descontos): Vale Transporte (R$ {{{benefits.valeTransporte}}}), Vale Refeição (R$ {{{benefits.valeRefeicao}}})
 
     Regras de Cálculo:
-    1.  **Horas Extras:** Calcule o valor das horas extras. Considere que a hora extra vale 50% a mais que a hora normal. A base de cálculo é o salário bruto para uma jornada de 220 horas mensais.
-    2.  **Proventos (earnings):** Liste o salário bruto e o valor das horas extras como proventos.
+    1.  **Horas Extras:** 
+        - Se 'overtimeAction' for 'pay', calcule o valor das horas extras. Considere que a hora extra vale 50% a mais que a hora normal. A base de cálculo é o salário bruto para uma jornada de 220 horas mensais. Inclua este valor nos proventos (earnings).
+        - Se 'overtimeAction' for 'bank', NÃO calcule o valor das horas extras para pagamento. Elas serão adicionadas ao banco de horas e não devem aparecer nos proventos.
+    2.  **Salário de Contribuição:** A base para INSS e IRRF é (salário bruto + valor das horas extras pagas). Se as horas extras forem para o banco, a base é apenas o salário bruto.
     3.  **Descontos (deductions):**
-        a.  **INSS:** Calcule o desconto do INSS com base no salário de contribuição (salário bruto + horas extras), aplicando as alíquotas progressivas da tabela vigente.
+        a.  **INSS:** Calcule o desconto do INSS com base no salário de contribuição, aplicando as alíquotas progressivas da tabela vigente.
         b.  **IRRF:** Calcule o desconto do Imposto de Renda Retido na Fonte. A base de cálculo é (Salário de Contribuição - INSS). Aplique as alíquotas e deduções da tabela vigente.
         c.  **Benefícios:** Inclua os valores de vale transporte e vale refeição como descontos.
         d.  **FGTS:** Calcule o valor do FGTS (8% sobre o salário de contribuição). **Importante:** O FGTS não é descontado do salário do empregado, mas deve ser listado nos descontos com a observação "(informativo)".

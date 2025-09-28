@@ -42,6 +42,7 @@ import { useToast } from "@/hooks/use-toast";
 import { generatePayroll, type PayrollInput, type PayrollOutput } from "@/ai/flows/payroll-flow";
 import { employeeData } from "@/lib/data";
 
+type OvertimeAction = "pay" | "bank";
 type PayrollStatus = "Pendente" | "Processando" | "Concluído" | "Erro";
 type EmployeePayroll = {
     id: string;
@@ -49,6 +50,7 @@ type EmployeePayroll = {
     role: string;
     grossSalary: number;
     status: PayrollStatus;
+    overtimeAction: OvertimeAction;
     payrollData?: PayrollOutput;
 };
 
@@ -58,6 +60,7 @@ const initialPayrollData: EmployeePayroll[] = employeeData.map(e => ({
   role: e.role,
   grossSalary: 7500.00, // Salário de exemplo, idealmente viria do cadastro do funcionário
   status: "Pendente",
+  overtimeAction: "pay", // Ação padrão
 }));
 
 
@@ -65,6 +68,12 @@ export default function PayrollPage() {
   const { toast } = useToast();
   const [payrollRun, setPayrollRun] = useState<EmployeePayroll[]>(initialPayrollData);
   const [isProcessing, startTransition] = useTransition();
+
+  const handleOvertimeActionChange = (employeeId: string, action: OvertimeAction) => {
+    setPayrollRun(prev => 
+        prev.map(e => e.id === employeeId ? { ...e, overtimeAction: action } : e)
+    );
+  };
 
   const handleProcessPayroll = () => {
     startTransition(() => {
@@ -76,11 +85,15 @@ export default function PayrollPage() {
         const processEmployee = async (employee: EmployeePayroll) => {
             setPayrollRun(prev => prev.map(e => e.id === employee.id ? { ...e, status: "Processando" } : e));
             try {
+                // Simulação de busca de dados do ponto
+                const overtimeHours = Math.floor(Math.random() * 20) + 5; // Ex: entre 5 e 25 horas extras
+
                 const input: PayrollInput = {
                     employeeName: employee.name,
                     grossSalary: employee.grossSalary,
                     hoursWorked: 160, // Exemplo
-                    overtimeHours: 10, // Exemplo
+                    overtimeHours: overtimeHours,
+                    overtimeAction: employee.overtimeAction,
                     benefits: {
                         valeTransporte: 150,
                         valeRefeicao: 440,
@@ -269,6 +282,7 @@ export default function PayrollPage() {
                         <TableRow>
                             <TableHead>Colaborador</TableHead>
                             <TableHead>Salário Bruto</TableHead>
+                            <TableHead>Ação Horas Extras</TableHead>
                             <TableHead>Proventos</TableHead>
                             <TableHead>Descontos</TableHead>
                             <TableHead>Salário Líquido</TableHead>
@@ -281,6 +295,21 @@ export default function PayrollPage() {
                             <TableRow key={employee.id}>
                                 <TableCell className="font-medium">{employee.name}</TableCell>
                                 <TableCell className="font-mono">R$ {employee.grossSalary.toFixed(2)}</TableCell>
+                                <TableCell>
+                                    <Select 
+                                        value={employee.overtimeAction} 
+                                        onValueChange={(value: OvertimeAction) => handleOvertimeActionChange(employee.id, value)}
+                                        disabled={employee.status !== 'Pendente'}
+                                    >
+                                        <SelectTrigger className="w-[180px] h-9">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="pay">Pagar na Folha</SelectItem>
+                                            <SelectItem value="bank">Adicionar ao Banco</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </TableCell>
                                 <TableCell className="font-mono text-green-600">
                                   {employee.payrollData ? `R$ ${employee.payrollData.totalEarnings.toFixed(2)}` : '-'}
                                 </TableCell>
