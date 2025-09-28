@@ -1,15 +1,16 @@
-
 'use client'
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { FacialRecognitionModal } from './facial-recognition-modal'
-import { PlayCircle, PauseCircle, Clock } from 'lucide-react'
+import { PlayCircle, PauseCircle, Clock, MapPin } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 export type ClockEvent = {
   time: string;
   type: 'Entrada' | 'Saída';
+  location?: string;
 };
 
 interface ClockWidgetProps {
@@ -21,6 +22,8 @@ export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
   const [timeElapsed, setTimeElapsed] = useState(0)
+  const [location, setLocation] = useState<GeolocationCoordinates | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -59,7 +62,22 @@ export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
   }
 
   const handleClockAction = () => {
-    setIsModalOpen(true)
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocation(position.coords);
+        setIsModalOpen(true);
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        toast({
+          variant: "destructive",
+          title: "Acesso à Localização Negado",
+          description: "Por favor, habilite o acesso à localização para registrar o ponto.",
+        });
+        // Optionally, you can still open the modal even if location fails
+        // setIsModalOpen(true); 
+      }
+    );
   }
 
   const handleVerificationSuccess = () => {
@@ -67,10 +85,16 @@ export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
     setIsClockedIn(newStatus)
 
     const eventType = newStatus ? 'Entrada' : 'Saída'
-    onClockEvent({
+    
+    const newEvent: ClockEvent = {
       time: formatTime(new Date()),
       type: eventType,
-    })
+      location: location
+        ? `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}`
+        : "N/A",
+    };
+    
+    onClockEvent(newEvent);
 
     if (newStatus) { // Clocking in
       setTimeElapsed(0)
@@ -99,6 +123,12 @@ export function ClockWidget({ onClockEvent }: ClockWidgetProps) {
             {isClockedIn && (
               <p className="text-muted-foreground">
                 Tempo Decorrido: <span className="font-semibold">{formatElapsedTime(timeElapsed)}</span>
+              </p>
+            )}
+             {location && (
+              <p className="text-muted-foreground text-xs flex items-center gap-1 mt-2">
+                <MapPin className="h-3 w-3" />
+                {`Localização: ${location.latitude.toFixed(2)}, ${location.longitude.toFixed(2)}`}
               </p>
             )}
           </div>

@@ -2,7 +2,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, LogIn, LogOut } from "lucide-react";
+import { Clock, LogIn, LogOut, MapPin } from "lucide-react";
 import type { ClockEvent } from "./clock-widget";
 
 interface TodaysActivityProps {
@@ -21,17 +21,25 @@ export function TodaysActivity({ activities }: TodaysActivityProps) {
       <CardContent>
         {activities.length > 0 ? (
           <ul className="space-y-4">
-            {activities.map((activity, index) => (
-              <li key={index} className="flex items-center gap-4">
-                {activity.type === 'Entrada' ? (
-                  <LogIn className="h-5 w-5 text-green-500" />
-                ) : (
-                  <LogOut className="h-5 w-5 text-red-500" />
-                )}
+            {activities.slice().reverse().map((activity, index) => (
+              <li key={index} className="flex items-start gap-4">
+                <div className="flex-shrink-0 mt-1">
+                  {activity.type === 'Entrada' ? (
+                    <LogIn className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <LogOut className="h-5 w-5 text-red-500" />
+                  )}
+                </div>
                 <div className="flex-grow">
                   <p className="font-medium">{activity.type}</p>
+                  {activity.location && (
+                     <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {activity.location}
+                      </p>
+                  )}
                 </div>
-                <p className="text-sm text-muted-foreground font-mono">{activity.time}</p>
+                <p className="text-sm text-muted-foreground font-mono flex-shrink-0">{activity.time}</p>
               </li>
             ))}
           </ul>
