@@ -158,7 +158,7 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
           </TabsList>
           
           <div className="flex-grow overflow-y-auto p-1 py-4">
-            <TabsContent value="personal" className="mt-0">
+            <TabsContent value="personal" className="mt-0 space-y-6">
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="name">Nome Completo</Label>
@@ -198,6 +198,20 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
                                 <SelectItem value="widowed">Viúvo(a)</SelectItem>
                             </SelectContent>
                         </Select>
+                    </div>
+                </div>
+                <Separator />
+                <div className="space-y-4">
+                    <h3 className="font-medium text-foreground">Contato de Emergência</h3>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="emergency-name">Nome do Contato</Label>
+                            <Input id="emergency-name" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="emergency-phone">Telefone do Contato</Label>
+                            <Input id="emergency-phone" />
+                        </div>
                     </div>
                 </div>
             </TabsContent>
