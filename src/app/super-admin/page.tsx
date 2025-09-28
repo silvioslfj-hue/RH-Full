@@ -57,8 +57,8 @@ export default function SuperAdminPage() {
 
     const handleCreateAdmin = () => {
         toast({
-            title: "Administrador Convidado",
-            description: "Um convite foi enviado para o email informado para que o novo administrador configure sua senha."
+            title: "Administrador Criado com Sucesso!",
+            description: "O novo administrador já pode acessar o sistema com as credenciais definidas."
         });
     }
 
@@ -86,9 +86,9 @@ export default function SuperAdminPage() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <UserPlus className="h-5 w-5" />
-                                Cadastro de Administradores
+                                Cadastrar Novo Administrador
                             </CardTitle>
-                            <CardDescription>Adicione novos usuários administradores ao sistema.</CardDescription>
+                            <CardDescription>Crie o primeiro acesso para um novo administrador do sistema.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
@@ -96,14 +96,18 @@ export default function SuperAdminPage() {
                                 <Input id="admin-name" placeholder="Nome do novo administrador" />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="admin-email">Email</Label>
+                                <Label htmlFor="admin-email">Email (Login)</Label>
                                 <Input id="admin-email" type="email" placeholder="email@empresa.com" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="admin-password">Senha Inicial</Label>
+                                <Input id="admin-password" type="password" placeholder="Defina uma senha forte" />
                             </div>
                         </CardContent>
                         <CardFooter>
                             <Button onClick={handleCreateAdmin}>
                                 <UserPlus className="mr-2 h-4 w-4" />
-                                Convidar Administrador
+                                Criar Administrador
                             </Button>
                         </CardFooter>
                     </Card>
