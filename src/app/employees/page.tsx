@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useTransition } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -14,6 +14,8 @@ import { ContractChangeDialog } from "@/components/employees/contract-change-dia
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TerminationDialog } from "@/components/employees/termination-dialog";
+import { generateTerminationData } from "@/ai/flows/termination-flow";
 
 
 export default function EmployeesPage() {
@@ -21,8 +23,10 @@ export default function EmployeesPage() {
     const [employees, setEmployees] = useState(initialEmployeeData);
     const [isEmployeeDialogOpen, setIsEmployeeDialogOpen] = useState(false);
     const [isContractChangeDialogOpen, setIsContractChangeDialogOpen] = useState(false);
+    const [isTerminationDialogOpen, setIsTerminationDialogOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [events, setEvents] = useState<EsocialEvent[]>(esocialEventsData);
+    const [isProcessing, startTransition] = useTransition();
 
     const [nameFilter, setNameFilter] = useState('');
     const [companyFilter, setCompanyFilter] = useState('all');
@@ -57,9 +61,9 @@ export default function EmployeesPage() {
         handleCloseEmployeeDialog();
     };
 
-    const handleDeleteEmployee = (id: string) => {
-        // In a real app, this would likely be a deactivation
-        setEmployees(employees.filter(e => e.id !== id));
+    const handleOpenDeactivateDialog = (employee: Employee) => {
+        setEditingEmployee(employee);
+        setIsTerminationDialogOpen(true);
     };
 
     const handleOpenContractChangeDialog = (employee: Employee) => {
@@ -70,14 +74,11 @@ export default function EmployeesPage() {
     const handleContractChange = (changeData: { newSalary?: number; newRole?: string }) => {
         if (!editingEmployee) return;
 
-        // 1. Update employee data (simulation)
         setEmployees(employees.map(e => e.id === editingEmployee.id ? { 
             ...e, 
             role: changeData.newRole || e.role,
-            // In real app, salary would be updated somewhere else
         } : e));
 
-        // 2. Create a new eSocial event
         const newEvent: EsocialEvent = {
             id: `EVT${(events.length + 1).toString().padStart(3, '0')}`,
             type: "S-2206 - Alteração Contratual",
@@ -87,8 +88,6 @@ export default function EmployeesPage() {
             status: "Pendente",
             details: `Alteração de contrato: ${changeData.newRole ? `Novo cargo: ${changeData.newRole}` : ''} ${changeData.newSalary ? `Novo salário: R$ ${changeData.newSalary}` : ''}`
         };
-        // In a real app, this would be saved to the database.
-        // For this demo, we can log it or, if we had a shared state, add it to the global state.
         console.log("Novo evento eSocial gerado:", newEvent);
         
         toast({
@@ -98,6 +97,54 @@ export default function EmployeesPage() {
 
         setIsContractChangeDialogOpen(false);
         setEditingEmployee(null);
+    }
+    
+    const handleTermination = (terminationData: { reasonCode: string, terminationDate: string }) => {
+        if (!editingEmployee) return;
+
+        startTransition(async () => {
+            setIsTerminationDialogOpen(false);
+            toast({
+                title: "Processando Rescisão...",
+                description: `Aguarde enquanto a IA gera os cálculos e o evento eSocial para ${editingEmployee.name}.`
+            });
+
+            try {
+                const result = await generateTerminationData({
+                    employeeId: editingEmployee.id,
+                    reasonCode: terminationData.reasonCode,
+                    terminationDate: terminationData.terminationDate,
+                });
+
+                setEmployees(employees.map(e => e.id === editingEmployee!.id ? { ...e, status: 'Inativo' } : e));
+
+                const newEvent: EsocialEvent = {
+                    id: `EVT${(events.length + 1).toString().padStart(3, '0')}`,
+                    type: "S-2299 - Desligamento",
+                    employeeId: editingEmployee.id,
+                    employeeName: editingEmployee.name,
+                    referenceDate: terminationData.terminationDate,
+                    status: "Pendente",
+                    details: `Rescisão contratual. Motivo: ${terminationData.reasonCode}. Verbas: R$ ${result.terminationPaySummary.severancePay.toFixed(2)}`
+                };
+                // Simula adicionar o evento à lista global de eventos
+                setEvents(prev => [...prev, newEvent]);
+
+                toast({
+                    title: "Rescisão Processada com Sucesso!",
+                    description: "O colaborador foi inativado e o evento S-2299 foi adicionado à fila do eSocial."
+                });
+                
+            } catch (error) {
+                toast({
+                    variant: "destructive",
+                    title: "Erro ao Processar Rescisão",
+                    description: "Não foi possível completar o processo de rescisão com a IA."
+                });
+            } finally {
+                setEditingEmployee(null);
+            }
+        });
     }
 
     return (
@@ -174,7 +221,7 @@ export default function EmployeesPage() {
                         <EmployeesTable 
                             data={filteredEmployees}
                             onEdit={handleOpenEmployeeDialog}
-                            onDelete={handleDeleteEmployee}
+                            onDeactivate={handleOpenDeactivateDialog}
                             onContractChange={handleOpenContractChangeDialog}
                         />
                     </CardContent>
@@ -198,6 +245,14 @@ export default function EmployeesPage() {
                 onSave={handleContractChange}
                 employee={editingEmployee}
                 roles={roleData}
+            />
+            
+            <TerminationDialog
+                isOpen={isTerminationDialogOpen}
+                onClose={() => setIsTerminationDialogOpen(false)}
+                onSave={handleTermination}
+                employee={editingEmployee}
+                isProcessing={isProcessing}
             />
         </AppLayout>
     );

@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, Pencil, Trash2, FilePen } from "lucide-react"
+import { MoreHorizontal, Pencil, UserX, FilePen } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +18,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Employee } from "@/lib/data";
@@ -26,11 +25,11 @@ import type { Employee } from "@/lib/data";
 interface EmployeesTableProps {
   data: Employee[];
   onEdit: (employee: Employee) => void;
-  onDelete: (id: string) => void;
+  onDeactivate: (employee: Employee) => void;
   onContractChange: (employee: Employee) => void;
 }
 
-export function EmployeesTable({ data, onEdit, onDelete, onContractChange }: EmployeesTableProps) {
+export function EmployeesTable({ data, onEdit, onDeactivate, onContractChange }: EmployeesTableProps) {
 
   const getStatusVariant = (status: Employee['status']) => {
     switch (status) {
@@ -85,7 +84,7 @@ export function EmployeesTable({ data, onEdit, onDelete, onContractChange }: Emp
             <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
+                    <Button variant="ghost" className="h-8 w-8 p-0" disabled={employee.status === 'Inativo'}>
                       <span className="sr-only">Abrir menu</span>
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
@@ -101,26 +100,10 @@ export function EmployeesTable({ data, onEdit, onDelete, onContractChange }: Emp
                       Alterar Contrato
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-500">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Desativar
-                        </DropdownMenuItem>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Esta ação irá desativar o colaborador. Ele não poderá mais acessar o sistema.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => onDelete(employee.id)}>Sim, Desativar</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <DropdownMenuItem onClick={() => onDeactivate(employee)} className="text-red-500 focus:text-red-500">
+                      <UserX className="mr-2 h-4 w-4" />
+                      Iniciar Rescisão
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
             </TableCell>
