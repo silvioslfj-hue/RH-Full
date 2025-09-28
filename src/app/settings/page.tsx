@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -19,19 +19,20 @@ import { WorkShiftsTable } from "@/components/settings/work-shifts-table";
 import { WorkShiftDialog } from "@/components/settings/work-shift-dialog";
 import { ManagersTable } from "@/components/settings/managers-table";
 import { ManagerDialog } from "@/components/settings/manager-dialog";
-import { unitData as initialUnitData, roleData as initialRoleData, companyData as initialCompanyData, workShiftData as initialWorkShiftData, managerData as initialManagerData } from "@/lib/data";
 import type { Unit, Role, Company, WorkShift, Manager } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { db } from "@/lib/firebaseClient";
+import { collection, getDocs, addDoc, doc, setDoc, deleteDoc } from "firebase/firestore";
 
 export default function SettingsPage() {
     const { toast } = useToast();
     
-    const [units, setUnits] = useState(initialUnitData);
-    const [roles, setRoles] = useState(initialRoleData);
-    const [companies, setCompanies] = useState(initialCompanyData);
-    const [workShifts, setWorkShifts] = useState(initialWorkShiftData);
-    const [managers, setManagers] = useState(initialManagerData);
+    const [units, setUnits] = useState<Unit[]>([]);
+    const [roles, setRoles] = useState<Role[]>([]);
+    const [companies, setCompanies] = useState<Company[]>([]);
+    const [workShifts, setWorkShifts] = useState<WorkShift[]>([]);
+    const [managers, setManagers] = useState<Manager[]>([]);
 
     const [isUnitDialogOpen, setIsUnitDialogOpen] = useState(false);
     const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
@@ -48,6 +49,25 @@ export default function SettingsPage() {
     const [overtimeAction, setOvertimeAction] = useState("pay");
     const [pjExtraDaysAction, setPjExtraDaysAction] = useState("pay");
 
+    const fetchData = useCallback(async (collectionName: string, setter: React.Dispatch<React.SetStateAction<any[]>>) => {
+        try {
+            const querySnapshot = await getDocs(collection(db, collectionName));
+            const dataList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setter(dataList);
+        } catch (error) {
+            console.error(`Error fetching ${collectionName}:`, error);
+            toast({ variant: "destructive", title: `Erro ao buscar dados de ${collectionName}` });
+        }
+    }, [toast]);
+
+    useEffect(() => {
+        fetchData("companies", setCompanies);
+        fetchData("units", setUnits);
+        fetchData("roles", setRoles);
+        fetchData("managers", setManagers);
+        fetchData("workShifts", setWorkShifts);
+    }, [fetchData]);
+
 
     const handleSavePayrollSettings = () => {
         toast({
@@ -56,110 +76,65 @@ export default function SettingsPage() {
         })
     }
 
-    // Unit Handlers
-    const handleOpenUnitDialog = (unit: Unit | null = null) => {
-        setEditingUnit(unit);
-        setIsUnitDialogOpen(true);
-    };
-    const handleCloseUnitDialog = () => {
-        setEditingUnit(null);
-        setIsUnitDialogOpen(false);
-    };
-    const handleSaveUnit = (unit: Unit) => {
-        if (editingUnit) {
-            setUnits(units.map(u => u.id === unit.id ? unit : u));
-        } else {
-            setUnits([...units, { ...unit, id: `UN${(units.length + 1).toString().padStart(3, '0')}` }]);
+    // Generic Handlers
+    const createHandleSave = <T extends { id: string }>(collectionName: string, setter: React.Dispatch<React.SetStateAction<T[]>>, editingItem: T | null, setEditingItem: (item: T | null) => void, closeDialog: () => void) => async (item: T) => {
+        try {
+            if (editingItem) {
+                const docRef = doc(db, collectionName, item.id);
+                await setDoc(docRef, item, { merge: true });
+                setter(prev => prev.map(i => i.id === item.id ? item : i));
+            } else {
+                const docRef = await addDoc(collection(db, collectionName), item);
+                setter(prev => [...prev, { ...item, id: docRef.id }]);
+            }
+            closeDialog();
+        } catch (error) {
+            console.error(`Error saving to ${collectionName}:`, error);
+            toast({ variant: "destructive", title: `Erro ao salvar em ${collectionName}` });
         }
-        handleCloseUnitDialog();
-    };
-    const handleDeleteUnit = (id: string) => {
-        setUnits(units.filter(u => u.id !== id));
-    };
-
-    // Role Handlers
-    const handleOpenRoleDialog = (role: Role | null = null) => {
-        setEditingRole(role);
-        setIsRoleDialogOpen(true);
-    };
-    const handleCloseRoleDialog = () => {
-        setEditingRole(null);
-        setIsRoleDialogOpen(false);
-    };
-    const handleSaveRole = (role: Role) => {
-        if (editingRole) {
-            setRoles(roles.map(r => r.id === role.id ? role : r));
-        } else {
-            setRoles([...roles, { ...role, id: `CAR${(roles.length + 1).toString().padStart(3, '0')}` }]);
-        }
-        handleCloseRoleDialog();
-    };
-    const handleDeleteRole = (id: string) => {
-        setRoles(roles.filter(r => r.id !== id));
-    };
-
-    // Company Handlers
-    const handleOpenCompanyDialog = (company: Company | null = null) => {
-        setEditingCompany(company);
-        setIsCompanyDialogOpen(true);
-    };
-    const handleCloseCompanyDialog = () => {
-        setEditingCompany(null);
-        setIsCompanyDialogOpen(false);
-    };
-    const handleSaveCompany = (company: Company) => {
-        if (editingCompany) {
-            setCompanies(companies.map(c => c.id === company.id ? company : c));
-        } else {
-            setCompanies([...companies, { ...company, id: `EMP${(companies.length + 1).toString().padStart(3, '0')}` }]);
-        }
-        handleCloseCompanyDialog();
-    };
-    const handleDeleteCompany = (id: string) => {
-        setCompanies(companies.filter(c => c.id !== id));
     };
     
-    // Work Shift Handlers
-    const handleOpenWorkShiftDialog = (workShift: WorkShift | null = null) => {
-        setEditingWorkShift(workShift);
-        setIsWorkShiftDialogOpen(true);
-    };
-    const handleCloseWorkShiftDialog = () => {
-        setEditingWorkShift(null);
-        setIsWorkShiftDialogOpen(false);
-    };
-    const handleSaveWorkShift = (workShift: WorkShift) => {
-        if (editingWorkShift) {
-            setWorkShifts(workShifts.map(ws => ws.id === workShift.id ? workShift : ws));
-        } else {
-            setWorkShifts([...workShifts, { ...workShift, id: `JOR${(workShifts.length + 1).toString().padStart(3, '0')}` }]);
+    const createHandleDelete = <T extends { id: string }>(collectionName: string, setter: React.Dispatch<React.SetStateAction<T[]>>) => async (id: string) => {
+        try {
+            await deleteDoc(doc(db, collectionName, id));
+            setter(prev => prev.filter(i => i.id !== id));
+        } catch (error) {
+            console.error(`Error deleting from ${collectionName}:`, error);
+            toast({ variant: "destructive", title: `Erro ao deletar de ${collectionName}` });
         }
-        handleCloseWorkShiftDialog();
     };
-    const handleDeleteWorkShift = (id: string) => {
-        setWorkShifts(workShifts.filter(ws => ws.id !== id));
+
+    // Dialog Openers
+    const handleOpenDialog = <T extends { id: string }>(setter: (item: T | null) => void, setOpen: (open: boolean) => void) => (item: T | null = null) => {
+        setter(item);
+        setOpen(true);
     };
-    
-    // Manager Handlers
-    const handleOpenManagerDialog = (manager: Manager | null = null) => {
-        setEditingManager(manager);
-        setIsManagerDialogOpen(true);
-    };
-    const handleCloseManagerDialog = () => {
-        setEditingManager(null);
-        setIsManagerDialogOpen(false);
-    };
-    const handleSaveManager = (manager: Manager) => {
-        if (editingManager) {
-            setManagers(managers.map(m => m.id === manager.id ? manager : m));
-        } else {
-            setManagers([...managers, { ...manager, id: `GES${(managers.length + 1).toString().padStart(3, '0')}` }]);
-        }
-        handleCloseManagerDialog();
-    };
-    const handleDeleteManager = (id: string) => {
-        setManagers(managers.filter(m => m.id !== id));
-    };
+
+    // Specific Handlers
+    const handleOpenUnitDialog = handleOpenDialog(setEditingUnit, setIsUnitDialogOpen);
+    const handleCloseUnitDialog = () => setIsUnitDialogOpen(false);
+    const handleSaveUnit = createHandleSave('units', setUnits, editingUnit, setEditingUnit, handleCloseUnitDialog);
+    const handleDeleteUnit = createHandleDelete('units', setUnits);
+
+    const handleOpenRoleDialog = handleOpenDialog(setEditingRole, setIsRoleDialogOpen);
+    const handleCloseRoleDialog = () => setIsRoleDialogOpen(false);
+    const handleSaveRole = createHandleSave('roles', setRoles, editingRole, setEditingRole, handleCloseRoleDialog);
+    const handleDeleteRole = createHandleDelete('roles', setRoles);
+
+    const handleOpenCompanyDialog = handleOpenDialog(setEditingCompany, setIsCompanyDialogOpen);
+    const handleCloseCompanyDialog = () => setIsCompanyDialogOpen(false);
+    const handleSaveCompany = createHandleSave('companies', setCompanies, editingCompany, setEditingCompany, handleCloseCompanyDialog);
+    const handleDeleteCompany = createHandleDelete('companies', setCompanies);
+
+    const handleOpenWorkShiftDialog = handleOpenDialog(setEditingWorkShift, setIsWorkShiftDialogOpen);
+    const handleCloseWorkShiftDialog = () => setIsWorkShiftDialogOpen(false);
+    const handleSaveWorkShift = createHandleSave('workShifts', setWorkShifts, editingWorkShift, setEditingWorkShift, handleCloseWorkShiftDialog);
+    const handleDeleteWorkShift = createHandleDelete('workShifts', setWorkShifts);
+
+    const handleOpenManagerDialog = handleOpenDialog(setEditingManager, setIsManagerDialogOpen);
+    const handleCloseManagerDialog = () => setIsManagerDialogOpen(false);
+    const handleSaveManager = createHandleSave('managers', setManagers, editingManager, setEditingManager, handleCloseManagerDialog);
+    const handleDeleteManager = createHandleDelete('managers', setManagers);
 
 
   return (
