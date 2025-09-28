@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,72 +34,124 @@ import {
   Factory,
   Loader2,
   CheckCircle,
-  MoreHorizontal,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Download
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { generatePayroll, type PayrollInput, type PayrollOutput } from "@/ai/flows/payroll-flow";
+import { employeeData } from "@/lib/data";
 
 type PayrollStatus = "Pendente" | "Processando" | "Concluído" | "Erro";
+type EmployeePayroll = {
+    id: string;
+    name: string;
+    role: string;
+    grossSalary: number;
+    status: PayrollStatus;
+    payrollData?: PayrollOutput;
+};
 
-const initialPayrollData = [
-  {
-    id: "FUNC001",
-    name: "Jane Doe",
-    role: "Desenvolvedor Front-end",
-    grossSalary: 7500.00,
-    status: "Pendente" as PayrollStatus,
-  },
-  {
-    id: "FUNC002",
-    name: "John Smith",
-    role: "Desenvolvedor Back-end",
-    grossSalary: 7200.00,
-    status: "Pendente" as PayrollStatus,
-  },
-  {
-    id: "FUNC003",
-    name: "Alice Johnson",
-    role: "Designer de Produto",
-    grossSalary: 6800.00,
-    status: "Pendente" as PayrollStatus,
-  },
-];
+const initialPayrollData: EmployeePayroll[] = employeeData.map(e => ({
+  id: e.id,
+  name: e.name,
+  role: e.role,
+  grossSalary: 7500.00, // Salário de exemplo, idealmente viria do cadastro do funcionário
+  status: "Pendente",
+}));
+
 
 export default function PayrollPage() {
   const { toast } = useToast();
-  const [payrollData, setPayrollData] = useState(initialPayrollData);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [payrollRun, setPayrollRun] = useState<EmployeePayroll[]>(initialPayrollData);
+  const [isProcessing, startTransition] = useTransition();
 
   const handleProcessPayroll = () => {
-    setIsProcessing(true);
-    toast({
-      title: "Processamento de Folha Iniciado",
-      description: "A folha de pagamento para a competência selecionada está sendo processada.",
+    startTransition(() => {
+        toast({
+            title: "Processamento de Folha Iniciado",
+            description: "A folha de pagamento para a competência selecionada está sendo processada.",
+        });
+
+        const processEmployee = async (employee: EmployeePayroll) => {
+            setPayrollRun(prev => prev.map(e => e.id === employee.id ? { ...e, status: "Processando" } : e));
+            try {
+                const input: PayrollInput = {
+                    employeeName: employee.name,
+                    grossSalary: employee.grossSalary,
+                    hoursWorked: 160, // Exemplo
+                    overtimeHours: 10, // Exemplo
+                    benefits: {
+                        valeTransporte: 150,
+                        valeRefeicao: 440,
+                    }
+                };
+
+                const result = await generatePayroll(input);
+
+                setPayrollRun(prev => prev.map(e => e.id === employee.id ? { ...e, status: "Concluído", payrollData: result } : e));
+            } catch (error) {
+                console.error(`Erro ao processar folha para ${employee.name}:`, error);
+                setPayrollRun(prev => prev.map(e => e.id === employee.id ? { ...e, status: "Erro" } : e));
+            }
+        };
+
+        const runAll = async () => {
+            for (const employee of payrollRun) {
+                await processEmployee(employee);
+            }
+            toast({
+                title: "Processamento Concluído",
+                description: "A folha de pagamento foi finalizada.",
+            });
+        }
+
+        runAll();
     });
+  };
 
-    // Simula o processamento individual
-    payrollData.forEach((employee, index) => {
-      setTimeout(() => {
-        setPayrollData(prev => prev.map(e => e.id === employee.id ? { ...e, status: "Processando" } : e));
-        
-        // Simula a conclusão (ou erro) do processamento
-        setTimeout(() => {
-             const isSuccess = Math.random() > 0.1; // 90% chance of success
-             setPayrollData(prev => prev.map(e => e.id === employee.id ? { ...e, status: isSuccess ? "Concluído" : "Erro" } : e));
-             
-             // Checa se é o último
-             if (index === payrollData.length - 1) {
-                setIsProcessing(false);
-                toast({
-                    title: "Processamento Concluído",
-                    description: "A folha de pagamento foi finalizada.",
-                });
-             }
+  const handleExportCsv = () => {
+    const completedPayrolls = payrollRun.filter(p => p.status === 'Concluído' && p.payrollData);
 
-        }, 1000 + Math.random() * 1000);
+    if (completedPayrolls.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Nenhum dado para exportar",
+        description: "Processe a folha de pagamento antes de exportar.",
+      });
+      return;
+    }
 
-      }, index * 500);
+    const headers = [
+      "ID Funcionário", "Nome", "Salário Bruto", "Total Proventos", "Total Descontos", "Salário Líquido",
+      "INSS", "IRRF", "FGTS"
+    ];
+
+    const rows = completedPayrolls.map(p => [
+      p.id,
+      p.name,
+      p.payrollData?.grossSalary.toFixed(2),
+      p.payrollData?.totalEarnings.toFixed(2),
+      p.payrollData?.totalDeductions.toFixed(2),
+      p.payrollData?.netSalary.toFixed(2),
+      p.payrollData?.deductions.find(d => d.name === 'INSS')?.value.toFixed(2) || '0.00',
+      p.payrollData?.deductions.find(d => d.name === 'IRRF')?.value.toFixed(2) || '0.00',
+      p.payrollData?.deductions.find(d => d.name === 'FGTS (informativo)')?.value.toFixed(2) || '0.00',
+    ].join(','));
+
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "relatorio_folha_pagamento.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+     toast({
+        title: "Relatório Exportado",
+        description: "O arquivo CSV foi baixado com sucesso.",
     });
   };
 
@@ -189,14 +241,18 @@ export default function PayrollPage() {
                 </Select>
               </div>
             </div>
-            <div className="flex justify-end pt-4">
+            <div className="flex justify-between items-center pt-4">
+                 <Button onClick={handleExportCsv} variant="outline" disabled={isProcessing}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Exportar Relatório (CSV)
+                </Button>
                 <Button onClick={handleProcessPayroll} disabled={isProcessing}>
                     {isProcessing ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
                         <Calculator className="mr-2 h-4 w-4" />
                     )}
-                    {isProcessing ? "Processando..." : "Processar Folha de Pagamento"}
+                    {isProcessing ? "Processando..." : "Processar Folha com IA"}
                 </Button>
             </div>
           </CardContent>
@@ -212,18 +268,28 @@ export default function PayrollPage() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Colaborador</TableHead>
-                            <TableHead>Cargo</TableHead>
                             <TableHead>Salário Bruto</TableHead>
+                            <TableHead>Proventos</TableHead>
+                            <TableHead>Descontos</TableHead>
+                            <TableHead>Salário Líquido</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Ações</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {payrollData.map((employee) => (
+                        {payrollRun.map((employee) => (
                             <TableRow key={employee.id}>
                                 <TableCell className="font-medium">{employee.name}</TableCell>
-                                <TableCell className="text-muted-foreground">{employee.role}</TableCell>
                                 <TableCell className="font-mono">R$ {employee.grossSalary.toFixed(2)}</TableCell>
+                                <TableCell className="font-mono text-green-600">
+                                  {employee.payrollData ? `R$ ${employee.payrollData.totalEarnings.toFixed(2)}` : '-'}
+                                </TableCell>
+                                <TableCell className="font-mono text-red-600">
+                                  {employee.payrollData ? `R$ ${employee.payrollData.totalDeductions.toFixed(2)}` : '-'}
+                                </TableCell>
+                                <TableCell className="font-mono font-bold">
+                                  {employee.payrollData ? `R$ ${employee.payrollData.netSalary.toFixed(2)}` : '-'}
+                                </TableCell>
                                 <TableCell>{getStatusComponent(employee.status)}</TableCell>
                                 <TableCell className="text-right">
                                     {employee.status === "Concluído" && (
