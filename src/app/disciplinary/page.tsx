@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,18 +14,43 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, FileText, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { employeeData, disciplinaryData as initialDisciplinaryData, type DisciplinaryAction } from "@/lib/data";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import type { DisciplinaryAction, Employee } from "@/lib/data";
+import { db } from "@/lib/firebaseClient";
+import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy } from "firebase/firestore";
 
 export default function DisciplinaryPage() {
     const { toast } = useToast();
-    const [actions, setActions] = useState<DisciplinaryAction[]>(initialDisciplinaryData);
+    const [actions, setActions] = useState<DisciplinaryAction[]>([]);
+    const [employees, setEmployees] = useState<Employee[]>([]);
 
     const [employeeId, setEmployeeId] = useState("");
     const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
     const [type, setType] = useState<DisciplinaryAction['type'] | "">("");
     const [reason, setReason] = useState("");
 
-    const handleIssueAction = () => {
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const employeesSnapshot = await getDocs(collection(db, "employees"));
+                const activeEmployees = employeesSnapshot.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() } as Employee))
+                    .filter(e => e.status === 'Ativo');
+                setEmployees(activeEmployees);
+
+                const actionsQuery = query(collection(db, "disciplinary_actions"), orderBy("date", "desc"));
+                const actionsSnapshot = await getDocs(actionsQuery);
+                const actionsList = actionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DisciplinaryAction));
+                setActions(actionsList);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                toast({ variant: "destructive", title: "Erro ao buscar dados do Firestore." });
+            }
+        };
+        fetchData();
+    }, [toast]);
+
+    const handleIssueAction = async () => {
         if(!employeeId || !date || !type || !reason) {
             toast({
                 variant: "destructive",
@@ -35,30 +60,51 @@ export default function DisciplinaryPage() {
             return;
         }
 
-        const employee = employeeData.find(e => e.id === employeeId);
+        const employee = employees.find(e => e.id === employeeId);
         if(!employee) return;
 
-        const newAction: DisciplinaryAction = {
-            id: `AD${(actions.length + 1).toString().padStart(3, '0')}`,
-            employeeId,
-            employeeName: employee.name,
-            date,
-            type: type as DisciplinaryAction['type'],
-            reason,
-            issuer: "Jane Doe" // Hardcoded for demo
-        };
+        try {
+            const newActionData: Omit<DisciplinaryAction, 'id'> = {
+                employeeId,
+                employeeName: employee.name,
+                date,
+                type: type as DisciplinaryAction['type'],
+                reason,
+                issuer: "Jane Doe" // Hardcoded for demo
+            };
 
-        setActions(prev => [newAction, ...prev]);
-        toast({
-            title: "Ação Disciplinar Emitida",
-            description: `Uma ${type} foi registrada para ${employee.name}.`
-        });
+            const docRef = await addDoc(collection(db, "disciplinary_actions"), newActionData);
+            const newAction = { ...newActionData, id: docRef.id };
 
-        // Reset form
-        setEmployeeId("");
-        setDate(new Date().toISOString().split("T")[0]);
-        setType("");
-        setReason("");
+            setActions(prev => [newAction, ...prev]);
+            toast({
+                title: "Ação Disciplinar Emitida",
+                description: `Uma ${type} foi registrada para ${employee.name}.`
+            });
+
+            // Reset form
+            setEmployeeId("");
+            setDate(new Date().toISOString().split("T")[0]);
+            setType("");
+            setReason("");
+        } catch (error) {
+            console.error("Error issuing disciplinary action:", error);
+            toast({ variant: "destructive", title: "Erro ao registrar ação." });
+        }
+    }
+
+    const handleDeleteAction = async (actionId: string) => {
+        try {
+            await deleteDoc(doc(db, "disciplinary_actions", actionId));
+            setActions(prev => prev.filter(action => action.id !== actionId));
+            toast({
+                title: "Ação Anulada",
+                description: "A ação disciplinar foi removida do histórico."
+            });
+        } catch (error) {
+            console.error("Error deleting action:", error);
+            toast({ variant: "destructive", title: "Erro ao anular ação." });
+        }
     }
     
     const getTypeVariant = (type: DisciplinaryAction['type']) => {
@@ -91,7 +137,7 @@ export default function DisciplinaryPage() {
                                         <SelectValue placeholder="Selecione um colaborador" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {employeeData.filter(e => e.status === 'Ativo').map(e => (
+                                        {employees.map(e => (
                                             <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
                                         ))}
                                     </SelectContent>
@@ -164,10 +210,28 @@ export default function DisciplinaryPage() {
                                                         <FileText className="mr-2 h-4 w-4" />
                                                         Gerar Documento
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-red-500">
-                                                        <Trash2 className="mr-2 h-4 w-4" />
-                                                        Anular
-                                                    </DropdownMenuItem>
+                                                    <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                            <DropdownMenuItem onSelect={e => e.preventDefault()} className="text-red-500 focus:text-red-500">
+                                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                                Anular
+                                                            </DropdownMenuItem>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    Esta ação não pode ser desfeita. A ação disciplinar será removida permanentemente.
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                                <AlertDialogAction onClick={() => handleDeleteAction(action.id)} className="bg-destructive hover:bg-destructive/90">
+                                                                    Sim, Anular
+                                                                </AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
