@@ -15,18 +15,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { User, Settings, LogOut, CreditCard, LifeBuoy } from "lucide-react"
 
 export function UserNav() {
-  const userAvatar = PlaceHolderImages.find(p => p.id === 'user-avatar');
+  const companyLogo = PlaceHolderImages.find(p => p.id === 'company-logo');
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-9 w-9">
-            {userAvatar && (
+            {companyLogo && (
                <AvatarImage 
-                  src={userAvatar.imageUrl} 
-                  alt="User avatar" 
-                  data-ai-hint={userAvatar.imageHint}
+                  src={companyLogo.imageUrl} 
+                  alt="Company Logo" 
+                  data-ai-hint={companyLogo.imageHint}
+                  className="p-1"
                 />
             )}
             <AvatarFallback>JD</AvatarFallback>
@@ -44,9 +45,11 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <User className="mr-2" />
-            <span>Perfil</span>
+          <DropdownMenuItem asChild>
+            <Link href="/profile">
+              <User className="mr-2" />
+              <span>Perfil</span>
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuItem>
             <CreditCard className="mr-2" />

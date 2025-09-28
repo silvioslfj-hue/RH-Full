@@ -20,7 +20,7 @@ const adminMenuItems = [
 
 const collaboratorMenuItems = [
   { href: '/clock', label: 'Registro de Ponto', icon: Hourglass },
-  { href: '/justifications', label: 'Justificativas', icon: FileCheck },
+  { href: 'justifications', label: 'Justificativas', icon: FileCheck },
   { href: '/my-reports', label: 'Meus Relatórios', icon: BarChart3 },
   { href: '/absences', label: 'Minhas Ausências', icon: CalendarOff },
   { href: '/proofs', label: 'Comprovantes', icon: Receipt },
@@ -34,9 +34,6 @@ export function MainNav() {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar();
 
-  // A rota de administrador é qualquer uma que comece com os caminhos de admin.
-  // Qualquer outra rota (incluindo '/absences' quando não originada de um admin) será considerada de colaborador.
-  // Esta é uma simplificação para o protótipo.
   const isAdminRoute = adminPaths.some(path => pathname.startsWith(path));
   
   const menuItems = isAdminRoute ? adminMenuItems : collaboratorMenuItems;
