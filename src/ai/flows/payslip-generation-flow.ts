@@ -13,7 +13,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import type { PayrollOutput } from './payroll-flow';
 
-export const PayslipGenerationInputSchema = z.object({
+const PayslipGenerationInputSchema = z.object({
   company: z.object({
     name: z.string().describe("Nome da empresa empregadora."),
     cnpj: z.string().describe("CNPJ da empresa empregadora."),
@@ -34,7 +34,7 @@ export const PayslipGenerationInputSchema = z.object({
 });
 export type PayslipGenerationInput = z.infer<typeof PayslipGenerationInputSchema>;
 
-export const PayslipGenerationOutputSchema = z.object({
+const PayslipGenerationOutputSchema = z.object({
   payslipContent: z.string().describe('O conteúdo textual completo do holerite, formatado para exibição e com quebras de linha (\\n).'),
 });
 export type PayslipGenerationOutput = z.infer<typeof PayslipGenerationOutputSchema>;
