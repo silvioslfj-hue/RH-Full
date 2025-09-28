@@ -1,3 +1,7 @@
+
+"use client";
+
+import { useState } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -5,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 
 const employeeData = {
     name: "Jane Doe",
@@ -19,6 +24,7 @@ const employeeData = {
 
 export default function ProfilePage() {
     const userAvatar = PlaceHolderImages.find(p => p.id === 'user-avatar');
+    const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
     return (
         <AppLayout>
@@ -30,17 +36,50 @@ export default function ProfilePage() {
 
                 <Card>
                     <CardHeader>
-                        <div className="flex items-center gap-4">
-                            <Avatar className="h-20 w-20">
-                                {userAvatar && (
-                                    <AvatarImage src={userAvatar.imageUrl} alt="User Avatar" data-ai-hint={userAvatar.imageHint} />
-                                )}
-                                <AvatarFallback>JD</AvatarFallback>
-                            </Avatar>
-                            <div>
-                                <CardTitle className="text-2xl">{employeeData.name}</CardTitle>
-                                <CardDescription>{employeeData.position}</CardDescription>
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-4">
+                                <Avatar className="h-20 w-20">
+                                    {userAvatar && (
+                                        <AvatarImage src={userAvatar.imageUrl} alt="User Avatar" data-ai-hint={userAvatar.imageHint} />
+                                    )}
+                                    <AvatarFallback>JD</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <CardTitle className="text-2xl">{employeeData.name}</CardTitle>
+                                    <CardDescription>{employeeData.position}</CardDescription>
+                                </div>
                             </div>
+                            <Dialog open={isChangePasswordOpen} onOpenChange={setIsChangePasswordOpen}>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline">Alterar Senha</Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Alterar Senha</DialogTitle>
+                                        <DialogDescription>
+                                            Para sua segurança, escolha uma senha forte e não a compartilhe.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4 py-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="current-password">Senha Atual</Label>
+                                            <Input id="current-password" type="password" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="new-password">Nova Senha</Label>
+                                            <Input id="new-password" type="password" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
+                                            <Input id="confirm-password" type="password" />
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <Button variant="outline" onClick={() => setIsChangePasswordOpen(false)}>Cancelar</Button>
+                                        <Button onClick={() => setIsChangePasswordOpen(false)}>Salvar Alterações</Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-6">
@@ -76,30 +115,6 @@ export default function ProfilePage() {
                     </CardContent>
                     <CardFooter className="border-t pt-6 flex justify-end">
                         <Button variant="outline">Solicitar Alteração de Dados</Button>
-                    </CardFooter>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Alterar Senha</CardTitle>
-                        <CardDescription>Para sua segurança, escolha uma senha forte.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="current-password">Senha Atual</Label>
-                            <Input id="current-password" type="password" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="new-password">Nova Senha</Label>
-                            <Input id="new-password" type="password" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
-                            <Input id="confirm-password" type="password" />
-                        </div>
-                    </CardContent>
-                    <CardFooter className="border-t pt-6 flex justify-end">
-                        <Button>Salvar Alterações</Button>
                     </CardFooter>
                 </Card>
             </div>
