@@ -88,6 +88,17 @@ export type TimeSheetEntry = {
     issue?: string;
 };
 
+export type TimeBankEntry = {
+    employeeId: string;
+    employeeName: string;
+    role: string;
+    avatar?: string;
+    balance: string;
+    expiringHours: string;
+    expiryDate: string;
+    status: 'Crítico' | 'Atenção' | 'OK';
+}
+
 
 // Types for payslip generation
 export const PayslipGenerationInputSchema = z.object({
@@ -329,6 +340,12 @@ export const jobOpeningsData: GeneratedJobOpening[] = [
         ],
         requiredSkills: ["React", "Node.js", "TypeScript", "SQL", "Git"]
     }
+];
+
+export const timeBankData: TimeBankEntry[] = [
+    { employeeId: 'FUNC001', employeeName: 'Carlos Andrade', role: "Desenvolvedor Back-end", avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d', balance: '25h 30m', expiringHours: '8h 00m', expiryDate: '31/10/2024', status: 'Atenção' },
+    { employeeId: 'FUNC002', employeeName: 'Mariana Costa', role: "Desenvolvedor Front-end", avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026705d', balance: '12h 15m', expiringHours: '12h 15m', expiryDate: '30/09/2024', status: 'Crítico' },
+    { employeeId: 'FUNC003', employeeName: 'Alice Johnson', role: "Designer de Produto", avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026706d', balance: '2h 00m', expiringHours: '0h 00m', expiryDate: '31/12/2024', status: 'OK' },
 ];
     
 

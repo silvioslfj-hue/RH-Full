@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import { usePathname } from 'next/navigation'
@@ -13,9 +14,9 @@ import {
   SidebarGroupLabel,
   SidebarMenuBadge
 } from '@/components/ui/sidebar'
-import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText, FileArchive, Settings, Users, Calculator, History, PieChart, Briefcase, Bank } from 'lucide-react'
+import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText, FileArchive, Settings, Users, Calculator, History, PieChart, Briefcase } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { absenceData, timeSheetData } from '@/lib/data'
+import { absenceData, timeSheetData, timeBankData } from '@/lib/data'
 
 
 const collaboratorMenuItems = [
@@ -28,7 +29,7 @@ const collaboratorMenuItems = [
   { href: '/income-reports', label: 'Informe de Rendimentos', icon: FileText },
 ]
 
-const adminPaths = ['/dashboard', '/timecards', '/reports', '/fiscal-files', '/settings', '/employees', '/payroll', '/payroll-history', '/payroll-reports', '/esocial', '/job-openings'];
+const adminPaths = ['/dashboard', '/timecards', '/reports', '/fiscal-files', '/settings', '/employees', '/payroll', '/payroll-history', '/payroll-reports', '/esocial', '/job-openings', '/time-bank'];
 
 export function MainNav() {
   const pathname = usePathname();
@@ -38,6 +39,7 @@ export function MainNav() {
   // Simulação de contagem de pendências
   const pendingAbsencesCount = absenceData.filter(a => a.status === 'Pendente').length;
   const inconsistentEntriesCount = timeSheetData.filter(e => e.status === 'warning').length;
+  const timeBankExpiringCount = timeBankData.filter(e => e.status === 'Crítico' || e.status === 'Atenção').length;
 
   useEffect(() => {
     // Lógica para determinar o contexto do usuário (admin vs. colaborador)
@@ -125,6 +127,15 @@ export function MainNav() {
                   <Clock />
                   <span>Registro de Ponto</span>
                   {inconsistentEntriesCount > 0 && <SidebarMenuBadge>{inconsistentEntriesCount}</SidebarMenuBadge>}
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname.startsWith('/time-bank')} tooltip={{ children: 'Banco de Horas' }}>
+                <Link href='/time-bank' onClick={handleLinkClick}>
+                  <Hourglass />
+                  <span>Banco de Horas</span>
+                  {timeBankExpiringCount > 0 && <SidebarMenuBadge>{timeBankExpiringCount}</SidebarMenuBadge>}
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

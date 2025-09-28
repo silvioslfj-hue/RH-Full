@@ -31,7 +31,6 @@ export default function DashboardPage() {
   const pendingESocialEventsCount = esocialEventsData.filter(e => e.status === "Pendente").length;
   const activeEmployeesCount = employeeData.filter(e => e.status === "Ativo").length;
   const timecardAlertsCount = 2; // Valor simulado para alertas de ponto
-  const timeBankExpiringCount = 5; // Valor simulado para banco de horas
 
 
   return (
@@ -87,10 +86,6 @@ export default function DashboardPage() {
           <ESocialPendingAlert count={pendingESocialEventsCount} />
         )}
         
-        {timeBankExpiringCount > 0 && (
-          <TimeBankExpiryAlert count={timeBankExpiringCount} />
-        )}
-
         <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <RecentAbsenceRequests requests={pendingAbsenceRequests} onStatusChange={handleStatusChange} />
