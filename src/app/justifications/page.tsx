@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, X, File } from "lucide-react";
+import { Upload, X, File, Camera } from "lucide-react";
+import { DocumentScanner } from "@/components/justifications/document-scanner";
 
 export default function JustificationsPage() {
   const { toast } = useToast();
@@ -17,6 +18,7 @@ export default function JustificationsPage() {
   const [date, setDate] = useState("");
   const [reason, setReason] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,11 +41,15 @@ export default function JustificationsPage() {
 
   const handleRemoveFile = () => {
     setFile(null);
-    // Also reset the input value
-    const fileInput = document.getElementById('file') as HTMLInputElement;
+    const fileInput = document.getElementById('file-upload') as HTMLInputElement;
     if (fileInput) {
       fileInput.value = '';
     }
+  };
+  
+  const handleScanComplete = (scannedFile: File) => {
+    setFile(scannedFile);
+    setIsScannerOpen(false);
   };
 
   return (
@@ -90,7 +96,13 @@ export default function JustificationsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="file">Anexar Documento (Opcional)</Label>
+                <div className="flex items-center justify-between">
+                    <Label htmlFor="file-upload">Anexar Documento</Label>
+                    <Button variant="outline" size="sm" onClick={() => setIsScannerOpen(true)}>
+                        <Camera className="mr-2 h-4 w-4" />
+                        Escanear
+                    </Button>
+                </div>
                 {file ? (
                   <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-3">
                     <div className="flex items-center gap-2">
@@ -102,7 +114,7 @@ export default function JustificationsPage() {
                     </Button>
                   </div>
                 ) : (
-                  <label htmlFor="file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted/70">
+                  <label htmlFor="file-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted/70 transition-colors">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                       <Upload className="w-8 h-8 mb-3 text-muted-foreground" />
                       <p className="mb-2 text-sm text-center text-muted-foreground">
@@ -110,7 +122,7 @@ export default function JustificationsPage() {
                       </p>
                       <p className="text-xs text-muted-foreground">PDF, PNG, JPG (máx. 5MB)</p>
                     </div>
-                    <Input id="file" type="file" className="hidden" onChange={handleFileChange} />
+                    <Input id="file-upload" type="file" className="hidden" onChange={handleFileChange} />
                   </label>
                 )}
               </div>
@@ -121,6 +133,11 @@ export default function JustificationsPage() {
           </CardContent>
         </Card>
       </div>
+      <DocumentScanner 
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScan={handleScanComplete}
+      />
     </AppLayout>
   );
 }
