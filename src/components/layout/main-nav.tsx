@@ -10,13 +10,14 @@ import {
   SidebarMenuButton,
   useSidebar
 } from '@/components/ui/sidebar'
-import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText, FileArchive, Settings, Users } from 'lucide-react'
+import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText, FileArchive, Settings, Users, Calculator } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 const adminMenuItems = [
   { href: '/dashboard', label: 'Resumo', icon: LayoutDashboard },
   { href: '/employees', label: 'Colaboradores', icon: Users },
   { href: '/timecards', label: 'Cartões de Ponto', icon: Clock },
+  { href: '/payroll', label: 'Folha de Pagamento', icon: Calculator },
   { href: '/absences', label: 'Ausências', icon: CalendarOff },
   { href: '/reports', label: 'Relatórios', icon: BarChart3 },
   { href: '/fiscal-files', label: 'Arquivos Fiscais', icon: FileArchive },
@@ -33,7 +34,7 @@ const collaboratorMenuItems = [
   { href: '/income-reports', label: 'Informe de Rendimentos', icon: FileText },
 ]
 
-const adminPaths = ['/dashboard', '/timecards', '/reports', '/fiscal-files', '/settings', '/employees'];
+const adminPaths = ['/dashboard', '/timecards', '/reports', '/fiscal-files', '/settings', '/employees', '/payroll'];
 
 export function MainNav() {
   const pathname = usePathname();
