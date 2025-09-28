@@ -16,6 +16,8 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Employee, Unit, Role, WorkShift } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 interface EmployeeDialogProps {
   isOpen: boolean;
@@ -28,12 +30,25 @@ interface EmployeeDialogProps {
 }
 
 export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles, workShifts }: EmployeeDialogProps) {
+    const { toast } = useToast();
+    const [isFetchingZip, setIsFetchingZip] = useState(false);
+    
+    // States for all form fields
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [role, setRole] = useState('');
     const [unit, setUnit] = useState('');
     const [status, setStatus] = useState<Employee['status']>('Ativo');
     
+    // Address states
+    const [zip, setZip] = useState('');
+    const [street, setStreet] = useState('');
+    const [number, setNumber] = useState('');
+    const [complement, setComplement] = useState('');
+    const [neighborhood, setNeighborhood] = useState('');
+    const [city, setCity] = useState('');
+    const [state, setState] = useState('');
+
   useEffect(() => {
     if (employee) {
       setName(employee.name);
@@ -41,6 +56,7 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
       setRole(employee.role);
       setUnit(employee.unit);
       setStatus(employee.status);
+      // Populate other fields if they exist on the employee object
     } else {
       // Reset form for new employee
       setName('');
@@ -48,8 +64,63 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
       setRole('');
       setUnit('');
       setStatus('Ativo');
+      setZip('');
+      setStreet('');
+      setNumber('');
+      setComplement('');
+      setNeighborhood('');
+      setCity('');
+      setState('');
     }
   }, [employee, isOpen]);
+
+  const handleZipBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const currentZip = e.target.value.replace(/\D/g, '');
+    if (currentZip.length !== 8) {
+      return;
+    }
+
+    setIsFetchingZip(true);
+    toast({
+      title: 'Buscando CEP...',
+      description: 'Aguarde enquanto preenchemos o endereço.',
+    });
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${currentZip}/json/`);
+      const data = await response.json();
+
+      if (data.erro) {
+        toast({
+          variant: 'destructive',
+          title: 'CEP não encontrado',
+          description: 'Por favor, verifique o CEP e tente novamente.',
+        });
+        setStreet('');
+        setNeighborhood('');
+        setCity('');
+        setState('');
+      } else {
+        setStreet(data.logradouro);
+        setNeighborhood(data.bairro);
+        setCity(data.localidade);
+        setState(data.uf);
+        toast({
+          title: 'Endereço Encontrado!',
+          description: 'Os campos de endereço foram preenchidos.',
+        });
+        document.getElementById('number')?.focus();
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao buscar CEP',
+        description: 'Não foi possível buscar o endereço. Tente novamente.',
+      });
+    } finally {
+      setIsFetchingZip(false);
+    }
+  };
 
   const handleSubmit = () => {
     const employeeData: Partial<Employee> = {
@@ -197,33 +268,34 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
 
             <TabsContent value="address" className="mt-0">
                  <div className="grid grid-cols-6 gap-x-6 gap-y-4">
-                    <div className="space-y-2 col-span-2">
+                    <div className="space-y-2 col-span-2 relative">
                         <Label htmlFor="zip">CEP</Label>
-                        <Input id="zip" />
+                        <Input id="zip" value={zip} onChange={(e) => setZip(e.target.value)} onBlur={handleZipBlur} />
+                        {isFetchingZip && <Loader2 className="absolute right-2 top-8 h-4 w-4 animate-spin" />}
                     </div>
                     <div className="space-y-2 col-span-4">
                         <Label htmlFor="street">Logradouro</Label>
-                        <Input id="street" />
+                        <Input id="street" value={street} onChange={(e) => setStreet(e.target.value)} />
                     </div>
                     <div className="space-y-2 col-span-2">
                         <Label htmlFor="number">Número</Label>
-                        <Input id="number" />
+                        <Input id="number" value={number} onChange={(e) => setNumber(e.target.value)} />
                     </div>
                     <div className="space-y-2 col-span-4">
                         <Label htmlFor="complement">Complemento</Label>
-                        <Input id="complement" />
+                        <Input id="complement" value={complement} onChange={(e) => setComplement(e.target.value)} />
                     </div>
                      <div className="space-y-2 col-span-3">
                         <Label htmlFor="neighborhood">Bairro</Label>
-                        <Input id="neighborhood" />
+                        <Input id="neighborhood" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} />
                     </div>
                     <div className="space-y-2 col-span-2">
                         <Label htmlFor="city">Cidade</Label>
-                        <Input id="city" />
+                        <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} />
                     </div>
                     <div className="space-y-2 col-span-1">
                         <Label htmlFor="state">UF</Label>
-                        <Input id="state" />
+                        <Input id="state" value={state} onChange={(e) => setState(e.target.value)} />
                     </div>
                  </div>
             </TabsContent>
@@ -288,3 +360,5 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
     </Dialog>
   );
 }
+
+    
