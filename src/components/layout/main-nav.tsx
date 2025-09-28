@@ -27,7 +27,7 @@ const collaboratorMenuItems = [
   { href: '/proofs', label: 'Comprovantes', icon: Receipt, contract: ['CLT'] },
   { href: '/payslips', label: 'Holerites', icon: Wallet, contract: ['CLT'] },
   { href: '/invoices', label: 'Notas Fiscais', icon: Receipt, contract: ['PJ'] },
-  { href: '/income-reports', label: 'Informe de Rendimentos', icon: ['CLT', 'PJ'] },
+  { href: '/income-reports', label: 'Informe de Rendimentos', icon: FileText, contract: ['CLT', 'PJ'] },
 ]
 
 const adminPaths = ['/dashboard', '/timecards', '/reports', '/fiscal-files', '/settings', '/employees', '/payroll', '/payroll-history', '/payroll-reports', '/esocial', '/job-openings', '/time-bank'];
