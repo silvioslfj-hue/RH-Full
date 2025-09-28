@@ -7,13 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Wand2, ClipboardCopy, Check } from "lucide-react";
+import { Loader2, Wand2, ClipboardCopy, Check, FileText } from "lucide-react";
 import { generateJobOpening } from "@/ai/flows/job-opening-flow";
-import type { JobOpeningOutput } from "@/lib/data";
+import type { JobOpeningOutput, GeneratedJobOpening } from "@/lib/data";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
+import { jobOpeningsData } from "@/lib/data";
+import { JobOpeningsTable } from "@/components/job-openings/job-openings-table";
 
 const CopyButton = ({ textToCopy }: { textToCopy: string }) => {
     const { toast } = useToast();
@@ -38,6 +39,8 @@ export default function JobOpeningsPage() {
     const [isGenerating, startTransition] = useTransition();
     const [jobTitle, setJobTitle] = useState("");
     const [generatedContent, setGeneratedContent] = useState<JobOpeningOutput | null>(null);
+    const [jobHistory, setJobHistory] = useState<GeneratedJobOpening[]>(jobOpeningsData);
+    const [editingJobId, setEditingJobId] = useState<string | null>(null);
 
     const handleGenerate = () => {
         if (!jobTitle.trim()) {
@@ -51,6 +54,7 @@ export default function JobOpeningsPage() {
 
         startTransition(async () => {
         setGeneratedContent(null);
+        setEditingJobId(null);
         toast({
             title: "Gerando Material da Vaga...",
             description: "Aguarde enquanto a IA cria a descrição, perguntas e habilidades."
@@ -59,9 +63,18 @@ export default function JobOpeningsPage() {
         try {
             const result = await generateJobOpening({ role: jobTitle });
             setGeneratedContent(result);
+
+            const newJob: GeneratedJobOpening = {
+                id: `VAGA${(jobHistory.length + 1).toString().padStart(3, '0')}`,
+                role: jobTitle,
+                createdAt: new Date().toISOString().split('T')[0],
+                ...result,
+            };
+            setJobHistory(prev => [newJob, ...prev]);
+
             toast({
             title: "Material Gerado com Sucesso!",
-            description: `O material para "${jobTitle}" foi criado pela IA.`
+            description: `O material para "${jobTitle}" foi criado e salvo no histórico.`
             });
         } catch (error) {
             console.error("Error generating job opening:", error);
@@ -73,6 +86,32 @@ export default function JobOpeningsPage() {
         }
         });
     };
+
+    const handleEdit = (job: GeneratedJobOpening) => {
+        setJobTitle(job.role);
+        setGeneratedContent({
+            description: job.description,
+            interviewQuestions: job.interviewQuestions,
+            requiredSkills: job.requiredSkills
+        });
+        setEditingJobId(job.id);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    const handleDelete = (id: string) => {
+        setJobHistory(prev => prev.filter(job => job.id !== id));
+        if (editingJobId === id) {
+            setGeneratedContent(null);
+            setEditingJobId(null);
+            setJobTitle("");
+        }
+        toast({
+            title: "Vaga Excluída",
+            description: "A vaga foi removida do seu histórico.",
+        });
+    }
+    
+    const currentJobTitle = editingJobId ? jobHistory.find(j => j.id === editingJobId)?.role : jobTitle;
     
     return (
         <AppLayout>
@@ -108,8 +147,10 @@ export default function JobOpeningsPage() {
 
                  <div className="flex-1 min-h-0">
                     {!generatedContent && !isGenerating && (
-                        <div className="flex items-center justify-center h-full text-muted-foreground border rounded-lg bg-muted/50">
-                        <p>O material gerado para a vaga aparecerá aqui.</p>
+                        <div className="flex items-center justify-center h-full text-muted-foreground border rounded-lg bg-muted/50 flex-col">
+                            <FileText className="h-12 w-12 mb-4" />
+                            <p>O material gerado para a vaga aparecerá aqui.</p>
+                            <p className="text-sm">Comece digitando um cargo acima e clicando em "Gerar".</p>
                         </div>
                     )}
                     {isGenerating && (
@@ -119,65 +160,81 @@ export default function JobOpeningsPage() {
                         </div>
                     )}
                     {generatedContent && (
-                        <Tabs defaultValue="description" className="h-full flex flex-col">
-                            <TabsList className="grid w-full grid-cols-3">
-                                <TabsTrigger value="description">Descrição da Vaga</TabsTrigger>
-                                <TabsTrigger value="questions">Perguntas de Entrevista</TabsTrigger>
-                                <TabsTrigger value="skills">Habilidades</TabsTrigger>
-                            </TabsList>
-                            <ScrollArea className="flex-1 mt-4">
-                                <TabsContent value="description">
-                                    <Card>
-                                        <CardHeader className="flex flex-row items-center justify-between">
-                                            <CardTitle>Descrição da Vaga para {jobTitle}</CardTitle>
-                                            <CopyButton textToCopy={generatedContent.description} />
-                                        </CardHeader>
-                                        <CardContent className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: generatedContent.description.replace(/\\n/g, '<br />') }} />
-                                    </Card>
-                                </TabsContent>
-                                <TabsContent value="questions">
-                                    <Card>
-                                        <CardHeader className="flex flex-row items-center justify-between">
-                                            <CardTitle>Perguntas para Entrevista</CardTitle>
-                                            <CopyButton textToCopy={generatedContent.interviewQuestions.map(q => `[${q.category}] ${q.question}`).join('\n')} />
-                                        </CardHeader>
-                                        <CardContent>
-                                            <ul className="space-y-4">
-                                            {generatedContent.interviewQuestions.map((q, index) => (
-                                                <li key={index} className="flex items-start gap-3">
-                                                    <span className="font-bold text-primary">{index + 1}.</span>
-                                                    <div>
-                                                        <p className="font-semibold">{q.question}</p>
-                                                        <p className="text-xs text-muted-foreground uppercase">{q.category}</p>
-                                                    </div>
-                                                </li>
-                                            ))}
-                                            </ul>
-                                        </CardContent>
-                                    </Card>
-                                </TabsContent>
-                                <TabsContent value="skills">
-                                    <Card>
-                                        <CardHeader className="flex flex-row items-center justify-between">
-                                            <CardTitle>Habilidades e Competências Essenciais</CardTitle>
-                                            <CopyButton textToCopy={generatedContent.requiredSkills.join(', ')} />
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="flex flex-wrap gap-2">
-                                            {generatedContent.requiredSkills.map((skill, index) => (
-                                                <div key={index} className="bg-secondary text-secondary-foreground rounded-full px-3 py-1 text-sm">
-                                                    {skill}
-                                                </div>
-                                            ))}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Material Gerado para "{currentJobTitle}"</CardTitle>
+                                <CardDescription>Abaixo está o material gerado pela IA. Use as abas para navegar.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Tabs defaultValue="description" className="h-full flex flex-col">
+                                    <TabsList className="grid w-full grid-cols-3">
+                                        <TabsTrigger value="description">Descrição da Vaga</TabsTrigger>
+                                        <TabsTrigger value="questions">Perguntas de Entrevista</TabsTrigger>
+                                        <TabsTrigger value="skills">Habilidades</TabsTrigger>
+                                    </TabsList>
+                                    <ScrollArea className="flex-1 mt-4 h-96">
+                                        <TabsContent value="description">
+                                            <div className="prose prose-sm dark:prose-invert max-w-none relative">
+                                                 <div className="absolute top-0 right-0">
+                                                    <CopyButton textToCopy={generatedContent.description} />
+                                                 </div>
+                                                <div dangerouslySetInnerHTML={{ __html: generatedContent.description.replace(/\\n/g, '<br />') }} />
                                             </div>
-                                        </CardContent>
-                                    </Card>
-                                </TabsContent>
-                            </ScrollArea>
-                        </Tabs>
+                                        </TabsContent>
+                                        <TabsContent value="questions">
+                                             <div className="relative">
+                                                <div className="absolute top-0 right-0">
+                                                    <CopyButton textToCopy={generatedContent.interviewQuestions.map(q => `[${q.category}] ${q.question}`).join('\n')} />
+                                                </div>
+                                                <ul className="space-y-4">
+                                                {generatedContent.interviewQuestions.map((q, index) => (
+                                                    <li key={index} className="flex items-start gap-3">
+                                                        <span className="font-bold text-primary">{index + 1}.</span>
+                                                        <div>
+                                                            <p className="font-semibold">{q.question}</p>
+                                                            <p className="text-xs text-muted-foreground uppercase">{q.category}</p>
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                                </ul>
+                                            </div>
+                                        </TabsContent>
+                                        <TabsContent value="skills">
+                                            <div className="relative">
+                                                <div className="absolute top-0 right-0">
+                                                    <CopyButton textToCopy={generatedContent.requiredSkills.join(', ')} />
+                                                </div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {generatedContent.requiredSkills.map((skill, index) => (
+                                                        <div key={index} className="bg-secondary text-secondary-foreground rounded-full px-3 py-1 text-sm">
+                                                            {skill}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </TabsContent>
+                                    </ScrollArea>
+                                </Tabs>
+                            </CardContent>
+                        </Card>
                     )}
                 </div>
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Histórico de Vagas</CardTitle>
+                        <CardDescription>Veja e gerencie as vagas que você já gerou com a IA.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <JobOpeningsTable
+                            data={jobHistory}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                        />
+                    </CardContent>
+                 </Card>
             </div>
         </AppLayout>
     );
 }
+
+    

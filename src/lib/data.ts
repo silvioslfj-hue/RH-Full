@@ -161,6 +161,12 @@ export const JobOpeningOutputSchema = z.object({
 });
 export type JobOpeningOutput = z.infer<typeof JobOpeningOutputSchema>;
 
+export type GeneratedJobOpening = JobOpeningOutput & {
+    id: string;
+    role: string;
+    createdAt: string;
+}
+
 
 export const summaryData = [
     { title: "Horas Esta Semana", value: "32.5", change: "+5.2%", changeType: "positive" },
@@ -310,6 +316,20 @@ export const timeSheetData: TimeSheetEntry[] = [
     { day: "04/07", date: "Qui", entries: "Ausência Justificada", worked: "00:00", balance: "-8:00", status: "info", issue: "Licença Médica" },
     { day: "05/07", date: "Sex", entries: "Férias", worked: "00:00", balance: "N/A", status: "info", issue: "Férias" },
 ];
+
+export const jobOpeningsData: GeneratedJobOpening[] = [
+    {
+        id: "VAGA001",
+        role: "Engenheiro de Software Pleno",
+        createdAt: "2024-07-28",
+        description: "## Sobre a Vaga\nBuscamos um Engenheiro de Software Pleno para se juntar à nossa equipe de tecnologia. Você será responsável por projetar, desenvolver e manter sistemas de software escaláveis e de alta qualidade.",
+        interviewQuestions: [
+            { category: "Técnica", question: "Descreva a diferença entre `let`, `const` e `var` em JavaScript." },
+            { category: "Comportamental", question: "Fale sobre uma situação em que você teve que aprender uma nova tecnologia rapidamente." }
+        ],
+        requiredSkills: ["React", "Node.js", "TypeScript", "SQL", "Git"]
+    }
+];
     
 
-
+    
