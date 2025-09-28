@@ -23,6 +23,10 @@ function CollaboratorLoginForm() {
           <Label htmlFor="access-code">Código de Acesso</Label>
           <Input id="access-code" type="text" placeholder="Insira seu código" />
         </div>
+        <div className="flex flex-col space-y-1.5">
+          <Label htmlFor="password-collaborator">Senha</Label>
+          <Input id="password-collaborator" type="password" placeholder="Sua senha" />
+        </div>
       </div>
       <Button type="submit" className="w-full mt-6">
         Entrar
