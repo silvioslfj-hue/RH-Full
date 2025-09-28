@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,19 +37,44 @@ import {
   Download,
   Loader2
 } from "lucide-react";
-import { employeeData, payrollHistoryData as initialHistory, type PayrollHistory as PayrollHistoryType } from "@/lib/data";
+import type { Employee, PayrollHistory as PayrollHistoryType } from "@/lib/data";
 import { PayslipViewerDialog } from "@/components/payroll/payslip-viewer-dialog";
 import { generatePayslipContent, type PayslipGenerationInput } from "@/ai/flows/payslip-generation-flow";
 import { useToast } from "@/hooks/use-toast";
+import { db } from "@/lib/firebaseClient";
+import { collection, getDocs } from "firebase/firestore";
 
 
 export default function PayrollHistoryPage() {
   const { toast } = useToast();
-  const [history, setHistory] = useState<PayrollHistoryType[]>(initialHistory);
+  const [history, setHistory] = useState<PayrollHistoryType[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [payslipContent, setPayslipContent] = useState("");
   const [selectedPayslipData, setSelectedPayslipData] = useState<PayrollHistoryType | null>(null);
   const [isGenerating, startTransition] = useTransition();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [historySnapshot, employeesSnapshot] = await Promise.all([
+          getDocs(collection(db, "payrollHistory")),
+          getDocs(collection(db, "employees")),
+        ]);
+        setHistory(historySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PayrollHistoryType)));
+        setEmployees(employeesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee)));
+      } catch (error) {
+        console.error("Error fetching payroll history:", error);
+        toast({ variant: "destructive", title: "Erro ao buscar histórico." });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [toast]);
+
 
   const handleViewPayslip = (item: PayrollHistoryType) => {
     startTransition(async () => {
@@ -60,26 +85,15 @@ export default function PayrollHistoryPage() {
         });
         
         try {
-            // Em um app real, os dados detalhados do payroll viriam do `item`
-            const detailedPayrollData = {
-                 grossSalary: item.grossSalary,
-                 earnings: [
-                    { name: "Horas Extras", value: item.grossSalary * 0.1 }, // Simulação
-                 ],
-                 deductions: [
-                    { name: "INSS", value: item.grossSalary * 0.11 }, // Simulação
-                    { name: "IRRF", value: item.grossSalary * 0.07 }, // Simulação
-                 ],
-                 totalEarnings: item.grossSalary + (item.grossSalary * 0.1),
-                 totalDeductions: (item.grossSalary * 0.11) + (item.grossSalary * 0.07),
-                 netSalary: item.netSalary
-            };
-
+            if (!item.payrollData) {
+              throw new Error("Dados detalhados da folha não encontrados para este holerite.");
+            }
+            
             const input: PayslipGenerationInput = {
                 company: { name: "RH-Full Soluções em TI", cnpj: "01.234.567/0001-89" },
-                employee: { name: item.employeeName, role: "Desenvolvedor" },
+                employee: { name: item.employeeName, role: "Desenvolvedor" }, // Role seria dinâmico
                 competence: item.competence,
-                payrollData: detailedPayrollData
+                payrollData: item.payrollData
             }
 
             const result = await generatePayslipContent(input);
@@ -90,8 +104,10 @@ export default function PayrollHistoryPage() {
             toast({
                 variant: "destructive",
                 title: "Erro ao Gerar Holerite",
-                description: "Não foi possível gerar o documento. Tente novamente."
+                description: (error as Error).message || "Não foi possível gerar o documento. Tente novamente."
             });
+        } finally {
+          setSelectedPayslipData(null);
         }
     });
   };
@@ -162,7 +178,7 @@ export default function PayrollHistoryPage() {
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Todos os Colaboradores</SelectItem>
-                        {employeeData.map(e => (
+                        {employees.map(e => (
                             <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
                         ))}
                     </SelectContent>
@@ -192,6 +208,11 @@ export default function PayrollHistoryPage() {
               </Button>
             </CardHeader>
             <CardContent>
+                {isLoading ? (
+                  <div className="flex items-center justify-center h-40">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -204,29 +225,36 @@ export default function PayrollHistoryPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {history.map((item) => (
-                            <TableRow key={item.id}>
-                                <TableCell className="font-medium">{item.competence}</TableCell>
-                                <TableCell>{item.employeeName}</TableCell>
-                                <TableCell className="font-mono">R$ {item.grossSalary.toFixed(2)}</TableCell>
-                                <TableCell className="font-mono font-bold">R$ {item.netSalary.toFixed(2)}</TableCell>
-                                <TableCell>
-                                    <Badge className="bg-green-600 hover:bg-green-700">{item.status}</Badge>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <Button variant="ghost" size="sm" onClick={() => handleViewPayslip(item)} disabled={isGenerating && selectedPayslipData?.id === item.id}>
-                                        {isGenerating && selectedPayslipData?.id === item.id ? (
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        ) : (
-                                            <FileText className="mr-2 h-4 w-4" />
-                                        )}
-                                        Ver Holerite
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                        {history.length === 0 ? (
+                           <TableRow>
+                              <TableCell colSpan={6} className="h-24 text-center">Nenhum histórico de folha de pagamento encontrado.</TableCell>
+                           </TableRow>
+                        ) : (
+                          history.map((item) => (
+                              <TableRow key={item.id}>
+                                  <TableCell className="font-medium">{item.competence}</TableCell>
+                                  <TableCell>{item.employeeName}</TableCell>
+                                  <TableCell className="font-mono">R$ {item.grossSalary.toFixed(2)}</TableCell>
+                                  <TableCell className="font-mono font-bold">R$ {item.netSalary.toFixed(2)}</TableCell>
+                                  <TableCell>
+                                      <Badge className="bg-green-600 hover:bg-green-700">{item.status}</Badge>
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                      <Button variant="ghost" size="sm" onClick={() => handleViewPayslip(item)} disabled={isGenerating && selectedPayslipData?.id === item.id}>
+                                          {isGenerating && selectedPayslipData?.id === item.id ? (
+                                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                          ) : (
+                                              <FileText className="mr-2 h-4 w-4" />
+                                          )}
+                                          Ver Holerite
+                                      </Button>
+                                  </TableCell>
+                              </TableRow>
+                          ))
+                        )}
                     </TableBody>
                 </Table>
+              )}
             </CardContent>
         </Card>
 

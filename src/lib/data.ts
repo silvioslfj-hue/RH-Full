@@ -1,5 +1,3 @@
-
-
 import type { ClockEvent } from "@/components/dashboard/clock-widget";
 import type { PayrollOutput } from "@/ai/flows/payroll-flow";
 import { z } from 'zod';
@@ -217,68 +215,7 @@ export type GeneratedJobOpening = JobOpeningOutput & {
 }
 
 
-export const summaryData: any[] = [];
-
-export const absenceData: any[] = [];
-
-export const teamStatusData: any[] = [];
-
-
-export const attendanceReportData: any[] = [];
-
-export const timeOffReportData: any[] = [];
+// This file now only contains type definitions.
+// All mock data has been removed and pages are connected to Firestore.
 
 export const initialTimecardData = ``;
-
-export const todaysActivityData: ClockEvent[] = [];
-
-export const personalTimeReportData = {
-    workedHours: "00h 00m",
-    timeBank: "00h 00m",
-    timeBankChange: "N/A",
-    timeBankChangeType: "neutral",
-};
-
-export const lateAverageData: any[] = [];
-
-export const personalTimeOffData: any[] = [];
-
-export const unitData: Unit[] = [];
-
-export const roleData: Role[] = [];
-
-export const managerData: Manager[] = [];
-
-export const companyData: Company[] = [];
-
-export const workShiftData: WorkShift[] = [];
-
-export const employeeData: Employee[] = [];
-
-export const payrollHistoryData: PayrollHistory[] = [];
-
-export const esocialEventsData: EsocialEvent[] = [];
-
-export const timeSheetData: TimeSheetEntry[] = [];
-
-export const jobOpeningsData: GeneratedJobOpening[] = [];
-
-export const timeBankData: TimeBankEntry[] = [];
-
-export const invoicesData: Invoice[] = [];
-
-export const disciplinaryData: DisciplinaryAction[] = [];
-    
-
-    
-
-
-
-
-
-
-
-    
-
-    
-

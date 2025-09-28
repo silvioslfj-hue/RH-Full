@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +40,9 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { generatePayroll, type PayrollInput, type PayrollOutput } from "@/ai/flows/payroll-flow";
-import { employeeData, type Employee } from "@/lib/data";
+import { type Employee } from "@/lib/data";
+import { db } from "@/lib/firebaseClient";
+import { collection, getDocs, addDoc } from "firebase/firestore";
 
 type PayrollStatus = "Pendente" | "Processando" | "Concluído" | "Erro";
 type EmployeePayroll = {
@@ -53,22 +55,40 @@ type EmployeePayroll = {
     payrollData?: PayrollOutput;
 };
 
-const initialPayrollData: EmployeePayroll[] = employeeData.map(e => ({
-  id: e.id,
-  name: e.name,
-  role: e.role,
-  contractType: e.contractType,
-  grossSalary: e.contractType === 'PJ' ? 12000.00 : 7500.00, // Salário de exemplo
-  status: "Pendente",
-}));
-
-
 export default function PayrollPage() {
   const { toast } = useToast();
-  const [payrollRun, setPayrollRun] = useState<EmployeePayroll[]>(initialPayrollData);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [payrollRun, setPayrollRun] = useState<EmployeePayroll[]>([]);
   const [isProcessing, startTransition] = useTransition();
 
-  // Esta configuração agora viria das configurações globais. Para o protótipo, vamos fixá-la.
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "employees"));
+        const fetchedEmployees = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
+        setEmployees(fetchedEmployees);
+        
+        const initialPayroll = fetchedEmployees
+          .filter(e => e.status === 'Ativo')
+          .map(e => ({
+            id: e.id,
+            name: e.name,
+            role: e.role,
+            contractType: e.contractType,
+            // Salário de exemplo, em um app real viria do cadastro do funcionário
+            grossSalary: e.contractType === 'PJ' ? 12000.00 : 7500.00, 
+            status: "Pendente" as PayrollStatus,
+          }));
+        setPayrollRun(initialPayroll);
+
+      } catch (error) {
+        console.error("Error fetching employees:", error);
+        toast({ variant: "destructive", title: "Erro ao buscar colaboradores." });
+      }
+    };
+    fetchEmployees();
+  }, [toast]);
+
   const globalOvertimeAction = "pay"; 
   const globalPjExtraDaysAction = "pay";
 
@@ -86,15 +106,13 @@ export default function PayrollPage() {
                 title: `Processando ${employee.name}...`,
                 description: "IA está verificando as regras antes de calcular."
             });
-            await new Promise(resolve => setTimeout(resolve, 1500)); // Simula a verificação
-
+            
             try {
                 let input: PayrollInput;
 
                 if (employee.contractType === 'CLT') {
-                    // Simulação de busca de dados do ponto para CLT
                     const normalOvertimeHours = Math.floor(Math.random() * 10);
-                    const holidayOvertimeHours = Math.random() > 0.7 ? Math.floor(Math.random() * 8) : 0; // 30% de chance
+                    const holidayOvertimeHours = Math.random() > 0.7 ? Math.floor(Math.random() * 8) : 0;
                     
                     input = {
                         employeeName: employee.name,
@@ -102,17 +120,13 @@ export default function PayrollPage() {
                         grossSalary: employee.grossSalary,
                         normalOvertimeHours,
                         holidayOvertimeHours,
-                        overtimeAction: globalOvertimeAction,
-                        pjExtraDaysAction: 'ignore', // Irrelevante para CLT
-                        benefits: {
-                            valeTransporte: 150,
-                            valeRefeicao: 440,
-                        }
+                        overtimeAction: globalOvertimeAction as 'pay' | 'bank',
+                        pjExtraDaysAction: 'ignore',
+                        benefits: { valeTransporte: 150, valeRefeicao: 440 }
                     };
                 } else { // PJ
-                    // Simulação de dias trabalhados para PJ
                     const contractedWorkDays = 22;
-                    const actualWorkedDays = Math.random() > 0.6 ? contractedWorkDays + Math.floor(Math.random() * 3) : contractedWorkDays; // 40% chance de dias extras
+                    const actualWorkedDays = Math.random() > 0.6 ? contractedWorkDays + Math.floor(Math.random() * 3) : contractedWorkDays;
 
                      input = {
                         employeeName: employee.name,
@@ -120,16 +134,27 @@ export default function PayrollPage() {
                         grossSalary: employee.grossSalary,
                         contractedWorkDays,
                         actualWorkedDays,
-                        overtimeAction: 'bank', // Irrelevante para PJ
-                        pjExtraDaysAction: globalPjExtraDaysAction,
+                        overtimeAction: 'bank',
+                        pjExtraDaysAction: globalPjExtraDaysAction as 'pay' | 'ignore',
                         benefits: {}
                     };
                 }
 
-
                 const result = await generatePayroll(input);
 
                 setPayrollRun(prev => prev.map(e => e.id === employee.id ? { ...e, status: "Concluído", payrollData: result } : e));
+
+                // Save to history
+                await addDoc(collection(db, "payrollHistory"), {
+                    competence: "Julho/2024", // Hardcoded for demo
+                    employeeId: employee.id,
+                    employeeName: employee.name,
+                    grossSalary: result.grossSalary,
+                    netSalary: result.netSalary,
+                    status: "Finalizado",
+                    payrollData: result
+                });
+
             } catch (error) {
                 console.error(`Erro ao processar folha para ${employee.name}:`, error);
                 setPayrollRun(prev => prev.map(e => e.id === employee.id ? { ...e, status: "Erro" } : e));
@@ -144,7 +169,7 @@ export default function PayrollPage() {
             }
             toast({
                 title: "Processamento Concluído",
-                description: "A folha de pagamento foi finalizada.",
+                description: "A folha de pagamento foi finalizada e salva no histórico.",
             });
         }
 
@@ -327,7 +352,11 @@ export default function PayrollPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {payrollRun.map((employee) => (
+                        {payrollRun.length === 0 ? (
+                           <TableRow>
+                              <TableCell colSpan={8} className="h-24 text-center">Nenhum colaborador ativo para processamento.</TableCell>
+                           </TableRow>
+                        ) : payrollRun.map((employee) => (
                             <TableRow key={employee.id}>
                                 <TableCell className="font-medium">{employee.name}</TableCell>
                                 <TableCell>
