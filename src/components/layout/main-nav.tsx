@@ -1,3 +1,4 @@
+
 'use client'
 
 import { usePathname } from 'next/navigation'
@@ -9,18 +10,19 @@ import {
   SidebarMenuButton,
   useSidebar
 } from '@/components/ui/sidebar'
-import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText } from 'lucide-react'
+import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText, FileArchive } from 'lucide-react'
 
 const adminMenuItems = [
   { href: '/dashboard', label: 'Resumo', icon: LayoutDashboard },
   { href: '/timecards', label: 'Cartões de Ponto', icon: Clock },
   { href: '/absences', label: 'Ausências', icon: CalendarOff },
   { href: '/reports', label: 'Relatórios', icon: BarChart3 },
+  { href: '/fiscal-files', label: 'Arquivos Fiscais', icon: FileArchive },
 ]
 
 const collaboratorMenuItems = [
   { href: '/clock', label: 'Registro de Ponto', icon: Hourglass },
-  { href: 'justifications', label: 'Justificativas', icon: FileCheck },
+  { href: '/justifications', label: 'Justificativas', icon: FileCheck },
   { href: '/my-reports', label: 'Meus Relatórios', icon: BarChart3 },
   { href: '/absences', label: 'Minhas Ausências', icon: CalendarOff },
   { href: '/proofs', label: 'Comprovantes', icon: Receipt },
@@ -28,7 +30,7 @@ const collaboratorMenuItems = [
   { href: '/income-reports', label: 'Informe de Rendimentos', icon: FileText },
 ]
 
-const adminPaths = ['/dashboard', '/timecards', '/reports'];
+const adminPaths = ['/dashboard', '/timecards', '/reports', '/fiscal-files'];
 
 export function MainNav() {
   const pathname = usePathname()
