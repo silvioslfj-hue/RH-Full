@@ -15,6 +15,7 @@ import { timeBankData } from '@/lib/data';
 
 const PayrollInputSchema = z.object({
   employeeName: z.string().describe('The name of the employee.'),
+  contractType: z.enum(['CLT', 'PJ']).describe('The type of contract (CLT or PJ).'),
   grossSalary: z.number().describe('The base gross salary of the employee for the month.'),
   normalOvertimeHours: z.number().optional().describe('Total overtime hours worked on regular days.'),
   holidayOvertimeHours: z.number().optional().describe('Total overtime hours worked on Sundays and holidays.'),
@@ -79,26 +80,31 @@ const prompt = ai.definePrompt({
   input: {schema: PayrollInputSchema},
   output: {schema: PayrollOutputSchema},
   prompt: `
-    Você é um gerente de folha de pagamento inteligente e autônomo. Sua principal tarefa é calcular o holerite de um funcionário, mas com uma regra de negócio CRÍTICA: garantir que as horas do banco de horas prestes a expirar sejam pagas.
+    Você é um gerente de folha de pagamento inteligente e autônomo. Sua tarefa é calcular o holerite de um funcionário, considerando o tipo de contrato (CLT ou PJ).
 
-    **Seu processo deve ser o seguinte:**
+    **Regra Principal: Distinção de Contrato**
+    - Se \`contractType\` for **"PJ"**: O cálculo é simples. O salário líquido é o salário bruto. Ignore todas as outras regras de horas extras, banco de horas e descontos. Gere um holerite com proventos e descontos zerados, onde o salário líquido é igual ao bruto.
+    - Se \`contractType\` for **"CLT"**: Prossiga com o cálculo detalhado abaixo.
+
+    **Processo de Cálculo para CLT:**
     1.  **SEMPRE** comece usando a ferramenta \`getTimeBankStatus\` para verificar se o funcionário tem horas do banco de horas próximas do vencimento.
-    2.  **Cenário 1: HÁ horas a expirar.**
+    2.  **Cenário 1 (CLT): HÁ horas a expirar.**
         - Se a ferramenta retornar \`hasExpiringHours: true\`, você DEVE pagar essas horas.
         - Calcule o valor dessas horas (com acréscimo de 50%) e adicione-as aos proventos com o nome "Horas Banco Pagas".
         - O pagamento dessas horas do banco é PRIORITÁRIO. Todas as horas extras do mês (normais e de feriado) devem ser direcionadas para o banco de horas (ignorando o parâmetro \`overtimeAction\`).
-    3.  **Cenário 2: NÃO HÁ horas a expirar.**
+    3.  **Cenário 2 (CLT): NÃO HÁ horas a expirar.**
         - Se a ferramenta retornar \`hasExpiringHours: false\`, prossiga com o cálculo padrão das horas extras do mês, respeitando o parâmetro \`overtimeAction\` ('pay' ou 'bank').
         
     **Informações do Funcionário:**
     - Nome: {{{employeeName}}}
+    - Tipo de Contrato: {{{contractType}}}
     - Salário Bruto: R$ {{{grossSalary}}}
     - Horas Extras Normais: {{{normalOvertimeHours}}}
     - Horas Extras (Domingos/Feriados): {{{holidayOvertimeHours}}}
-    - Ação para Horas Extras (se não houver horas de banco a pagar): {{{overtimeAction}}}
+    - Ação para Horas Extras (se aplicável): {{{overtimeAction}}}
     - Benefícios (descontos): Vale Transporte (R$ {{{benefits.valeTransporte}}}), Vale Refeição (R$ {{{benefits.valeRefeicao}}})
 
-    **Regras Gerais de Cálculo:**
+    **Regras Gerais de Cálculo (Apenas para CLT):**
     - A base para cálculo da hora é o salário bruto para uma jornada de 220 horas mensais.
     - Horas extras normais ou horas do banco pagas têm um acréscimo de 50%.
     - Horas extras em domingos e feriados têm um acréscimo de 100%. Crie um item de provento separado "Horas Extras (100%)" para elas.

@@ -54,6 +54,7 @@ export type Employee = {
     role: string;
     unit: string;
     status: 'Ativo' | 'Inativo' | 'Férias';
+    contractType: 'CLT' | 'PJ';
     avatar?: string;
 }
 
@@ -297,10 +298,10 @@ export const workShiftData: WorkShift[] = [
 ];
 
 export const employeeData: Employee[] = [
-    { id: "FUNC001", name: "Carlos Andrade", email: "carlos.andrade@example.com", company: "RH-Full Soluções em TI", role: "Desenvolvedor Back-end", unit: "Matriz São Paulo", status: "Ativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d" },
-    { id: "FUNC002", name: "Mariana Costa", email: "mariana.costa@example.com", company: "InovaTech Consultoria", role: "Desenvolvedor Front-end", unit: "Filial Rio de Janeiro", status: "Ativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026705d" },
-    { id: "FUNC003", name: "Alice Johnson", email: "alice.johnson@example.com", company: "RH-Full Soluções em TI", role: "Designer de Produto", unit: "Matriz São Paulo", status: "Férias", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026706d" },
-    { id: "FUNC004", name: "Robert Brown", email: "robert.brown@example.com", company: "InovaTech Consultoria", role: "Analista de RH", unit: "Escritório Belo Horizonte", status: "Inativo", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026707d" },
+    { id: "FUNC001", name: "Carlos Andrade", email: "carlos.andrade@example.com", company: "RH-Full Soluções em TI", role: "Desenvolvedor Back-end", unit: "Matriz São Paulo", status: "Ativo", contractType: "CLT", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d" },
+    { id: "FUNC002", name: "Mariana Costa", email: "mariana.costa@example.com", company: "InovaTech Consultoria", role: "Desenvolvedor Front-end", unit: "Filial Rio de Janeiro", status: "Ativo", contractType: "PJ", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026705d" },
+    { id: "FUNC003", name: "Alice Johnson", email: "alice.johnson@example.com", company: "RH-Full Soluções em TI", role: "Designer de Produto", unit: "Matriz São Paulo", status: "Férias", contractType: "CLT", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026706d" },
+    { id: "FUNC004", name: "Robert Brown", email: "robert.brown@example.com", company: "InovaTech Consultoria", role: "Analista de RH", unit: "Escritório Belo Horizonte", status: "Inativo", contractType: "CLT", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026707d" },
 ]
 
 export const payrollHistoryData: PayrollHistory[] = [

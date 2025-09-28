@@ -40,9 +40,8 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { generatePayroll, type PayrollInput, type PayrollOutput } from "@/ai/flows/payroll-flow";
-import { employeeData } from "@/lib/data";
+import { employeeData, type Employee } from "@/lib/data";
 
-type OvertimeAction = "pay" | "bank";
 type PayrollStatus = "Pendente" | "Processando" | "Concluído" | "Erro";
 type EmployeePayroll = {
     id: string;
@@ -50,6 +49,7 @@ type EmployeePayroll = {
     role: string;
     grossSalary: number;
     status: PayrollStatus;
+    contractType: Employee['contractType'];
     payrollData?: PayrollOutput;
 };
 
@@ -57,7 +57,8 @@ const initialPayrollData: EmployeePayroll[] = employeeData.map(e => ({
   id: e.id,
   name: e.name,
   role: e.role,
-  grossSalary: 7500.00, // Salário de exemplo, idealmente viria do cadastro do funcionário
+  contractType: e.contractType,
+  grossSalary: e.contractType === 'PJ' ? 12000.00 : 7500.00, // Salário de exemplo
   status: "Pendente",
 }));
 
@@ -68,7 +69,7 @@ export default function PayrollPage() {
   const [isProcessing, startTransition] = useTransition();
 
   // Esta configuração agora viria das configurações globais. Para o protótipo, vamos fixá-la.
-  const globalOvertimeAction: OvertimeAction = "pay"; 
+  const globalOvertimeAction = "pay"; 
 
   const handleProcessPayroll = () => {
     startTransition(() => {
@@ -82,7 +83,7 @@ export default function PayrollPage() {
             
             toast({
                 title: `Processando ${employee.name}...`,
-                description: "IA está verificando o banco de horas antes de calcular."
+                description: "IA está verificando as regras antes de calcular."
             });
             await new Promise(resolve => setTimeout(resolve, 1500)); // Simula a verificação
 
@@ -93,10 +94,11 @@ export default function PayrollPage() {
 
                 const input: PayrollInput = {
                     employeeName: employee.name,
+                    contractType: employee.contractType,
                     grossSalary: employee.grossSalary,
                     normalOvertimeHours,
                     holidayOvertimeHours,
-                    overtimeAction: globalOvertimeAction, // Usa a configuração global
+                    overtimeAction: globalOvertimeAction,
                     benefits: {
                         valeTransporte: 150,
                         valeRefeicao: 440,
@@ -226,7 +228,7 @@ export default function PayrollPage() {
           <CardHeader>
             <CardTitle>Processar Folha de Pagamento</CardTitle>
             <CardDescription>
-              Selecione a competência e inicie o processamento. A IA irá verificar e pagar automaticamente o banco de horas a vencer, e tratará as horas extras conforme a configuração global do sistema.
+              Selecione a competência e inicie o processamento. A IA irá verificar o tipo de contrato, pagar automaticamente o banco de horas a vencer para CLTs e tratará as horas extras conforme a configuração global do sistema.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -293,6 +295,7 @@ export default function PayrollPage() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Colaborador</TableHead>
+                            <TableHead>Contrato</TableHead>
                             <TableHead>Salário Bruto</TableHead>
                             <TableHead>Proventos</TableHead>
                             <TableHead>Descontos</TableHead>
@@ -305,6 +308,11 @@ export default function PayrollPage() {
                         {payrollRun.map((employee) => (
                             <TableRow key={employee.id}>
                                 <TableCell className="font-medium">{employee.name}</TableCell>
+                                <TableCell>
+                                    <Badge variant={employee.contractType === 'CLT' ? 'default' : 'secondary'}>
+                                        {employee.contractType}
+                                    </Badge>
+                                </TableCell>
                                 <TableCell className="font-mono">R$ {employee.grossSalary.toFixed(2)}</TableCell>
                                 <TableCell className="font-mono text-green-600">
                                   {employee.payrollData ? `R$ ${employee.payrollData.totalEarnings.toFixed(2)}` : '-'}
