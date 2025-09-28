@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/sidebar'
 import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText, FileArchive, Settings, Users, Calculator, History, PieChart, Briefcase, Building, LandPlot, Coins } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { absenceData } from '@/lib/data'
+import { absenceData, timeSheetData } from '@/lib/data'
 
 
 const collaboratorMenuItems = [
@@ -37,6 +37,7 @@ export function MainNav() {
 
   // Simulação de contagem de pendências
   const pendingAbsencesCount = absenceData.filter(a => a.status === 'Pendente').length;
+  const inconsistentEntriesCount = timeSheetData.filter(e => e.status === 'warning').length;
 
   useEffect(() => {
     // Lógica para determinar o contexto do usuário (admin vs. colaborador)
@@ -111,7 +112,11 @@ export function MainNav() {
             <SidebarGroupLabel>Ponto Eletrônico</SidebarGroupLabel>
              <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={pathname.startsWith('/timecards')} tooltip={{ children: 'Registro de Ponto' }}>
-                <Link href='/timecards' onClick={handleLinkClick}><Clock /><span>Registro de Ponto</span></Link>
+                <Link href='/timecards' onClick={handleLinkClick}>
+                  <Clock />
+                  <span>Registro de Ponto</span>
+                  {inconsistentEntriesCount > 0 && <SidebarMenuBadge>{inconsistentEntriesCount}</SidebarMenuBadge>}
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarGroup>

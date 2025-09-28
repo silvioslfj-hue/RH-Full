@@ -24,7 +24,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { initialTimecardData } from "@/lib/data";
+import { initialTimecardData, timeSheetData } from "@/lib/data";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -142,14 +142,6 @@ function AITool() {
   );
 }
 
-const dummyTimeSheet = [
-    { day: "01/07", date: "Seg", entries: "09:01 - 12:30, 13:31 - 18:05", worked: "08:03", balance: "+0:03", status: "ok" },
-    { day: "02/07", date: "Ter", entries: "08:58 - 12:35, 13:30 - 18:01", worked: "08:08", balance: "+0:08", status: "ok" },
-    { day: "03/07", date: "Qua", entries: "09:10 - 12:40, 13:45 - 18:15", worked: "08:00", balance: "+0:00", status: "warning", issue: "Atraso de 10min" },
-    { day: "04/07", date: "Qui", entries: "Ausência Justificada", worked: "00:00", balance: "-8:00", status: "info", issue: "Licença Médica" },
-    { day: "05/07", date: "Sex", entries: "Férias", worked: "00:00", balance: "N/A", status: "info", issue: "Férias" },
-];
-
 function InconsistentEntries({ entries, onAdjust }: { entries: any[], onAdjust: (entry: any) => void }) {
     return (
         <Card className="border-destructive/50">
@@ -208,7 +200,7 @@ function TimeSheetManager() {
     const [isAdjustmentDialogOpen, setIsAdjustmentDialogOpen] = useState(false);
 
     const { inconsistentEntries, consistentEntries } = useMemo(() => {
-        return dummyTimeSheet.reduce((acc, entry) => {
+        return timeSheetData.reduce((acc, entry) => {
             if (entry.status === 'warning') {
                 acc.inconsistentEntries.push(entry);
             } else {

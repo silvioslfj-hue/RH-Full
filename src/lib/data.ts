@@ -78,6 +78,17 @@ export type PayrollHistory = {
   payrollData?: PayrollOutput;
 };
 
+export type TimeSheetEntry = {
+    day: string;
+    date: string;
+    entries: string;
+    worked: string;
+    balance: string;
+    status: "ok" | "warning" | "info";
+    issue?: string;
+};
+
+
 // Types for payslip generation
 export const PayslipGenerationInputSchema = z.object({
   company: z.object({
@@ -276,4 +287,12 @@ export const esocialEventsData: EsocialEvent[] = [
     { id: "EVT006", type: "S-1210 - Pagamentos", employeeName: "Todos", employeeId: "N/A", referenceDate: "2024-08-05", status: "Enviado", details: "Pagamento de salários de Julho/2024" },
 ]
 
+export const timeSheetData: TimeSheetEntry[] = [
+    { day: "01/07", date: "Seg", entries: "09:01 - 12:30, 13:31 - 18:05", worked: "08:03", balance: "+0:03", status: "ok" },
+    { day: "02/07", date: "Ter", entries: "08:58 - 12:35, 13:30 - 18:01", worked: "08:08", balance: "+0:08", status: "ok" },
+    { day: "03/07", date: "Qua", entries: "09:10 - 12:40, 13:45 - 18:15", worked: "08:00", balance: "+0:00", status: "warning", issue: "Atraso de 10min" },
+    { day: "04/07", date: "Qui", entries: "Ausência Justificada", worked: "00:00", balance: "-8:00", status: "info", issue: "Licença Médica" },
+    { day: "05/07", date: "Sex", entries: "Férias", worked: "00:00", balance: "N/A", status: "info", issue: "Férias" },
+];
     
+
