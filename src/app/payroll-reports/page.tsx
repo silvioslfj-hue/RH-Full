@@ -26,7 +26,6 @@ import {
   Bus,
   Utensils,
   PlusCircle,
-  MinusCircle,
   LucideIcon
 } from "lucide-react";
 
@@ -56,8 +55,7 @@ export default function PayrollReportsPage() {
         { title: "Total Vale Alimentação (VA)", value: "R$ 15.750,00", icon: Grape },
         { title: "Total Vale Transporte (VT)", value: "R$ 5.250,00", icon: Bus },
         { title: "Total Vale Refeição (VR)", value: "R$ 23.100,00", icon: Utensils },
-        { title: "Total Horas Extras", value: "350h", icon: PlusCircle },
-        { title: "Total Banco de Horas", value: "-48h", icon: MinusCircle },
+        { title: "Total Horas Extras (R$)", value: "R$ 8.750,00", icon: PlusCircle },
     ];
 
   return (
@@ -125,7 +123,7 @@ export default function PayrollReportsPage() {
             </CardContent>
         </Card>
 
-         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {summaryData.map((item) => (
                 <SummaryCard key={item.title} {...item} />
             ))}
