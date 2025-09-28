@@ -11,33 +11,10 @@ import { UnitsTable } from "@/components/settings/units-table";
 import { UnitDialog } from "@/components/settings/unit-dialog";
 import { RolesTable } from "@/components/settings/roles-table";
 import { RoleDialog } from "@/components/settings/role-dialog";
-import { unitData as initialUnitData, roleData as initialRoleData } from "@/lib/data";
-import type { Unit, Role } from "@/lib/data";
-
-function CompaniesTab() {
-    return (
-        <Card>
-            <CardHeader>
-                <div className="flex justify-between items-start">
-                    <div>
-                        <CardTitle>Empresas</CardTitle>
-                        <CardDescription>Gerencie as empresas e filiais cadastradas no sistema.</CardDescription>
-                    </div>
-                     <Button>
-                        <PlusCircle className="mr-2" />
-                        Adicionar Empresa
-                    </Button>
-                </div>
-            </CardHeader>
-            <CardContent>
-                <div className="text-center text-muted-foreground py-8">
-                    <Building className="mx-auto h-12 w-12" />
-                    <p className="mt-4">O gerenciamento de empresas será implementado em breve.</p>
-                </div>
-            </CardContent>
-        </Card>
-    )
-}
+import { CompaniesTable } from "@/components/settings/companies-table";
+import { CompanyDialog } from "@/components/settings/company-dialog";
+import { unitData as initialUnitData, roleData as initialRoleData, companyData as initialCompanyData } from "@/lib/data";
+import type { Unit, Role, Company } from "@/lib/data";
 
 function WorkShiftsTab() {
     return (
@@ -68,21 +45,25 @@ function WorkShiftsTab() {
 export default function SettingsPage() {
     const [units, setUnits] = useState(initialUnitData);
     const [roles, setRoles] = useState(initialRoleData);
+    const [companies, setCompanies] = useState(initialCompanyData);
+
     const [isUnitDialogOpen, setIsUnitDialogOpen] = useState(false);
     const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+    const [isCompanyDialogOpen, setIsCompanyDialogOpen] = useState(false);
+
     const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
     const [editingRole, setEditingRole] = useState<Role | null>(null);
+    const [editingCompany, setEditingCompany] = useState<Company | null>(null);
 
+    // Unit Handlers
     const handleOpenUnitDialog = (unit: Unit | null = null) => {
         setEditingUnit(unit);
         setIsUnitDialogOpen(true);
     };
-
     const handleCloseUnitDialog = () => {
         setEditingUnit(null);
         setIsUnitDialogOpen(false);
     };
-
     const handleSaveUnit = (unit: Unit) => {
         if (editingUnit) {
             setUnits(units.map(u => u.id === unit.id ? unit : u));
@@ -91,21 +72,19 @@ export default function SettingsPage() {
         }
         handleCloseUnitDialog();
     };
-
     const handleDeleteUnit = (id: string) => {
         setUnits(units.filter(u => u.id !== id));
     };
 
+    // Role Handlers
     const handleOpenRoleDialog = (role: Role | null = null) => {
         setEditingRole(role);
         setIsRoleDialogOpen(true);
     };
-
     const handleCloseRoleDialog = () => {
         setEditingRole(null);
         setIsRoleDialogOpen(false);
     };
-
     const handleSaveRole = (role: Role) => {
         if (editingRole) {
             setRoles(roles.map(r => r.id === role.id ? role : r));
@@ -114,9 +93,29 @@ export default function SettingsPage() {
         }
         handleCloseRoleDialog();
     };
-
     const handleDeleteRole = (id: string) => {
         setRoles(roles.filter(r => r.id !== id));
+    };
+
+    // Company Handlers
+    const handleOpenCompanyDialog = (company: Company | null = null) => {
+        setEditingCompany(company);
+        setIsCompanyDialogOpen(true);
+    };
+    const handleCloseCompanyDialog = () => {
+        setEditingCompany(null);
+        setIsCompanyDialogOpen(false);
+    };
+    const handleSaveCompany = (company: Company) => {
+        if (editingCompany) {
+            setCompanies(companies.map(c => c.id === company.id ? company : c));
+        } else {
+            setCompanies([...companies, { ...company, id: `EMP${(companies.length + 1).toString().padStart(3, '0')}` }]);
+        }
+        handleCloseCompanyDialog();
+    };
+    const handleDeleteCompany = (id: string) => {
+        setCompanies(companies.filter(c => c.id !== id));
     };
 
 
@@ -132,7 +131,7 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        <Tabs defaultValue="units">
+        <Tabs defaultValue="companies">
             <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="companies">
                     <Building className="mr-2" />
@@ -153,7 +152,27 @@ export default function SettingsPage() {
             </TabsList>
 
             <TabsContent value="companies" className="pt-6">
-                <CompaniesTab />
+                 <Card>
+                    <CardHeader>
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <CardTitle>Empresas</CardTitle>
+                                <CardDescription>Gerencie as empresas e filiais cadastradas no sistema.</CardDescription>
+                            </div>
+                            <Button onClick={() => handleOpenCompanyDialog()}>
+                                <PlusCircle className="mr-2" />
+                                Adicionar Empresa
+                            </Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <CompaniesTable 
+                            data={companies} 
+                            onEdit={handleOpenCompanyDialog} 
+                            onDelete={handleDeleteCompany} 
+                        />
+                    </CardContent>
+                </Card>
             </TabsContent>
 
             <TabsContent value="units" className="pt-6">
@@ -221,6 +240,12 @@ export default function SettingsPage() {
             onClose={handleCloseRoleDialog}
             onSave={handleSaveRole}
             role={editingRole}
+        />
+        <CompanyDialog
+            isOpen={isCompanyDialogOpen}
+            onClose={handleCloseCompanyDialog}
+            onSave={handleSaveCompany}
+            company={editingCompany}
         />
     </AppLayout>
   );

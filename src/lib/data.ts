@@ -17,6 +17,17 @@ export type Role = {
     description: string;
 }
 
+export type Company = {
+    id: string;
+    name: string;
+    cnpj: string;
+    address: string;
+    city: string;
+    state: string;
+    zip: string;
+    certificateFile?: string;
+}
+
 export const summaryData = [
     { title: "Horas Esta Semana", value: "32.5", change: "+5.2%", changeType: "positive" },
     { title: "Próxima Folga", value: "2 dias", change: "Próximo: 25 de Julho", changeType: "neutral" },
@@ -115,4 +126,9 @@ export const roleData: Role[] = [
     { id: "CAR002", name: "Desenvolvedor Back-end", department: "Tecnologia", description: "Gerencia a lógica do servidor, banco de dados e APIs." },
     { id: "CAR003", name: "Designer de Produto", department: "Produto", description: "Cria a experiência do usuário e o design visual dos produtos." },
     { id: "CAR004", name: "Analista de RH", department: "Recursos Humanos", description: "Gerencia o recrutamento, a folha de pagamento e as relações com os funcionários." },
+]
+
+export const companyData: Company[] = [
+    { id: "EMP001", name: "RH-Full Soluções em TI", cnpj: "01.234.567/0001-89", address: "Av. Principal, 123", city: "São Paulo", state: "SP", zip: "01000-000", certificateFile: "rh_full_cert.pfx" },
+    { id: "EMP002", name: "InovaTech Consultoria", cnpj: "98.765.432/0001-10", address: "Rua da Inovação, 456", city: "Rio de Janeiro", state: "RJ", zip: "20000-000" }
 ]
