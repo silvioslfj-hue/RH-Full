@@ -144,7 +144,7 @@ export default function PayrollHistoryPage() {
                           <Factory className="h-4 w-4 text-muted-foreground" />
                           <SelectValue placeholder="Todas" />
                         </div>
-                    </Trigger>
+                    </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Todas as Unidades</SelectItem>
                         <SelectItem value="sp">São Paulo - SP</SelectItem>
