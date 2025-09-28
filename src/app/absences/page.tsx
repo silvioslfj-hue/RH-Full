@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,7 +8,6 @@ import { AbsenceTable } from "@/components/absences/absence-table";
 import { RequestAbsenceDialog } from "@/components/absences/request-absence-dialog";
 import { absenceData as initialAbsenceData } from "@/lib/data";
 import { PlusCircle } from "lucide-react";
-import { usePathname } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 
 // Assume-se que o usuário logado é 'Jane Doe' para o protótipo.
@@ -16,11 +16,13 @@ const loggedInUser = "Jane Doe";
 export default function AbsencesPage() {
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const [absenceData, setAbsenceData] = useState(initialAbsenceData);
-  const [isClient, setIsClient] = useState(false);
+  const [isAdminView, setIsAdminView] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    setIsClient(true);
+    // No mundo real, a verificação do papel do usuário viria de um contexto de autenticação
+    const role = window.sessionStorage.getItem('userRole');
+    setIsAdminView(role === 'admin');
   }, []);
 
   const handleNewRequest = (newRequest: any) => {
@@ -42,14 +44,11 @@ export default function AbsencesPage() {
         description: "Sua solicitação de ausência foi cancelada.",
     });
   }
-
-  const pathname = usePathname();
-  const isAdminRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/timecards') || pathname.startsWith('/reports');
   
-  const pageTitle = isAdminRoute ? "Gestão de Ausências" : "Minhas Ausências";
-  const pageDescription = isAdminRoute ? "Aprove, negue e visualize as solicitações de ausência da equipe." : "Solicite folgas e visualize o histórico de suas ausências.";
+  const pageTitle = isAdminView ? "Gestão de Ausências" : "Minhas Ausências";
+  const pageDescription = isAdminView ? "Aprove, negue e visualize as solicitações de ausência da equipe." : "Solicite folgas e visualize o histórico de suas ausências.";
 
-  const filteredData = isClient && !isAdminRoute 
+  const filteredData = !isAdminView 
     ? absenceData.filter(item => item.employee === loggedInUser)
     : absenceData;
 
@@ -62,7 +61,7 @@ export default function AbsencesPage() {
             <h1 className="text-3xl font-bold font-headline tracking-tight">{pageTitle}</h1>
             <p className="text-muted-foreground">{pageDescription}</p>
           </div>
-          {!isAdminRoute && (
+          {!isAdminView && (
             <Button onClick={() => setIsRequestDialogOpen(true)}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Solicitar Ausência
@@ -72,7 +71,7 @@ export default function AbsencesPage() {
         
         <AbsenceTable 
           data={filteredData} 
-          isAdmin={isAdminRoute} 
+          isAdmin={isAdminView} 
           onStatusChange={handleStatusChange}
           onCancelRequest={handleCancelRequest}
         />

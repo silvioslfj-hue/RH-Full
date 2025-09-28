@@ -1,6 +1,15 @@
 
 import type { ClockEvent } from "@/components/dashboard/clock-widget";
 
+export type Unit = {
+    id: string;
+    name: string;
+    address: string;
+    city: string;
+    state: string;
+    zip: string;
+}
+
 export const summaryData = [
     { title: "Horas Esta Semana", value: "32.5", change: "+5.2%", changeType: "positive" },
     { title: "Próxima Folga", value: "2 dias", change: "Próximo: 25 de Julho", changeType: "neutral" },
@@ -87,3 +96,9 @@ export const personalTimeOffData = [
     { type: "Licença Médica", count: 2, fill: "hsl(var(--chart-2))" },
     { type: "Pessoal", count: 0, fill: "hsl(var(--chart-4))" },
 ];
+
+export const unitData: Unit[] = [
+    { id: "UN001", name: "Matriz São Paulo", address: "Av. Paulista, 1100", city: "São Paulo", state: "SP", zip: "01310-100" },
+    { id: "UN002", name: "Filial Rio de Janeiro", address: "Av. Rio Branco, 1", city: "Rio de Janeiro", state: "RJ", zip: "20090-003" },
+    { id: "UN003", name: "Escritório Belo Horizonte", address: "Av. Afonso Pena, 4000", city: "Belo Horizonte", state: "MG", zip: "30130-009" },
+]

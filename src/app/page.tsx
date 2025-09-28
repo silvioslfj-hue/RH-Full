@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -13,6 +14,9 @@ function CollaboratorLoginForm() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem('userRole', 'collaborator');
+    }
     router.push('/clock');
   };
 
@@ -40,6 +44,9 @@ function AdminLoginForm() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem('userRole', 'admin');
+    }
     router.push('/dashboard');
   };
 
