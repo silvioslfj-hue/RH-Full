@@ -23,12 +23,13 @@ const adminMenuItems = [
   { href: '/absences', label: 'Ausências', icon: CalendarOff },
   { href: '/reports', label: 'Relatórios', icon: BarChart3 },
   { href: '/fiscal-files', label: 'Arquivos Fiscais', icon: FileArchive },
+  { href: '/esocial', label: 'eSocial', icon: FileArchive },
   { href: '/settings', label: 'Configurações', icon: Settings },
 ]
 
 const collaboratorMenuItems = [
   { href: '/clock', label: 'Registro de Ponto', icon: Hourglass },
-  { href: '/justifications', label: 'Justificativas', icon: FileCheck },
+  { href: 'justifications', label: 'Justificativas', icon: FileCheck },
   { href: '/my-reports', label: 'Meus Relatórios', icon: BarChart3 },
   { href: '/absences', label: 'Minhas Ausências', icon: CalendarOff },
   { href: '/proofs', label: 'Comprovantes', icon: Receipt },
@@ -36,7 +37,7 @@ const collaboratorMenuItems = [
   { href: '/income-reports', label: 'Informe de Rendimentos', icon: FileText },
 ]
 
-const adminPaths = ['/dashboard', '/timecards', '/reports', '/fiscal-files', '/settings', '/employees', '/payroll', '/payroll-history', '/payroll-reports'];
+const adminPaths = ['/dashboard', '/timecards', '/reports', '/fiscal-files', '/settings', '/employees', '/payroll', '/payroll-history', '/payroll-reports', '/esocial'];
 
 export function MainNav() {
   const pathname = usePathname();
