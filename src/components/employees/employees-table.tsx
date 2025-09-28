@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, Pencil, UserX, FilePen } from "lucide-react"
+import { MoreHorizontal, Pencil, UserX, FilePen, Plane } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,9 +27,10 @@ interface EmployeesTableProps {
   onEdit: (employee: Employee) => void;
   onDeactivate: (employee: Employee) => void;
   onContractChange: (employee: Employee) => void;
+  onScheduleVacation: (employee: Employee) => void;
 }
 
-export function EmployeesTable({ data, onEdit, onDeactivate, onContractChange }: EmployeesTableProps) {
+export function EmployeesTable({ data, onEdit, onDeactivate, onContractChange, onScheduleVacation }: EmployeesTableProps) {
 
   const getStatusVariant = (status: Employee['status']) => {
     switch (status) {
@@ -99,6 +100,12 @@ export function EmployeesTable({ data, onEdit, onDeactivate, onContractChange }:
                       <FilePen className="mr-2 h-4 w-4" />
                       Alterar Contrato
                     </DropdownMenuItem>
+                    {employee.status === 'Ativo' && (
+                       <DropdownMenuItem onClick={() => onScheduleVacation(employee)}>
+                        <Plane className="mr-2 h-4 w-4" />
+                        Programar Férias
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => onDeactivate(employee)} className="text-red-500 focus:text-red-500">
                       <UserX className="mr-2 h-4 w-4" />

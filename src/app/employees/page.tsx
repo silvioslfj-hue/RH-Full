@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TerminationDialog } from "@/components/employees/termination-dialog";
 import { generateTerminationData } from "@/ai/flows/termination-flow";
+import { VacationDialog } from "@/components/employees/vacation-dialog";
 
 
 export default function EmployeesPage() {
@@ -24,6 +25,7 @@ export default function EmployeesPage() {
     const [isEmployeeDialogOpen, setIsEmployeeDialogOpen] = useState(false);
     const [isContractChangeDialogOpen, setIsContractChangeDialogOpen] = useState(false);
     const [isTerminationDialogOpen, setIsTerminationDialogOpen] = useState(false);
+    const [isVacationDialogOpen, setIsVacationDialogOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [events, setEvents] = useState<EsocialEvent[]>(esocialEventsData);
     const [isProcessing, startTransition] = useTransition();
@@ -69,6 +71,11 @@ export default function EmployeesPage() {
     const handleOpenContractChangeDialog = (employee: Employee) => {
         setEditingEmployee(employee);
         setIsContractChangeDialogOpen(true);
+    };
+    
+    const handleOpenVacationDialog = (employee: Employee) => {
+        setEditingEmployee(employee);
+        setIsVacationDialogOpen(true);
     };
 
     const handleContractChange = (changeData: { newSalary?: number; newRole?: string }) => {
@@ -147,6 +154,22 @@ export default function EmployeesPage() {
         });
     }
 
+    const handleScheduleVacation = (vacationData: { startDate: string, endDate: string }) => {
+        if (!editingEmployee) return;
+        
+        setEmployees(employees.map(e => e.id === editingEmployee.id ? { ...e, status: 'Férias' } : e));
+
+        toast({
+            title: "Férias Programadas!",
+            description: `O status de ${editingEmployee.name} foi alterado para "Férias" de ${vacationData.startDate} a ${vacationData.endDate}.`
+        });
+
+        // Aqui poderia ser gerado o evento S-2230 do eSocial
+        
+        setIsVacationDialogOpen(false);
+        setEditingEmployee(null);
+    }
+
     return (
         <AppLayout>
             <div className="space-y-8">
@@ -223,6 +246,7 @@ export default function EmployeesPage() {
                             onEdit={handleOpenEmployeeDialog}
                             onDeactivate={handleOpenDeactivateDialog}
                             onContractChange={handleOpenContractChangeDialog}
+                            onScheduleVacation={handleOpenVacationDialog}
                         />
                     </CardContent>
                 </Card>
@@ -253,6 +277,13 @@ export default function EmployeesPage() {
                 onSave={handleTermination}
                 employee={editingEmployee}
                 isProcessing={isProcessing}
+            />
+
+            <VacationDialog
+                isOpen={isVacationDialogOpen}
+                onClose={() => setIsVacationDialogOpen(false)}
+                onSave={handleScheduleVacation}
+                employee={editingEmployee}
             />
         </AppLayout>
     );
