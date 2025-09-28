@@ -18,6 +18,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { Employee, Unit, Role, WorkShift } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { Switch } from '../ui/switch';
+import { Separator } from '../ui/separator';
 
 interface EmployeeDialogProps {
   isOpen: boolean;
@@ -300,22 +302,69 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
                  </div>
             </TabsContent>
             
-            <TabsContent value="contract" className="mt-0">
-                <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="salary">Salário Base</Label>
-                        <Input id="salary" type="number" placeholder="Ex: 3500.00" />
+            <TabsContent value="contract" className="mt-0 space-y-6">
+                <div className="space-y-4">
+                    <h3 className="font-medium text-foreground">Remuneração e Contrato</h3>
+                     <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="salary">Salário Base</Label>
+                            <Input id="salary" type="number" placeholder="Ex: 3500.00" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="contractType">Tipo de Contrato</Label>
+                            <Select>
+                                <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="clt">CLT</SelectItem>
+                                    <SelectItem value="pj">PJ</SelectItem>
+                                    <SelectItem value="intern">Estágio</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="contractType">Tipo de Contrato</Label>
-                        <Select>
-                            <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="clt">CLT</SelectItem>
-                                <SelectItem value="pj">PJ</SelectItem>
-                                <SelectItem value="intern">Estágio</SelectItem>
-                            </SelectContent>
-                        </Select>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-4">
+                    <h3 className="font-medium text-foreground">Benefícios</h3>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                        <div className="flex items-center space-x-2">
+                            <Switch id="vt" />
+                            <Label htmlFor="vt">Opta por Vale Transporte (VT)</Label>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="vr">Valor Diário do Vale Refeição (VR)</Label>
+                            <Input id="vr" type="number" placeholder="Ex: 25.00" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="va">Valor Mensal do Vale Alimentação (VA)</Label>
+                            <Input id="va" type="number" placeholder="Ex: 450.00" />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="health-plan">Valor do Plano de Saúde (desconto)</Label>
+                            <Input id="health-plan" type="number" placeholder="Ex: 150.00" />
+                        </div>
+                    </div>
+                </div>
+                
+                <Separator />
+
+                <div className="space-y-4">
+                    <h3 className="font-medium text-foreground">Informações Bancárias</h3>
+                     <div className="grid grid-cols-3 gap-x-6 gap-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="bank">Banco</Label>
+                            <Input id="bank" placeholder="Ex: 260 - Nu Pagamentos" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="agency">Agência</Label>
+                            <Input id="agency" placeholder="Ex: 0001" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="account">Conta Corrente</Label>
+                            <Input id="account" placeholder="Ex: 1234567-8" />
+                        </div>
                     </div>
                 </div>
             </TabsContent>
@@ -360,5 +409,3 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
     </Dialog>
   );
 }
-
-    
