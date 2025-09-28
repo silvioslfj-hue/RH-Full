@@ -9,7 +9,7 @@ import {
   SidebarMenuButton,
   useSidebar
 } from '@/components/ui/sidebar'
-import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass } from 'lucide-react'
+import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck } from 'lucide-react'
 
 const adminMenuItems = [
   { href: '/dashboard', label: 'Resumo', icon: LayoutDashboard },
@@ -22,28 +22,30 @@ const collaboratorMenuItems = [
   { href: '/clock', label: 'Registro de Ponto', icon: Hourglass },
   { href: '/absences', label: 'Minhas Ausências', icon: CalendarOff },
   { href: '/reports', label: 'Meus Relatórios', icon: BarChart3 },
+  { href: '/proofs', label: 'Comprovantes', icon: Receipt },
+  { href: '/justifications', label: 'Justificativas', icon: FileCheck },
 ]
 
 const adminPaths = ['/dashboard', '/timecards'];
-const collaboratorPaths = ['/clock'];
+const collaboratorPaths = ['/clock', '/proofs', '/justifications'];
 
 export function MainNav() {
   const pathname = usePathname()
   const { setOpenMobile } = useSidebar();
 
   const isAdminRoute = adminPaths.some(path => pathname.startsWith(path));
-  // A rota de ausências e relatórios é compartilhada, então precisamos de uma lógica mais específica
   let menuItems;
+  
   if (isAdminRoute) {
     menuItems = adminMenuItems;
-  } else if (pathname.startsWith('/absences') || pathname.startsWith('/reports') || pathname.startsWith('/clock')) {
-    // Se não for uma rota de admin E for uma rota de colaborador, mostre o menu do colaborador
-    // Isso cobre o caso de /absences e /reports para ambos os perfis. A diferenciação de dados viria do backend.
+  } else if (collaboratorPaths.some(path => pathname.startsWith(path))) {
+    menuItems = collaboratorMenuItems;
+  } else if (pathname.startsWith('/absences') || pathname.startsWith('/reports')) {
+    // Para rotas compartilhadas, precisaríamos de uma lógica de perfil de usuário real.
+    // Como protótipo, assumimos que o menu do colaborador é o padrão aqui.
     menuItems = collaboratorMenuItems;
   } else {
-    // Default para admin se o usuário logado for admin e estiver em /absences ou /reports
-    // Numa aplicação real, isso seria definido pelo perfil do usuário no estado global.
-    // Como protótipo, vamos assumir que se não for uma rota específica de colaborador, é admin.
+    // Default para admin se nada corresponder (ex: página inicial do dashboard)
     menuItems = adminMenuItems;
   }
 
