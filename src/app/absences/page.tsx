@@ -9,6 +9,8 @@ import { RequestAbsenceDialog } from "@/components/absences/request-absence-dial
 import { absenceData as initialAbsenceData } from "@/lib/data";
 import { PlusCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Assume-se que o usuário logado é 'Jane Doe' para o protótipo.
 const loggedInUser = "Jane Doe";
@@ -48,10 +50,10 @@ export default function AbsencesPage() {
   const pageTitle = isAdminView ? "Gestão de Ausências" : "Minhas Ausências";
   const pageDescription = isAdminView ? "Aprove, negue e visualize as solicitações de ausência da equipe." : "Solicite folgas e visualize o histórico de suas ausências.";
 
-  const filteredData = !isAdminView 
-    ? absenceData.filter(item => item.employee === loggedInUser)
-    : absenceData;
+  const pendingRequests = absenceData.filter(item => item.status === 'Pendente');
+  const evaluatedRequests = absenceData.filter(item => item.status !== 'Pendente');
 
+  const collaboratorRequests = absenceData.filter(item => item.employee === loggedInUser);
 
   return (
     <AppLayout>
@@ -69,12 +71,38 @@ export default function AbsencesPage() {
           )}
         </div>
         
-        <AbsenceTable 
-          data={filteredData} 
-          isAdmin={isAdminView} 
-          onStatusChange={handleStatusChange}
-          onCancelRequest={handleCancelRequest}
-        />
+        {isAdminView ? (
+          <Tabs defaultValue="pending">
+            <TabsList>
+              <TabsTrigger value="pending">
+                Solicitações Pendentes
+                <span className="ml-2 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold w-5 h-5">
+                  {pendingRequests.length}
+                </span>
+              </TabsTrigger>
+              <TabsTrigger value="history">Histórico</TabsTrigger>
+            </TabsList>
+            <TabsContent value="pending" className="pt-4">
+               <AbsenceTable 
+                data={pendingRequests} 
+                isAdmin={true} 
+                onStatusChange={handleStatusChange}
+              />
+            </TabsContent>
+            <TabsContent value="history" className="pt-4">
+               <AbsenceTable 
+                data={evaluatedRequests} 
+                isAdmin={true}
+              />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <AbsenceTable 
+            data={collaboratorRequests} 
+            isAdmin={false} 
+            onCancelRequest={handleCancelRequest}
+          />
+        )}
       </div>
       <RequestAbsenceDialog 
         isOpen={isRequestDialogOpen}

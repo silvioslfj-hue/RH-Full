@@ -10,10 +10,13 @@ import {
   SidebarMenuButton,
   useSidebar,
   SidebarGroup,
-  SidebarGroupLabel
+  SidebarGroupLabel,
+  SidebarMenuBadge
 } from '@/components/ui/sidebar'
 import { LayoutDashboard, Clock, CalendarOff, BarChart3, Hourglass, Receipt, FileCheck, Wallet, FileText, FileArchive, Settings, Users, Calculator, History, PieChart, Briefcase, Building, LandPlot, Coins } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { absenceData } from '@/lib/data'
+
 
 const collaboratorMenuItems = [
   { href: '/clock', label: 'Registro de Ponto', icon: Hourglass },
@@ -31,6 +34,9 @@ export function MainNav() {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
   const [isAdminView, setIsAdminView] = useState(false);
+
+  // Simulação de contagem de pendências
+  const pendingAbsencesCount = absenceData.filter(a => a.status === 'Pendente').length;
 
   useEffect(() => {
     // Lógica para determinar o contexto do usuário (admin vs. colaborador)
@@ -73,7 +79,11 @@ export function MainNav() {
             </SidebarMenuItem>
              <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={pathname.startsWith('/absences')} tooltip={{ children: 'Ausências' }}>
-                <Link href='/absences' onClick={handleLinkClick}><CalendarOff /><span>Ausências</span></Link>
+                <Link href='/absences' onClick={handleLinkClick}>
+                  <CalendarOff />
+                  <span>Ausências</span>
+                  {pendingAbsencesCount > 0 && <SidebarMenuBadge>{pendingAbsencesCount}</SidebarMenuBadge>}
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarGroup>
