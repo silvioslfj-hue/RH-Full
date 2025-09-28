@@ -108,7 +108,7 @@ export default function PayslipsPage() {
                         ) : (
                             <Eye className="mr-2 h-4 w-4" />
                         )}
-                      Visualizar
+                      {isGenerating && selectedPayslip?.id === payslip.id ? "Gerando..." : "Visualizar"}
                     </Button>
                     <Button variant="ghost" size="icon" title="Baixar PDF (simulação)">
                       <Download className="h-5 w-5" />
