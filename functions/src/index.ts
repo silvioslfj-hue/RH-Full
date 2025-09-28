@@ -17,8 +17,12 @@ import * as admin from "firebase-admin";
 // const forge = require('node-forge');
 // const axios = require('axios');
 
+// Secret Manager Client
+import {SecretManagerServiceClient} from "@google-cloud/secret-manager";
+
 // Initialize Firebase Admin SDK
 admin.initializeApp();
+const secretManagerClient = new SecretManagerServiceClient();
 
 
 // For cost control, you can set the maximum number of containers that can be
@@ -32,6 +36,36 @@ admin.initializeApp();
 // In the v1 API, each function can only serve one request per container, so
 // this will be the maximum concurrent request count.
 setGlobalOptions({maxInstances: 10});
+
+/**
+ * Fetches a secret from Google Cloud Secret Manager.
+ * @param {string} secretName The name of the secret to fetch.
+ * @return {Promise<string>} The secret's value.
+ */
+async function getSecret(secretName: string): Promise<string> {
+    const projectId = process.env.GCLOUD_PROJECT;
+    if (!projectId) {
+        throw new Error("Google Cloud project ID not available.");
+    }
+
+    const name = `projects/${projectId}/secrets/${secretName}/versions/latest`;
+
+    try {
+        const [version] = await secretManagerClient.accessSecretVersion({
+            name: name,
+        });
+
+        const payload = version.payload?.data?.toString();
+        if (!payload) {
+            throw new Error(`Secret ${secretName} has no payload.`);
+        }
+        return payload;
+    } catch (error) {
+        logger.error(`Failed to access secret ${secretName}`, error);
+        throw new HttpsError("internal", `Could not access secret for ${secretName}.`);
+    }
+}
+
 
 /**
  * Handles the transmission of an eSocial event.
@@ -64,6 +98,9 @@ export const transmitirEventoESocial = onCall(async (request) => {
             throw new HttpsError("not-found", `Evento com ID ${eventId} não foi encontrado.`);
         }
         const eventData = eventDoc.data();
+        if (!eventData) {
+            throw new HttpsError("not-found", "Dados do evento não encontrados.");
+        }
         const companyId = eventData.companyId; // Assuming companyId is stored in the event
 
         // 3. Generate Structured Data (JSON)
@@ -80,12 +117,20 @@ export const transmitirEventoESocial = onCall(async (request) => {
         const xmlString = "<xml>Simulated XML content</xml>"; // Placeholder
 
         // 5. Fetch Certificate and Sign the XML
-        // TODO: Implement logic to download certificate from Firebase Storage and get password from Secret Manager.
-        // const certBuffer = await admin.storage().bucket().file(`certs/${companyId}.pfx`).download();
-        // const certPassword = await getCertPasswordFromSecretManager(companyId);
+        const certName = `certs/${companyId}.pfx`;
+        const secretName = `CERT_PASS_${companyId}`;
+        logger.info(`Fetching certificate ${certName} and secret ${secretName}`, { eventId });
+        
+        // TODO: Implement logic to download certificate from Firebase Storage.
+        // const certBuffer = await admin.storage().bucket().file(certName).download();
+        
+        // Fetch the certificate password from Secret Manager
+        const certPassword = await getSecret(secretName);
+        
+        // TODO: Implement logic to sign the XML
         // const signedXml = signXml(xmlString, certBuffer, certPassword);
-        logger.info("TODO: Fetch certificate and sign XML", { eventId });
-        const signedXml = "<xml>Simulated SIGNED XML content</xml>"; // Placeholder
+        logger.info("TODO: Sign XML using fetched certificate and password", { eventId, certPassword: "[REDACTED]" });
+        const signedXml = `<xml>Simulated SIGNED XML content with password ${certPassword.substring(0,2)}...</xml>`; // Placeholder
 
         // 6. Transmit to eSocial API
         // TODO: Implement the API call to the eSocial webservice.
@@ -102,7 +147,7 @@ export const transmitirEventoESocial = onCall(async (request) => {
 
     } catch (error) {
         logger.error(`Failed to process event ${eventId}`, error);
-        await eventRef.update({status: "Erro", errorMessage: error.message});
+        await eventRef.update({status: "Erro", errorMessage: (error as Error).message});
         
         if (error instanceof HttpsError) {
             throw error;
