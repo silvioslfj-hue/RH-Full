@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,9 +13,10 @@ import type { JobOpeningOutput, GeneratedJobOpening } from "@/lib/data";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { jobOpeningsData } from "@/lib/data";
 import { JobOpeningsTable } from "@/components/job-openings/job-openings-table";
 import { marked } from "marked";
+import { db } from "@/lib/firebaseClient";
+import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy } from "firebase/firestore";
 
 const CopyButton = ({ textToCopy }: { textToCopy: string }) => {
     const { toast } = useToast();
@@ -40,8 +41,24 @@ export default function JobOpeningsPage() {
     const [isGenerating, startTransition] = useTransition();
     const [jobTitle, setJobTitle] = useState("");
     const [generatedContent, setGeneratedContent] = useState<JobOpeningOutput | null>(null);
-    const [jobHistory, setJobHistory] = useState<GeneratedJobOpening[]>(jobOpeningsData);
+    const [jobHistory, setJobHistory] = useState<GeneratedJobOpening[]>([]);
     const [editingJobId, setEditingJobId] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchJobOpenings = async () => {
+            try {
+                const q = query(collection(db, "jobOpenings"), orderBy("createdAt", "desc"));
+                const querySnapshot = await getDocs(q);
+                const openings = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GeneratedJobOpening));
+                setJobHistory(openings);
+            } catch (error) {
+                console.error("Error fetching job openings:", error);
+                toast({ variant: "destructive", title: "Erro ao buscar histórico de vagas." });
+            }
+        };
+        fetchJobOpenings();
+    }, [toast]);
+
 
     const handleGenerate = () => {
         if (!jobTitle.trim()) {
@@ -54,41 +71,43 @@ export default function JobOpeningsPage() {
         }
 
         startTransition(async () => {
-        setGeneratedContent(null);
-        setEditingJobId(null);
-        toast({
-            title: "Gerando Material da Vaga...",
-            description: "Aguarde enquanto a IA cria a descrição, perguntas e habilidades."
-        });
-
-        try {
-            const result = await generateJobOpening({ role: jobTitle });
-            
-            const htmlDescription = marked.parse(result.description);
-            const contentWithHtml = { ...result, description: htmlDescription };
-
-            setGeneratedContent(contentWithHtml);
-
-            const newJob: GeneratedJobOpening = {
-                id: `VAGA${(jobHistory.length + 1).toString().padStart(3, '0')}`,
-                role: jobTitle,
-                createdAt: new Date().toISOString().split('T')[0],
-                ...result,
-            };
-            setJobHistory(prev => [newJob, ...prev]);
-
+            setGeneratedContent(null);
+            setEditingJobId(null);
             toast({
-            title: "Material Gerado com Sucesso!",
-            description: `O material para "${jobTitle}" foi criado e salvo no histórico.`
+                title: "Gerando Material da Vaga...",
+                description: "Aguarde enquanto a IA cria a descrição, perguntas e habilidades."
             });
-        } catch (error) {
-            console.error("Error generating job opening:", error);
-            toast({
-            variant: "destructive",
-            title: "Erro na Geração",
-            description: "Não foi possível gerar o material da vaga. Tente novamente.",
-            });
-        }
+
+            try {
+                const result = await generateJobOpening({ role: jobTitle });
+                
+                const htmlDescription = marked.parse(result.description);
+                const contentWithHtml = { ...result, description: htmlDescription };
+
+                setGeneratedContent(contentWithHtml);
+
+                const newJobData: Omit<GeneratedJobOpening, 'id'> = {
+                    role: jobTitle,
+                    createdAt: new Date().toISOString(),
+                    ...result,
+                };
+                
+                const docRef = await addDoc(collection(db, "jobOpenings"), newJobData);
+                const newJob = { ...newJobData, id: docRef.id };
+                setJobHistory(prev => [newJob, ...prev]);
+
+                toast({
+                title: "Material Gerado com Sucesso!",
+                description: `O material para "${jobTitle}" foi criado e salvo no histórico.`
+                });
+            } catch (error) {
+                console.error("Error generating job opening:", error);
+                toast({
+                variant: "destructive",
+                title: "Erro na Geração",
+                description: "Não foi possível gerar o material da vaga. Tente novamente.",
+                });
+            }
         });
     };
 
@@ -107,17 +126,23 @@ export default function JobOpeningsPage() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    const handleDelete = (id: string) => {
-        setJobHistory(prev => prev.filter(job => job.id !== id));
-        if (editingJobId === id) {
-            setGeneratedContent(null);
-            setEditingJobId(null);
-            setJobTitle("");
+    const handleDelete = async (id: string) => {
+        try {
+            await deleteDoc(doc(db, "jobOpenings", id));
+            setJobHistory(prev => prev.filter(job => job.id !== id));
+            if (editingJobId === id) {
+                setGeneratedContent(null);
+                setEditingJobId(null);
+                setJobTitle("");
+            }
+            toast({
+                title: "Vaga Excluída",
+                description: "A vaga foi removida do seu histórico.",
+            });
+        } catch (error) {
+            console.error("Error deleting job opening:", error);
+            toast({ variant: "destructive", title: "Erro ao excluir vaga." });
         }
-        toast({
-            title: "Vaga Excluída",
-            description: "A vaga foi removida do seu histórico.",
-        });
     }
     
     const currentJobTitle = editingJobId ? jobHistory.find(j => j.id === editingJobId)?.role : jobTitle;
