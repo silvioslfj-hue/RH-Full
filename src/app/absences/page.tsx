@@ -8,6 +8,7 @@ import { RequestAbsenceDialog } from "@/components/absences/request-absence-dial
 import { absenceData as initialAbsenceData } from "@/lib/data";
 import { PlusCircle } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 // Assume-se que o usuário logado é 'Jane Doe' para o protótipo.
 const loggedInUser = "Jane Doe";
@@ -16,6 +17,7 @@ export default function AbsencesPage() {
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const [absenceData, setAbsenceData] = useState(initialAbsenceData);
   const [isClient, setIsClient] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     setIsClient(true);
@@ -24,8 +26,23 @@ export default function AbsencesPage() {
   const handleNewRequest = (newRequest: any) => {
     setAbsenceData(prev => [{...newRequest, id: `ABS${(prev.length + 1).toString().padStart(3, '0')}`, status: 'Pendente'}, ...prev])
   }
+  
+  const handleStatusChange = (id: string, status: 'Aprovado' | 'Negado') => {
+    setAbsenceData(prev => prev.map(item => item.id === id ? { ...item, status } : item));
+    toast({
+        title: `Solicitação ${status === 'Aprovado' ? 'Aprovada' : 'Negada'}`,
+        description: `A solicitação de ausência foi marcada como "${status}".`,
+    });
+  };
 
-  // A lógica do isAdminRoute pode ser substituída por uma verificação de perfil de usuário real.
+  const handleCancelRequest = (id: string) => {
+    setAbsenceData(prev => prev.filter(item => item.id !== id));
+    toast({
+        title: "Solicitação Cancelada",
+        description: "Sua solicitação de ausência foi cancelada.",
+    });
+  }
+
   const pathname = usePathname();
   const isAdminRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/timecards') || pathname.startsWith('/reports');
   
@@ -53,7 +70,12 @@ export default function AbsencesPage() {
           )}
         </div>
         
-        <AbsenceTable data={filteredData} isAdmin={isAdminRoute} />
+        <AbsenceTable 
+          data={filteredData} 
+          isAdmin={isAdminRoute} 
+          onStatusChange={handleStatusChange}
+          onCancelRequest={handleCancelRequest}
+        />
       </div>
       <RequestAbsenceDialog 
         isOpen={isRequestDialogOpen}

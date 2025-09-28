@@ -18,6 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog"
 
 type Absence = {
   id: string;
@@ -31,9 +32,11 @@ type Absence = {
 interface AbsenceTableProps {
   data: Absence[];
   isAdmin: boolean;
+  onStatusChange?: (id: string, status: 'Aprovado' | 'Negado') => void;
+  onCancelRequest?: (id: string) => void;
 }
 
-export function AbsenceTable({ data, isAdmin }: AbsenceTableProps) {
+export function AbsenceTable({ data, isAdmin, onStatusChange, onCancelRequest }: AbsenceTableProps) {
   const getStatusVariant = (status: Absence['status']) => {
     switch (status) {
       case 'Aprovado':
@@ -75,10 +78,10 @@ export function AbsenceTable({ data, isAdmin }: AbsenceTableProps) {
                 <TableCell className="text-right">
                   {isAdmin && absence.status === 'Pendente' ? (
                     <div className="flex gap-2 justify-end">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600 hover:bg-green-100 hover:text-green-700">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600 hover:bg-green-100 hover:text-green-700" onClick={() => onStatusChange?.(absence.id, 'Aprovado')}>
                         <Check className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 hover:bg-red-100 hover:text-red-700">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 hover:bg-red-100 hover:text-red-700" onClick={() => onStatusChange?.(absence.id, 'Negado')}>
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
@@ -93,10 +96,26 @@ export function AbsenceTable({ data, isAdmin }: AbsenceTableProps) {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>Ver Detalhes</DropdownMenuItem>
                          {!isAdmin && absence.status === 'Pendente' && (
-                          <DropdownMenuItem className="text-red-500">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Cancelar Solicitação
-                          </DropdownMenuItem>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-500">
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Cancelar Solicitação
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta ação não pode ser desfeita. Isso cancelará permanentemente sua solicitação de ausência.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Voltar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => onCancelRequest?.(absence.id)}>Sim, Cancelar</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>

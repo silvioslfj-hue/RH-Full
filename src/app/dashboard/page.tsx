@@ -8,10 +8,25 @@ import { TeamStatus } from "@/components/dashboard/admin/team-status";
 import { RecentAbsenceRequests } from "@/components/dashboard/admin/recent-absence-requests";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Building, Factory } from "lucide-react";
+import { absenceData as initialAbsenceData } from "@/lib/data";
+import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardPage() {
   const [company, setCompany] = useState("all");
   const [unit, setUnit] = useState("all");
+  const [absenceData, setAbsenceData] = useState(initialAbsenceData);
+  const { toast } = useToast();
+
+  const handleStatusChange = (id: string, status: 'Aprovado' | 'Negado') => {
+    setAbsenceData(prev => prev.map(item => item.id === id ? { ...item, status } : item));
+    toast({
+        title: `Solicitação ${status === 'Aprovado' ? 'Aprovada' : 'Negada'}`,
+        description: `A solicitação de ausência foi marcada como "${status}".`,
+    });
+  };
+
+  const pendingRequests = absenceData.filter(a => a.status === "Pendente");
+
 
   return (
     <AppLayout>
@@ -55,11 +70,11 @@ export default function DashboardPage() {
           </div>
         </div>
         
-        <QuickActions />
+        <QuickActions pendingRequestsCount={pendingRequests.length} />
 
         <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <RecentAbsenceRequests />
+            <RecentAbsenceRequests requests={pendingRequests} onStatusChange={handleStatusChange} />
           </div>
           <TeamStatus />
         </div>
