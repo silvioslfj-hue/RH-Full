@@ -414,23 +414,26 @@ export function EmployeeDialog({ isOpen, onClose, onSave, employee, units, roles
             </TabsContent>
             
             <TabsContent value="access" className="mt-0">
-                <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="system-email">Email de Acesso</Label>
-                        <Input id="system-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="system-email">Email de Acesso (Login)</Label>
+                            <Input id="system-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email que será usado para login"/>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="accessCode">Código de Acesso (Login Inicial)</Label>
+                            <Input id="accessCode" placeholder="Ex: FUNC001"/>
+                        </div>
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="accessCode">Código de Acesso (Ponto)</Label>
-                        <Input id="accessCode" />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="password">Senha Inicial</Label>
+                     <div className="space-y-2">
+                        <Label htmlFor="password">Senha Inicial Provisória</Label>
                         <Input id="password" type="password" placeholder="Será gerada automaticamente se deixado em branco" />
+                        <p className="text-xs text-muted-foreground">O colaborador será solicitado a alterar esta senha no primeiro login.</p>
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="status">Status do Colaborador</Label>
                         <Select value={status} onValueChange={(value) => setStatus(value as Employee['status'])}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="Ativo">Ativo</SelectItem>
                                 <SelectItem value="Férias">Férias</SelectItem>
