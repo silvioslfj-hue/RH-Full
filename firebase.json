@@ -1,7 +1,6 @@
 {
   "hosting": {
-      "site": "rhlite",
-      "source": "."
+      "site": "rhlite"
   },
   "firestore": {
       "database": "(default)",
