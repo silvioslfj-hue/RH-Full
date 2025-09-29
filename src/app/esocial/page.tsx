@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { KeyRound, Settings, Send, Building, Search, UserPlus, UserMinus, FileText, Loader2, FilePen, XCircle } from "lucide-react";
+import { KeyRound, Settings, Send, Building, Search, UserPlus, UserMinus, FileText, Loader2, FilePen, XCircle, Clock } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,7 +30,8 @@ import {
 import { generateESocialEventData } from "@/ai/flows/esocial-event-flow";
 import { generateContractChangeData } from "@/ai/flows/contract-change-flow";
 import { db } from "@/lib/firebaseClient";
-import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { collection, getDocs, doc, updateDoc, deleteDoc, onSnapshot } from "firebase/firestore";
 
 
 export default function ESocialPage() {
@@ -47,20 +48,27 @@ export default function ESocialPage() {
     const [companyFilter, setCompanyFilter] = useState("all");
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [eventsSnapshot, companiesSnapshot] = await Promise.all([
-                    getDocs(collection(db, "esocialEvents")),
-                    getDocs(collection(db, "companies")),
-                ]);
-                setEvents(eventsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EsocialEvent)));
+        const fetchCompanies = async () => {
+             try {
+                const companiesSnapshot = await getDocs(collection(db, "companies"));
                 setCompanies(companiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Company)));
             } catch (error) {
-                console.error("Error fetching eSocial data:", error);
-                toast({ variant: "destructive", title: "Erro ao buscar eventos do eSocial." });
+                console.error("Error fetching companies:", error);
+                toast({ variant: "destructive", title: "Erro ao buscar empresas." });
             }
         };
-        fetchData();
+        fetchCompanies();
+
+        // Real-time listener for events
+        const unsubscribe = onSnapshot(collection(db, "esocialEvents"), (querySnapshot) => {
+            const eventsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EsocialEvent));
+            setEvents(eventsData);
+        }, (error) => {
+            console.error("Error fetching eSocial events in real-time:", error);
+            toast({ variant: "destructive", title: "Erro ao buscar eventos do eSocial." });
+        });
+        
+        return () => unsubscribe(); // Cleanup listener on component unmount
     }, [toast]);
 
 
@@ -97,20 +105,24 @@ export default function ESocialPage() {
             return;
         }
 
+        const functions = getFunctions();
+        const transmitirEventoESocial = httpsCallable(functions, 'transmitirEventoESocial');
+
         startTransition(async () => {
              toast({
                 title: "Geração de Dados Iniciada...",
-                description: `Gerando dados para ${selectedEvents.length} eventos. A IA processará eventos de Admissão (S-2200) e Alteração Contratual (S-2206) nesta demo.`,
+                description: `A IA processará os eventos e em seguida eles serão enviados.`,
             });
             
             for (const eventId of selectedEvents) {
                 const event = events.find(e => e.id === eventId);
                 if (!event) continue;
 
-                try {
-                    let data: object | null = null;
-                    let title = '';
+                let data: object | null = null;
+                let title = '';
 
+                try {
+                    // Step 1: Generate JSON data with AI flows
                     if (event.type.startsWith('S-2200')) {
                         data = await generateESocialEventData({ employeeId: event.employeeId });
                         title = 'Dados Estruturados do Evento eSocial (S-2200 - Admissão)';
@@ -122,32 +134,37 @@ export default function ESocialPage() {
                         });
                          title = 'Dados Estruturados do Evento eSocial (S-2206 - Alteração Contratual)';
                     }
+                    // TODO: Add flows for other event types (S-2299, S-1200, etc.)
                     
                     if(data) {
                         setGeneratedData(data);
                         setDataViewerTitle(title);
-                        setIsDataViewerOpen(true);
-                        toast({
-                            title: `Dados Gerados para ${event.employeeName}!`,
-                            description: `Os dados estruturados para o evento ${event.type} foram gerados pela IA.`,
-                        });
+                        setIsDataViewerOpen(true); // Show the user the generated data
                         
-                        await updateDoc(doc(db, "esocialEvents", eventId), { status: 'Enviado' });
-                        setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: 'Enviado' } : e));
-                        setSelectedEvents(prev => prev.filter(id => id !== eventId));
+                        // Step 2: Call the backend function with the generated data
+                        await transmitirEventoESocial({ eventId: eventId, jsonData: data, companyId: event.companyId });
 
-                        // In a real app, you would add the XML to a transmission queue here.
-                        // We stop after the first successful generation for this demo.
-                        break; 
+                        toast({
+                            title: `Evento ${event.type} enviado para processamento!`,
+                            description: `O backend está processando e transmitindo o evento para ${event.employeeName}.`,
+                        });
+                    } else {
+                        // For events without an AI flow, we can still try to send them if the data exists
+                         await transmitirEventoESocial({ eventId: eventId, jsonData: event.details, companyId: event.companyId });
+                          toast({
+                            title: `Evento ${event.type} enviado para processamento!`,
+                            description: `O backend está processando e transmitindo o evento para ${event.employeeName}.`,
+                        });
                     }
-                } catch (error) {
+                    setSelectedEvents(prev => prev.filter(id => id !== eventId));
+                    break; // Process one at a time for this demo
+                } catch (error: any) {
                      toast({
                         variant: "destructive",
-                        title: `Erro ao Gerar Dados para ${event.employeeName}`,
-                        description: `Não foi possível gerar os dados do evento ${event.type} com a IA.`,
+                        title: `Erro ao Processar Evento para ${event.employeeName}`,
+                        description: error.message || "A IA ou o backend falhou ao processar este evento.",
                     });
-                     await updateDoc(doc(db, "esocialEvents", eventId), { status: 'Erro' });
-                     setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: 'Erro' } : e));
+                     await updateDoc(doc(db, "esocialEvents", eventId), { status: 'Erro', errorMessage: error.message });
                 }
             }
         });
@@ -156,7 +173,6 @@ export default function ESocialPage() {
     const handleDeleteEvent = async (eventId: string) => {
         try {
             await deleteDoc(doc(db, "esocialEvents", eventId));
-            setEvents(prev => prev.filter(e => e.id !== eventId));
             setSelectedEvents(prev => prev.filter(id => id !== eventId));
             toast({
                 title: "Evento Excluído",
@@ -170,7 +186,6 @@ export default function ESocialPage() {
     const handleRejectEvent = async (eventId: string) => {
         try {
             await updateDoc(doc(db, "esocialEvents", eventId), { status: 'Rejeitado' });
-            setEvents(prev => prev.map(e => e.id === eventId ? { ...e, status: 'Rejeitado' } : e));
             setSelectedEvents(prev => prev.filter(id => id !== eventId));
             toast({
                 title: "Evento Rejeitado",
@@ -256,58 +271,57 @@ export default function ESocialPage() {
           </CardContent>
         </Card>
 
-        <Card>
-            <CardHeader>
-                <CardTitle>Eventos Pendentes para {competenceFilter}</CardTitle>
-                <CardDescription>Resumo dos eventos não periódicos e periódicos a serem enviados.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="bg-muted/30">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-base font-medium">Admissões (S-2200)</CardTitle>
-                        <UserPlus className="h-5 w-5 text-muted-foreground"/>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{pendingEventsSummary.admissions}</div>
-                        <p className="text-xs text-muted-foreground">Novos colaboradores registrados</p>
-                    </CardContent>
-                </Card>
-                <Card className="bg-muted/30">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-base font-medium">Alterações (S-2206)</CardTitle>
-                        <FilePen className="h-5 w-5 text-muted-foreground"/>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{pendingEventsSummary.contractChanges}</div>
-                        <p className="text-xs text-muted-foreground">Alterações de contrato</p>
-                    </CardContent>
-                </Card>
-                 <Card className="bg-muted/30">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-base font-medium">Desligamentos (S-2299)</CardTitle>
-                        <UserMinus className="h-5 w-5 text-muted-foreground"/>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{pendingEventsSummary.terminations}</div>
-                        <p className="text-xs text-muted-foreground">Rescisões de contrato</p>
-                    </CardContent>
-                </Card>
-                 <Card className="bg-muted/30">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-base font-medium">Folhas (S-1200/S-1210)</CardTitle>
-                        <FileText className="h-5 w-5 text-muted-foreground"/>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{pendingEventsSummary.payrolls}</div>
-                        <p className="text-xs text-muted-foreground">Remunerações a serem enviadas</p>
-                    </CardContent>
-                </Card>
-            </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <Card className="bg-muted/30">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Admissões</CardTitle>
+                    <UserPlus className="h-4 w-4 text-muted-foreground"/>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{pendingEventsSummary.admissions}</div>
+                </CardContent>
+            </Card>
+            <Card className="bg-muted/30">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Alterações</CardTitle>
+                    <FilePen className="h-4 w-4 text-muted-foreground"/>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{pendingEventsSummary.contractChanges}</div>
+                </CardContent>
+            </Card>
+             <Card className="bg-muted/30">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Desligamentos</CardTitle>
+                    <UserMinus className="h-4 w-4 text-muted-foreground"/>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{pendingEventsSummary.terminations}</div>
+                </CardContent>
+            </Card>
+             <Card className="bg-muted/30">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Folhas</CardTitle>
+                    <FileText className="h-4 w-4 text-muted-foreground"/>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{pendingEventsSummary.payrolls}</div>
+                </CardContent>
+            </Card>
+            <Card className="bg-muted/30">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-sm font-medium">Eventos de Ponto</CardTitle>
+                    <Clock className="h-4 w-4 text-muted-foreground"/>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">0</div>
+                </CardContent>
+            </Card>
+        </div>
 
         <Card>
              <CardHeader>
-                <CardTitle>Seleção de Eventos para Envio</CardTitle>
+                <CardTitle>Fila de Eventos para Envio</CardTitle>
                 <CardDescription>Marque os eventos que você deseja gerar e enviar para o eSocial. A geração de dados com IA é simulada para eventos de admissão (S-2200) e alteração contratual (S-2206).</CardDescription>
             </CardHeader>
             <CardContent>
@@ -326,7 +340,7 @@ export default function ESocialPage() {
                     ) : (
                         <Send className="mr-2 h-4 w-4"/>
                     )}
-                    {isSending ? `Gerando ${selectedEvents.length} eventos...` : `Gerar e Enviar ${selectedEvents.length} Eventos`}
+                    {isSending ? `Processando ${selectedEvents.length} eventos...` : `Processar e Enviar ${selectedEvents.length} Eventos`}
                 </Button>
             </CardFooter>
         </Card>
@@ -337,7 +351,7 @@ export default function ESocialPage() {
           <DialogHeader>
             <DialogTitle>{dataViewerTitle}</DialogTitle>
             <DialogDescription>
-              Abaixo estão os dados gerados pela IA, prontos para serem convertidos em XML e transmitidos.
+              Abaixo estão os dados gerados pela IA, prontos para serem enviados ao backend.
             </DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-auto bg-muted/50 rounded-md p-4">
