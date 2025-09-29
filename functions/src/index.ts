@@ -15,8 +15,6 @@ import * as admin from "firebase-admin";
 
 // Dependencies for eSocial integration
 import * as convert from "xml-js";
-import * as forge from "node-forge";
-import axios from "axios";
 
 // Secret Manager Client
 import {SecretManagerServiceClient} from "@google-cloud/secret-manager";
@@ -63,109 +61,90 @@ async function getSecret(secretName: string): Promise<string> {
     return payload;
   } catch (error) {
     logger.error(`Failed to access secret ${secretName}`, error);
-    throw new HttpsError("internal", `Could not access secret for ${secretName}.`);
+    const msg = `Could not access secret for ${secretName}.`;
+    throw new HttpsError("internal", msg);
   }
 }
 
 
 /**
- * Handles the transmission of an eSocial event.
- * This function is triggered by a call from the client-side application.
+ * Generates an XML file for an eSocial event and saves it to Firestore.
+ * This function simulates the entire transmission process but stops after
+ * generating the XML and updating the status in Firestore.
  */
 export const transmitirEventoESocial = onCall(async (request) => {
   // 1. Authentication and Authorization
   if (!request.auth) {
-    throw new HttpsError("unauthenticated", "A função deve ser chamada por um usuário autenticado.");
+    const msg = "A função deve ser chamada por um usuário autenticado.";
+    throw new HttpsError("unauthenticated", msg);
   }
-  // TODO: Add role-based access control (check if the user is an admin)
-  // For example: const user = await admin.auth().getUser(request.auth.uid);
-  // if (user.customClaims?.role !== 'admin') { ... }
 
-  const eventId = request.data.eventId;
-  if (!eventId) {
-    throw new HttpsError("invalid-argument", "O ID do evento é obrigatório.");
+  const {eventId, jsonData} = request.data;
+  if (!eventId || !jsonData) {
+    const msg = "O ID do evento e os dados JSON são obrigatórios.";
+    throw new HttpsError("invalid-argument", msg);
   }
 
   const db = admin.firestore();
   const eventRef = db.collection("esocialEvents").doc(eventId);
 
   try {
-    logger.info(`Processing eSocial event: ${eventId}`, {structuredData: true});
+    logger.info(`Generating XML for eSocial event: ${eventId}`);
     await eventRef.update({status: "Processando"});
 
-    // 2. Fetch Event and Related Data
-    const eventDoc = await eventRef.get();
-    if (!eventDoc.exists) {
-      throw new HttpsError("not-found", `Evento com ID ${eventId} não foi encontrado.`);
-    }
-    const eventData = eventDoc.data();
-    if (!eventData) {
-      throw new HttpsError("not-found", "Dados do evento não encontrados.");
-    }
+    // 2. Convert JSON to XML
+    const loteEventos = {
+      _declaration: {_attributes: {version: "1.0", encoding: "UTF-8"}},
+      eSocial: {
+        ...jsonData,
+      },
+    };
+    const xmlString = convert.json2xml(loteEventos, {compact: true, spaces: 4});
+    logger.info("XML content generated", {eventId});
 
-    // In a real scenario, you'd re-run the AI generation here for security,
-    // or trust the data generated and stored by the client-side flow.
-    const jsonData = eventData;
+    // 3. Save XML to Firestore and update status
+    await eventRef.update({
+      status: "XML Gerado",
+      xmlContent: xmlString,
+      generatedAt: new Date(),
+    });
 
-    // 4. Convert JSON to XML
-    logger.info("Converting JSON to XML", {eventId});
-    const xmlString = convert.json2xml(jsonData, {compact: true, spaces: 4});
-    logger.info("XML content generated:", {eventId, xml: xmlString.substring(0, 100) + "..."});
+    logger.info(`Event ${eventId} XML successfully generated and saved.`);
 
-
-    // 5. Fetch Certificate and Sign the XML
-    const companyId = eventData.companyId; // Assuming companyId is stored in the event
-    const certSecretName = `CERT_PASS_${companyId}`;
-    logger.info(`Fetching certificate for company ${companyId} and secret ${certSecretName}`, {eventId});
-
-    // TODO: Implement logic to download certificate from Firebase Storage.
-    // const certName = `certs/${companyId}.pfx`;
-    // const certBuffer = await admin.storage().bucket().file(certName).download();
-
-    // Fetch the certificate password from Secret Manager
-    const certPassword = await getSecret(certSecretName);
-
-    // This is a simulation of the signing process. A real implementation would use node-forge or crypto.
-    logger.info("Simulating XML signing using fetched certificate password", {eventId, certPassword: "[REDACTED]"});
-    const signedXml = `<xml>Simulated SIGNED XML content for event ${eventId} with password ${certPassword.substring(0, 2)}...</xml>`; // Placeholder
-
-    // 6. Transmit to eSocial API
-    logger.info("Simulating transmission to eSocial API", {eventId});
-    // const esocialEndpoint = "https://webservices.producao.esocial.gov.br/...";
-    // const response = await axios.post(esocialEndpoint, signedXml, { headers: { 'Content-Type': 'application/xml' } });
-    const receiptId = `mock_receipt_${Date.now()}`; // Placeholder for the actual receipt from the API response
-
-    // 7. Update Firestore with the result
-    await eventRef.update({status: "Enviado", receiptId: receiptId, sentAt: new Date()});
-    logger.info(`Event ${eventId} successfully sent.`, {receiptId});
-
-    return {success: true, message: "Evento enviado com sucesso!", receiptId: receiptId};
+    return {success: true, message: "XML do evento gerado com sucesso!"};
   } catch (error) {
-    logger.error(`Failed to process event ${eventId}`, error);
-    await eventRef.update({status: "Erro", errorMessage: (error as Error).message});
+    logger.error(`Failed to generate XML for event ${eventId}`, error);
+    await eventRef.update({
+      status: "Erro",
+      errorMessage: (error as Error).message,
+    });
 
     if (error instanceof HttpsError) {
       throw error;
     } else {
-      throw new HttpsError("internal", `Ocorreu um erro inesperado ao processar o evento ${eventId}.`);
+      const msg = "Ocorreu um erro inesperado ao gerar o XML.";
+      throw new HttpsError("internal", msg);
     }
   }
 });
 
 
 /**
- * Creates or updates a secret in Google Cloud Secret Manager for a company's certificate.
+ * Creates or updates a secret in Google Cloud Secret Manager for a
+ * company's certificate.
  */
 export const setupCompanySecrets = onCall(async (request) => {
   // 1. Authentication and Authorization
   if (!request.auth) {
-    throw new HttpsError("unauthenticated", "A função deve ser chamada por um usuário autenticado.");
+    const msg = "A função deve ser chamada por um usuário autenticado.";
+    throw new HttpsError("unauthenticated", msg);
   }
   // TODO: Verify if the user is an admin.
 
   const {companyId, certificatePassword} = request.data;
   if (!companyId || !certificatePassword) {
-    throw new HttpsError("invalid-argument", "O ID da empresa e a senha do certificado são obrigatórios.");
+    const msg = "ID da empresa e senha do certificado são obrigatórios.";
+    throw new HttpsError("invalid-argument", msg);
   }
 
   const projectId = process.env.GCLOUD_PROJECT;
@@ -211,9 +190,11 @@ export const setupCompanySecrets = onCall(async (request) => {
     });
 
     logger.info(`Added secret version ${version.name}`);
-    return {success: true, message: `Senha do certificado para ${companyId} salva com sucesso.`};
+    const msg = `Senha do certificado para ${companyId} salva com sucesso.`;
+    return {success: true, message: msg};
   } catch (error) {
     logger.error(`Failed to set up secret for company ${companyId}`, error);
-    throw new HttpsError("internal", "Não foi possível salvar a senha do certificado.");
+    const msg = "Não foi possível salvar a senha do certificado.";
+    throw new HttpsError("internal", msg);
   }
 });
