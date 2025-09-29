@@ -5,7 +5,8 @@
  * import {onCall} from "firebase-functions/v2/https";
  * import {onDocumentWritten} from "firebase-functions/v2/firestore";
  *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
+ * See a full list of supported triggers at
+ * https://firebase.google.com/docs/functions
  */
 
 import {setGlobalOptions} from "firebase-functions/v2";
@@ -35,37 +36,6 @@ const secretManagerClient = new SecretManagerServiceClient();
 // In the v1 API, each function can only serve one request per container, so
 // this will be the maximum concurrent request count.
 setGlobalOptions({maxInstances: 10});
-
-/**
- * Fetches a secret from Google Cloud Secret Manager.
- * @param {string} secretName The name of the secret to fetch.
- * @return {Promise<string>} The secret's value.
- */
-async function getSecret(secretName: string): Promise<string> {
-  const projectId = process.env.GCLOUD_PROJECT;
-  if (!projectId) {
-    throw new Error("Google Cloud project ID not available.");
-  }
-
-  const name = `projects/${projectId}/secrets/${secretName}/versions/latest`;
-
-  try {
-    const [version] = await secretManagerClient.accessSecretVersion({
-      name: name,
-    });
-
-    const payload = version.payload?.data?.toString();
-    if (!payload) {
-      throw new Error(`Secret ${secretName} has no payload.`);
-    }
-    return payload;
-  } catch (error) {
-    logger.error(`Failed to access secret ${secretName}`, error);
-    const msg = `Could not access secret for ${secretName}.`;
-    throw new HttpsError("internal", msg);
-  }
-}
-
 
 /**
  * Generates an XML file for an eSocial event and saves it to Firestore.
@@ -163,8 +133,8 @@ export const setupCompanySecrets = onCall(async (request) => {
     try {
       await secretManagerClient.getSecret({name: secretPath});
       logger.info(`Secret ${secretName} already exists. Adding new version.`);
-    } catch (error: any) {
-      if (error.code === 5) { // NOT_FOUND
+    } catch (error: unknown) {
+      if ((error as {code: number}).code === 5) { // NOT_FOUND
         logger.info(`Secret ${secretName} not found. Creating it.`);
         // Create the secret with replication policy
         await secretManagerClient.createSecret({
