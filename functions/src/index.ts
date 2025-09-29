@@ -69,7 +69,7 @@ export const transmitirEventoESocial = onCall(async (request) => {
         ...jsonData,
       },
     };
-    const xmlString = convert.json2xml(loteEventos, {compact: true, spaces: 4});
+    const xmlString = convert.js2xml(loteEventos, {compact: true, spaces: 4});
     logger.info("XML content generated", {eventId});
 
     // 3. Save XML to Firestore and update status
@@ -103,15 +103,16 @@ export const transmitirEventoESocial = onCall(async (request) => {
  * Creates or updates a secret in Google Cloud Secret Manager for a
  * company's certificate.
  */
-export const setupCompanySecrets = onCall(async (request) => {
+export const setupCompanySecrets = onCall(async (request: unknown) => {
   // 1. Authentication and Authorization
-  if (!request.auth) {
+  const req = request as { auth?: { uid: string }, data: any };
+  if (!req.auth) {
     const msg = "A função deve ser chamada por um usuário autenticado.";
     throw new HttpsError("unauthenticated", msg);
   }
   // TODO: Verify if the user is an admin.
 
-  const {companyId, certificatePassword} = request.data;
+  const {companyId, certificatePassword} = req.data;
   if (!companyId || !certificatePassword) {
     const msg = "ID da empresa e senha do certificado são obrigatórios.";
     throw new HttpsError("invalid-argument", msg);
