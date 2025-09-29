@@ -29,7 +29,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             <div className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
                 <Icons.logo className="h-8 w-8 text-primary" />
-                <h1 className="text-xl font-bold font-headline">RH-Full</h1>
+                <h1 className="text-xl font-bold font-headline">RH Lite</h1>
               </div>
               <div className="p-2 -mr-2 hidden group-data-[collapsible=icon]:block">
                  <Icons.logo className="h-6 w-6 text-primary" />
@@ -44,7 +44,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               <div className="flex items-center space-x-2 lg:hidden">
                 <SidebarTrigger />
                  <Icons.logo className="h-6 w-6 text-primary" />
-                 <span className="font-bold">RH-Full</span>
+                 <span className="font-bold">RH Lite</span>
               </div>
               <div className="flex flex-1 items-center justify-end space-x-4">
                 <UserNav />

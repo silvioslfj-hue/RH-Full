@@ -54,7 +54,7 @@ function SuperAdminLayout({ children }: { children: React.ReactNode }) {
                 <div className="container flex h-14 items-center justify-between">
                     <div className="flex items-center space-x-2">
                         <Icons.logo className="h-6 w-6 text-primary" />
-                        <span className="font-bold">RH-Full</span>
+                        <span className="font-bold">RH Lite</span>
                         <span className="text-sm text-muted-foreground font-mono">[Super Admin]</span>
                     </div>
                     <Button variant="ghost" size="sm" onClick={handleLogout}>

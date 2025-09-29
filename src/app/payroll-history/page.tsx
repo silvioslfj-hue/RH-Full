@@ -90,7 +90,7 @@ export default function PayrollHistoryPage() {
             }
             
             const input: PayslipGenerationInput = {
-                company: { name: "RH-Full Soluções em TI", cnpj: "01.234.567/0001-89" },
+                company: { name: "RH Lite Soluções em TI", cnpj: "01.234.567/0001-89" },
                 employee: { name: item.employeeName, role: "Desenvolvedor" }, // Role seria dinâmico
                 competence: item.competence,
                 payrollData: item.payrollData

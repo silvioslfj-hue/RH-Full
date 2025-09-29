@@ -125,7 +125,7 @@ export default function LoginPage() {
           <div className="flex justify-center mb-4">
             <Icons.logo className="h-10 w-10 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-headline">Bem-vindo ao RH-Full</CardTitle>
+          <CardTitle className="text-2xl font-headline">Bem-vindo ao RH Lite</CardTitle>
           <CardDescription>Faça login para acessar seu painel</CardDescription>
         </CardHeader>
         <CardContent>

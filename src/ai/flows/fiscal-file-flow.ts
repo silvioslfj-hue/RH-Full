@@ -56,7 +56,7 @@ const prompt = ai.definePrompt({
     Siga rigorosamente o layout definido pela Portaria 671.
 
     Dados de exemplo para a geração do arquivo:
-    - Empresa: CNPJ {{input.companyCnpj}}, Razão Social: "RH-Full Soluções em TI", Endereço: "Av. Principal, 123"
+    - Empresa: CNPJ {{input.companyCnpj}}, Razão Social: "RH Lite Soluções em TI", Endereço: "Av. Principal, 123"
     - Período: {{input.startDate}} a {{input.endDate}}
     - Marcações de Ponto:
     \`\`\`json

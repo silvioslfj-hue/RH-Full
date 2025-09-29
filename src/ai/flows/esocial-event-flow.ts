@@ -59,13 +59,13 @@ const getEmployeeDataForESocial = (employeeId: string) => {
     const mockDatabase: Record<string, any> = {
         'FUNC001': {
             employee: { id: 'FUNC001', name: 'Carlos Andrade', email: 'carlos.andrade@example.com', cpf: '111.222.333-44', birthDate: '1985-08-15', gender: 'M', nationality: 'Brasileira' },
-            company: { name: 'RH-Full Soluções em TI', cnpj: '01.234.567/0001-89' },
+            company: { name: 'RH Lite Soluções em TI', cnpj: '01.234.567/0001-89' },
             contract: { admissionDate: '2024-07-01', salary: 5000.00, workShiftId: 'JOR001'},
             workShift: { id: "JOR001", name: "Padrão (Seg-Sex, 8h/dia)", description: "Segunda a Sexta, das 09:00 às 18:00 com 1h de intervalo."}
         },
         'FUNC002': {
              employee: { id: 'FUNC002', name: 'Mariana Costa', email: 'mariana.costa@example.com', cpf: '555.666.777-88', birthDate: '1992-11-30', gender: 'F', nationality: 'Brasileira' },
-            company: { name: 'RH-Full Soluções em TI', cnpj: '01.234.567/0001-89' },
+            company: { name: 'RH Lite Soluções em TI', cnpj: '01.234.567/0001-89' },
             contract: { admissionDate: '2024-07-01', salary: 6500.00, workShiftId: 'JOR001'},
             workShift: { id: "JOR001", name: "Padrão (Seg-Sex, 8h/dia)", description: "Segunda a Sexta, das 09:00 às 18:00 com 1h de intervalo."}
         }

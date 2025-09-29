@@ -20,7 +20,7 @@ const getMockAnnualData = (employeeId: string, year: number) => {
     // This is a simulation.
     return {
         employee: { name: 'Jane Doe', cpf: '123.456.789-00' },
-        company: { name: 'RH-Full Soluções em TI', cnpj: '01.234.567/0001-89' },
+        company: { name: 'RH Lite Soluções em TI', cnpj: '01.234.567/0001-89' },
         totalTaxableIncome: 90000.00, // Total rendimentos (salários, férias, etc.)
         thirteenthSalary: 7500.00, // Décimo terceiro
         incomeTaxWithheld: 15000.00, // Imposto de Renda Retido na Fonte
