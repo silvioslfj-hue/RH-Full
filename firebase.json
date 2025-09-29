@@ -1,13 +1,6 @@
 {
   "hosting": {
-    "rewrites": [
-      {
-        "source": "**",
-        "apphosting": {
-          "backendId": "rhlite"
-        }
-      }
-    ]
+    "source": "."
   },
   "firestore": {
     "database": "(default)",
