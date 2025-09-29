@@ -21,8 +21,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { MoreHorizontal, Ban, Trash2, FileJson } from "lucide-react";
+import { MoreHorizontal, Ban, Trash2, Download, CheckCircle, AlertCircle } from "lucide-react";
 import type { EsocialEvent } from "@/lib/data";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 interface ESocialEventsTableProps {
   data: EsocialEvent[];
@@ -30,6 +31,7 @@ interface ESocialEventsTableProps {
   onSelectedEventsChange: (ids: string[]) => void;
   onReject: (id: string) => void;
   onDelete: (id: string) => void;
+  onDownload: (event: EsocialEvent) => void;
 }
 
 export function ESocialEventsTable({ 
@@ -38,6 +40,7 @@ export function ESocialEventsTable({
     onSelectedEventsChange,
     onReject,
     onDelete,
+    onDownload,
 }: ESocialEventsTableProps) {
     
   const pendingEvents = data.filter(d => d.status === 'Pendente');
@@ -63,7 +66,7 @@ export function ESocialEventsTable({
     switch (status) {
       case "Pendente":
         return "secondary";
-      case "Enviado":
+      case "XML Gerado":
         return "default";
       case "Erro":
         return "destructive";
@@ -73,8 +76,20 @@ export function ESocialEventsTable({
         return "outline";
     }
   };
+  
+  const getStatusIcon = (status: EsocialEvent['status']) => {
+    switch (status) {
+      case "XML Gerado":
+        return <CheckCircle className="mr-2 h-4 w-4" />;
+      case "Erro":
+        return <AlertCircle className="mr-2 h-4 w-4" />;
+      default:
+        return null;
+    }
+  }
 
   return (
+    <TooltipProvider>
     <div className="border rounded-md">
       <Table>
         <TableHeader>
@@ -116,11 +131,24 @@ export function ESocialEventsTable({
                 <TableCell>{event.employeeName}</TableCell>
                 <TableCell>{event.referenceDate}</TableCell>
                 <TableCell>
-                  <Badge variant={getStatusVariant(event.status)}>
-                    {event.status}
+                  <Badge variant={getStatusVariant(event.status)} className="items-center">
+                     {getStatusIcon(event.status)}
+                     {event.status}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
+                   {event.status === "XML Gerado" ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={() => onDownload(event)}>
+                                <Download className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Baixar XML</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="h-8 w-8 p-0">
@@ -129,12 +157,11 @@ export function ESocialEventsTable({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <FileJson className="mr-2 h-4 w-4" />
-                        Ver detalhes XML
-                      </DropdownMenuItem>
-                      {event.status === "Erro" && (
-                          <DropdownMenuItem className="text-destructive">Ver erro</DropdownMenuItem>
+                       {event.status === "Erro" && (
+                          <DropdownMenuItem className="text-destructive focus:text-destructive">
+                            <AlertCircle className="mr-2 h-4 w-4" />
+                            Ver erro
+                          </DropdownMenuItem>
                       )}
                       {(event.status === 'Pendente' || event.status === 'Erro') && (
                           <>
@@ -186,13 +213,13 @@ export function ESocialEventsTable({
                       )}
                     </DropdownMenuContent>
                   </DropdownMenu>
+                    )}
                 </TableCell>
               </TableRow>
             )))}
         </TableBody>
       </Table>
     </div>
+    </TooltipProvider>
   );
 }
-
-    

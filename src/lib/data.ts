@@ -72,8 +72,9 @@ export type EsocialEvent = {
   employeeName: string;
   employeeId: string; // The ID of the employee to fetch full data
   referenceDate: string;
-  status: 'Pendente' | 'Enviado' | 'Erro' | 'Rejeitado';
+  status: 'Pendente' | 'Processando' | 'XML Gerado' | 'Erro' | 'Rejeitado';
   details: string;
+  xmlContent?: string;
 };
 
 export type PayrollHistory = {

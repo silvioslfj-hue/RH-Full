@@ -20,13 +20,6 @@ import type { Company, EsocialEvent } from "@/lib/data";
 import { Input } from "@/components/ui/input";
 import { ESocialEventsTable } from "@/components/esocial/esocial-events-table";
 import { useState, useTransition, useMemo, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { generateESocialEventData } from "@/ai/flows/esocial-event-flow";
 import { generateContractChangeData } from "@/ai/flows/contract-change-flow";
 import { db } from "@/lib/firebaseClient";
@@ -36,14 +29,11 @@ import { collection, getDocs, doc, updateDoc, deleteDoc, onSnapshot } from "fire
 
 export default function ESocialPage() {
     const { toast } = useToast();
-    const [isSending, startTransition] = useTransition();
+    const [isGenerating, startTransition] = useTransition();
     const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
     const [events, setEvents] = useState<EsocialEvent[]>([]);
     const [companies, setCompanies] = useState<Company[]>([]);
-    const [isDataViewerOpen, setIsDataViewerOpen] = useState(false);
-    const [generatedData, setGeneratedData] = useState<object | null>(null);
-    const [dataViewerTitle, setDataViewerTitle] = useState('');
-
+    
     const [competenceFilter, setCompetenceFilter] = useState("2024-07");
     const [companyFilter, setCompanyFilter] = useState("all");
 
@@ -95,12 +85,12 @@ export default function ESocialPage() {
     }, [filteredEvents]);
 
 
-    const handleSendEvents = () => {
+    const handleGenerateXml = () => {
         if(selectedEvents.length === 0) {
             toast({
                 variant: "destructive",
                 title: "Nenhum Evento Selecionado",
-                description: "Selecione ao menos um evento para gerar o envio.",
+                description: "Selecione ao menos um evento para gerar o XML.",
             });
             return;
         }
@@ -110,8 +100,8 @@ export default function ESocialPage() {
 
         startTransition(async () => {
              toast({
-                title: "Geração de Dados Iniciada...",
-                description: `A IA processará os eventos e em seguida eles serão enviados.`,
+                title: "Geração de XML Iniciada...",
+                description: `A IA processará os eventos e em seguida o XML será salvo.`,
             });
             
             for (const eventId of selectedEvents) {
@@ -119,42 +109,30 @@ export default function ESocialPage() {
                 if (!event) continue;
 
                 let data: object | null = null;
-                let title = '';
-
+                
                 try {
                     // Step 1: Generate JSON data with AI flows
                     if (event.type.startsWith('S-2200')) {
                         data = await generateESocialEventData({ employeeId: event.employeeId });
-                        title = 'Dados Estruturados do Evento eSocial (S-2200 - Admissão)';
                     } else if (event.type.startsWith('S-2206')) {
                          data = await generateContractChangeData({
                             employeeId: event.employeeId,
                             changeDate: event.referenceDate,
                             changeDetails: event.details,
                         });
-                         title = 'Dados Estruturados do Evento eSocial (S-2206 - Alteração Contratual)';
                     }
                     // TODO: Add flows for other event types (S-2299, S-1200, etc.)
                     
                     if(data) {
-                        setGeneratedData(data);
-                        setDataViewerTitle(title);
-                        setIsDataViewerOpen(true); // Show the user the generated data
-                        
-                        // Step 2: Call the backend function with the generated data
-                        await transmitirEventoESocial({ eventId: eventId, jsonData: data, companyId: event.companyId });
+                        // Step 2: Call the backend function to generate and save XML
+                        await transmitirEventoESocial({ eventId: eventId, jsonData: data });
 
                         toast({
-                            title: `Evento ${event.type} enviado para processamento!`,
-                            description: `O backend está processando e transmitindo o evento para ${event.employeeName}.`,
+                            title: `XML Gerado para ${event.type}!`,
+                            description: `O XML para ${event.employeeName} está pronto para download.`,
                         });
                     } else {
-                        // For events without an AI flow, we can still try to send them if the data exists
-                         await transmitirEventoESocial({ eventId: eventId, jsonData: event.details, companyId: event.companyId });
-                          toast({
-                            title: `Evento ${event.type} enviado para processamento!`,
-                            description: `O backend está processando e transmitindo o evento para ${event.employeeName}.`,
-                        });
+                        throw new Error(`Fluxo de IA para o tipo de evento ${event.type} não implementado.`);
                     }
                     setSelectedEvents(prev => prev.filter(id => id !== eventId));
                     break; // Process one at a time for this demo
@@ -195,6 +173,25 @@ export default function ESocialPage() {
              toast({ variant: "destructive", title: "Erro ao rejeitar evento." });
         }
     }
+    
+    const handleDownloadXml = (event: EsocialEvent) => {
+        if (!event.xmlContent) {
+            toast({ variant: "destructive", title: "Conteúdo XML não encontrado." });
+            return;
+        }
+
+        const blob = new Blob([event.xmlContent], { type: "application/xml" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        const fileName = `${event.type.replace(/\s/g, '_')}_${event.employeeName.replace(/\s/g, '_')}.xml`;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
 
     const handleResetFilters = () => {
         setCompetenceFilter("2024-07");
@@ -213,7 +210,7 @@ export default function ESocialPage() {
             eSocial
           </h1>
           <p className="text-muted-foreground">
-            Gerencie a geração e o envio de eventos para o eSocial.
+            Gerencie a geração de eventos para upload manual no portal do eSocial.
           </p>
         </div>
 
@@ -221,7 +218,7 @@ export default function ESocialPage() {
           <CardHeader>
             <CardTitle>Painel de Controle do eSocial</CardTitle>
             <CardDescription>
-              Selecione a empresa e a competência para visualizar e enviar os eventos pendentes.
+              Selecione a empresa e a competência para visualizar e gerar os arquivos XML dos eventos.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -258,16 +255,6 @@ export default function ESocialPage() {
                     </Button>
                 </div>
             </div>
-             <Alert>
-                <KeyRound className="h-4 w-4" />
-                <AlertTitle>Certificado Digital</AlertTitle>
-                <AlertDescription>
-                    Certifique-se de que a empresa selecionada possui um <strong>Certificado Digital A1</strong> válido e configurado para realizar os envios.
-                    <Button variant="link" className="p-0 h-auto ml-1" asChild>
-                        <Link href="/settings">Verificar configuração</Link>
-                    </Button>
-                </AlertDescription>
-            </Alert>
           </CardContent>
         </Card>
 
@@ -321,46 +308,31 @@ export default function ESocialPage() {
 
         <Card>
              <CardHeader>
-                <CardTitle>Fila de Eventos para Envio</CardTitle>
-                <CardDescription>Marque os eventos que você deseja gerar e enviar para o eSocial. A geração de dados com IA é simulada para eventos de admissão (S-2200) e alteração contratual (S-2206).</CardDescription>
+                <CardTitle>Fila de Eventos</CardTitle>
+                <CardDescription>Marque os eventos que você deseja gerar. A IA criará o arquivo XML, que ficará disponível para download para o envio manual no portal do eSocial.</CardDescription>
             </CardHeader>
             <CardContent>
                 <ESocialEventsTable 
                     data={filteredEvents}
                     selectedEvents={selectedEvents}
                     onSelectedEventsChange={setSelectedEvents}
-                    onDelete={handleDeleteEvent}
                     onReject={handleRejectEvent}
+                    onDelete={handleDeleteEvent}
+                    onDownload={handleDownloadXml}
                 />
             </CardContent>
             <CardFooter className="flex-col items-stretch gap-4 sm:flex-row sm:justify-end">
-                 <Button onClick={handleSendEvents} disabled={isSending || selectedEvents.length === 0}>
-                    {isSending ? (
+                 <Button onClick={handleGenerateXml} disabled={isGenerating || selectedEvents.length === 0}>
+                    {isGenerating ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
                     ) : (
                         <Send className="mr-2 h-4 w-4"/>
                     )}
-                    {isSending ? `Processando ${selectedEvents.length} eventos...` : `Processar e Enviar ${selectedEvents.length} Eventos`}
+                    {isGenerating ? `Gerando ${selectedEvents.length} XML...` : `Gerar XML para ${selectedEvents.length} Eventos`}
                 </Button>
             </CardFooter>
         </Card>
       </div>
-
-       <Dialog open={isDataViewerOpen} onOpenChange={setIsDataViewerOpen}>
-        <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>{dataViewerTitle}</DialogTitle>
-            <DialogDescription>
-              Abaixo estão os dados gerados pela IA, prontos para serem enviados ao backend.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex-1 overflow-auto bg-muted/50 rounded-md p-4">
-            <pre className="text-xs">{JSON.stringify(generatedData, null, 2)}</pre>
-          </div>
-        </DialogContent>
-      </Dialog>
     </AppLayout>
   );
 }
-
-    

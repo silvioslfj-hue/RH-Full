@@ -69,125 +69,57 @@ async function getSecret(secretName: string): Promise<string> {
 
 
 /**
- * Handles the transmission of an eSocial event, following the real integration steps.
+ * Generates an XML file for an eSocial event and saves it to Firestore.
  */
 export const transmitirEventoESocial = onCall(async (request) => {
     // 1. Authentication and Authorization
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "A função deve ser chamada por um usuário autenticado.");
     }
-    // TODO: Add role-based access control here.
 
-    const { eventId, jsonData } = request.data; // Assuming jsonData is passed from the client
+    const { eventId, jsonData } = request.data;
     if (!eventId || !jsonData) {
         throw new HttpsError("invalid-argument", "O ID do evento e os dados JSON são obrigatórios.");
     }
 
     const db = admin.firestore();
     const eventRef = db.collection("esocialEvents").doc(eventId);
-    const eventDoc = await eventRef.get();
-    if (!eventDoc.exists) throw new HttpsError("not-found", `Evento com ID ${eventId} não foi encontrado.`);
-    const eventData = eventDoc.data()!;
 
     try {
-        logger.info(`Processing eSocial event: ${eventId}`, {structuredData: true});
+        logger.info(`Generating XML for eSocial event: ${eventId}`, {structuredData: true});
         await eventRef.update({status: "Processando"});
 
-        // ===================================================================
-        // PASSO 2: GERAÇÃO E ASSINATURA DIGITAL DO XML
-        // ===================================================================
-
-        // 2.1 Geração do Lote XML
-        logger.info("Step 2.1: Converting JSON to XML Batch", { eventId });
+        // 2. Convert JSON to XML
         const loteEventos = {
             _declaration: { _attributes: { version: "1.0", encoding: "UTF-8" } },
             eSocial: {
-                // TODO: The developer should structure this according to the eSocial lote schema.
-                // This is a simplified example.
-                evtAdmissao: jsonData.evtAdmissao
+                // This structure assumes the jsonData is the direct content for the event type
+                // e.g., for S-2200, jsonData would be { evtAdmissao: { ... } }
+                ...jsonData
             }
         };
         const xmlString = convert.json2xml(loteEventos, { compact: true, spaces: 4 });
-        logger.info("XML content generated (unsigned)", { eventId, xml: xmlString.substring(0, 200) + '...' });
-        
-        // 2.2 Assinatura Digital
-        logger.info("Step 2.2: Preparing for XML Digital Signature", { eventId });
-        const companyId = eventData.companyId; 
-        const certSecretName = `CERT_PASS_${companyId}`;
+        logger.info("XML content generated", { eventId });
 
-        // Fetching the certificate password
-        const certPassword = await getSecret(certSecretName);
-        
-        // --- AÇÃO MANUAL DO DESENVOLVEDOR ---
-        // TODO: Download o arquivo .pfx do Firebase Storage.
-        // const bucket = admin.storage().bucket();
-        // const certFile = bucket.file(`certs/${companyId}.pfx`);
-        // const [certBuffer] = await certFile.download();
-        // --- FIM DA AÇÃO MANUAL ---
+        // 3. Save XML content to Firestore and update status
+        await eventRef.update({
+            status: "XML Gerado",
+            xmlContent: xmlString,
+            generatedAt: new Date(),
+        });
 
-        // --- AÇÃO MANUAL DO DESENVOLVEDOR ---
-        // TODO: Implementar a assinatura digital XMLDsig/XAdES.
-        // Usar bibliotecas como 'xml-crypto' e 'node-forge'.
-        // 1. Carregar a chave privada do certBuffer usando a certPassword.
-        // 2. Canonizar (transformar) o XML para um formato padrão antes de assinar.
-        // 3. Gerar o hash SHA-256 do XML canonizado.
-        // 4. Assinar o hash com a chave privada.
-        // 5. Inserir o bloco <Signature> no XML conforme o padrão XAdES.
-        logger.info("Simulating XML signing process...", { eventId });
-        const signedXml = xmlString.replace("</eSocial>", `<Signature>...signed content with password starting with ${certPassword.substring(0, 2)}...</Signature></eSocial>`);
-        // --- FIM DA AÇÃO MANUAL ---
-        
-        // ===================================================================
-        // PASSO 3: COMUNICAÇÃO SOAP (WEB SERVICES)
-        // ===================================================================
-        logger.info("Step 3: Simulating SOAP Communication", { eventId });
+        logger.info(`Event ${eventId} XML successfully generated and saved.`);
 
-        // --- AÇÃO MANUAL DO DESENVOLVEDOR ---
-        // TODO: Implementar a chamada SOAP com 'node-soap'.
-        // 1. Criar um cliente SOAP a partir do WSDL do eSocial para envio de lotes.
-        //    const wsdlUrl = 'https://.../servico/enviarLoteEventos.wsdl';
-        //    const client = await soap.createClientAsync(wsdlUrl);
-        // 2. Chamar o método 'EnviarLoteEventos' passando o 'signedXml' no corpo.
-        //    client.addSoapHeader({ /* Cabeçalho de autenticação, se necessário */ });
-        //    const { result } = await client.EnviarLoteEventosAsync({ loteEventos: { any: signedXml } });
-        //    const protocolId = result.enviarLoteEventosResult.retornoEnvioLote.protocoloEnvio;
-        
-        const protocolId = `protocol_${Date.now()}`; // Simulação do protocolo retornado
-        logger.info("Simulated SOAP call. Received protocol ID.", { eventId, protocolId });
-        // --- FIM DA AÇÃO MANUAL ---
-
-        // ===================================================================
-        // PASSO 4: ATUALIZAÇÃO E FLUXO ASSÍNCRONO
-        // ===================================================================
-        logger.info(`Step 4: Updating Firestore with protocol ID for event ${eventId}.`);
-
-        // 4.1 Resposta Imediata (Protocolo)
-        // Atualiza o evento com o protocolo e muda o status para "Aguardando Recibo"
-        await eventRef.update({status: "Aguardando Recibo", protocolId: protocolId, sentAt: new Date()});
-        
-        // 4.2 Resposta Final (Processamento)
-        // Em um projeto real, uma outra Cloud Function (agendada ou acionada)
-        // usaria o 'protocolId' para consultar o resultado do processamento.
-        // Aqui, vamos simular que a consulta foi feita e o evento foi aceito.
-        const receiptId = `receipt_${Date.now()}`; // Simulação do recibo final
-        
-        // Simulando a atualização final após a consulta do protocolo
-        setTimeout(async () => {
-            await eventRef.update({status: "Enviado", receiptId: receiptId});
-            logger.info(`Final status update for event ${eventId}.`, { receiptId });
-        }, 5000); // Atraso de 5s para simular a consulta assíncrona
-
-
-        return {success: true, message: "Evento enviado para processamento!", protocolId: protocolId};
+        return {success: true, message: "XML do evento gerado com sucesso!"};
 
     } catch (error) {
-        logger.error(`Failed to process event ${eventId}`, error);
+        logger.error(`Failed to generate XML for event ${eventId}`, error);
         await eventRef.update({status: "Erro", errorMessage: (error as Error).message});
         
         if (error instanceof HttpsError) {
             throw error;
         } else {
-            throw new HttpsError("internal", `Ocorreu um erro inesperado ao processar o evento ${eventId}.`);
+            throw new HttpsError("internal", `Ocorreu um erro inesperado ao gerar o XML para o evento ${eventId}.`);
         }
     }
 });
@@ -258,5 +190,3 @@ export const setupCompanySecrets = onCall(async (request) => {
         throw new HttpsError("internal", "Não foi possível salvar a senha do certificado.");
     }
 });
-
-    
