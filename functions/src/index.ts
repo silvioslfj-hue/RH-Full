@@ -103,16 +103,18 @@ export const transmitirEventoESocial = onCall(async (request) => {
  * Creates or updates a secret in Google Cloud Secret Manager for a
  * company's certificate.
  */
-export const setupCompanySecrets = onCall(async (request: unknown) => {
+export const setupCompanySecrets = onCall(async (request: {
+  auth?: { uid: string };
+  data: { companyId: string, certificatePassword?: string };
+}) => {
   // 1. Authentication and Authorization
-  const req = request as { auth?: { uid: string }, data: any };
-  if (!req.auth) {
+  if (!request.auth) {
     const msg = "A função deve ser chamada por um usuário autenticado.";
     throw new HttpsError("unauthenticated", msg);
   }
   // TODO: Verify if the user is an admin.
 
-  const {companyId, certificatePassword} = req.data;
+  const {companyId, certificatePassword} = request.data;
   if (!companyId || !certificatePassword) {
     const msg = "ID da empresa e senha do certificado são obrigatórios.";
     throw new HttpsError("invalid-argument", msg);
