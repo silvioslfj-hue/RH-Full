@@ -220,3 +220,90 @@ export type GeneratedJobOpening = JobOpeningOutput & {
 // All mock data has been removed and pages are connected to Firestore.
 
 export const initialTimecardData = ``;
+
+export const timeSheetData: TimeSheetEntry[] = [
+  { day: "Seg", date: "22/07", entries: "09:01 - 12:32 - 13:33 - 18:05", worked: "08:03", balance: "+00:03", status: 'ok' },
+  { day: "Ter", date: "23/07", entries: "08:58 - 12:30 - 13:30 - 17:59", worked: "07:59", balance: "-00:01", status: 'ok' },
+  { day: "Qua", date: "24/07", entries: "09:15 - 12:35 - 13:40 - 18:10", worked: "07:50", balance: "-00:10", status: 'warning', issue: 'Atraso' },
+  { day: "Qui", date: "25/07", entries: "09:00 - 12:30 - 13:30", worked: "03:30", balance: "-04:30", status: 'warning', issue: 'Incompleto' },
+  { day: "Sex", date: "26/07", entries: "Ausente", worked: "00:00", balance: "-08:00", status: 'info', issue: 'Falta' },
+];
+
+export const companyData: Company[] = [
+    { id: '1', name: 'RH Lite Soluções em TI', cnpj: '01.234.567/0001-89', address: 'Av. Principal', city: 'São Paulo', state: 'SP', zip: '01234-567', certificateFile: 'cert1.pfx' },
+    { id: '2', name: 'Inova Tech', cnpj: '98.765.432/0001-10', address: 'Rua das Inovações', city: 'Rio de Janeiro', state: 'RJ', zip: '98765-432' },
+];
+
+export const unitData: Unit[] = [
+    { id: '1', name: 'Sede São Paulo', address: 'Av. Principal, 123', city: 'São Paulo', state: 'SP', zip: '01234-567' },
+    { id: '2', name: 'Filial Remota', address: 'N/A', city: 'Remoto', state: 'N/A', zip: 'N/A' },
+];
+
+export const employeeData: Employee[] = [
+    { id: 'FUNC001', name: 'Carlos Andrade', email: 'carlos.andrade@example.com', company: 'RH Lite Soluções em TI', role: 'Desenvolvedor Backend', unit: 'Sede São Paulo', status: 'Ativo', contractType: 'CLT', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d' },
+    { id: 'FUNC002', name: 'Mariana Costa', email: 'mariana.costa@example.com', company: 'RH Lite Soluções em TI', role: 'Designer UI/UX', unit: 'Sede São Paulo', status: 'Férias', contractType: 'CLT', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026705d' },
+    { id: 'FUNC003', name: 'Pedro Alves', email: 'pedro.alves@example.com', company: 'RH Lite Soluções em TI', role: 'Gerente de Projetos', unit: 'Filial Remota', status: 'Ativo', contractType: 'CLT', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026706d' },
+    { id: 'FUNC004', name: 'Juliana Lima', email: 'juliana.lima@example.com', company: 'RH Lite Soluções em TI', role: 'Analista de RH', unit: 'Sede São Paulo', status: 'Inativo', contractType: 'CLT', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026707d' },
+    { id: 'FUNC005', name: 'Fernando Oliveira', email: 'fernando.oliveira@example.com', company: 'Inova Tech', role: 'Engenheiro de IA', unit: 'Filial Remota', status: 'Ativo', contractType: 'PJ', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026708d' },
+];
+
+export const teamStatusData = [
+  { name: "Carlos Andrade", status: "Trabalhando", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d" },
+  { name: "Mariana Costa", status: "Ausente - Férias", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026705d" },
+  { name: "Pedro Alves", status: "Em pausa", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026706d" },
+  { name: "Lucas Ferreira", status: "De folga", avatar: "https://i.pravatar.cc/150?u=a042581f4e29026709d" },
+];
+
+export const absenceData: Absence[] = [
+  { id: '1', employee: 'Carlos Andrade', startDate: '2024-08-01', endDate: '2024-08-05', type: 'Licença Médica', status: 'Aprovado' },
+  { id: '2', employee: 'Mariana Costa', startDate: '2024-08-10', endDate: '2024-08-20', type: 'Férias', status: 'Pendente' },
+  { id: '3', employee: 'Pedro Alves', startDate: '2024-07-29', endDate: '2024-07-29', type: 'Licença Pessoal', status: 'Negado' },
+];
+
+export const attendanceReportData = [
+  { date: '20 Jul', Presentes: 88, Ausentes: 12 },
+  { date: '21 Jul', Presentes: 92, Ausentes: 8 },
+  { date: '22 Jul', Presentes: 90, Ausentes: 10 },
+  { date: '23 Jul', Presentes: 85, Ausentes: 15 },
+  { date: '24 Jul', Presentes: 95, Ausentes: 5 },
+  { date: '25 Jul', Presentes: 91, Ausentes: 9 },
+  { date: '26 Jul', Presentes: 89, Ausentes: 11 },
+];
+
+export const timeOffReportData = [
+  { type: 'Férias', count: 45, fill: 'var(--color-Férias)' },
+  { type: 'Licença Médica', count: 25, fill: 'var(--color-Licença Médica)' },
+  { type: 'Pessoal', count: 20, fill: 'var(--color-Pessoal)' },
+  { type: 'Não Remunerada', count: 10, fill: 'var(--color-Não Remunerada)' },
+];
+
+export const timeBankData: TimeBankEntry[] = [
+    { employeeId: 'FUNC001', employeeName: 'Carlos Andrade', role: 'Desenvolvedor Backend', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d', balance: '+12h 30m', expiringHours: '04h 15m', expiryDate: '31/08/2024', status: 'Crítico' },
+    { employeeId: 'FUNC002', employeeName: 'Mariana Costa', role: 'Designer UI/UX', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026705d', balance: '-02h 00m', expiringHours: '00h 00m', expiryDate: '-', status: 'OK' },
+    { employeeId: 'FUNC003', employeeName: 'Pedro Alves', role: 'Gerente de Projetos', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026706d', balance: '+35h 45m', expiringHours: '10h 30m', expiryDate: '15/09/2024', status: 'Atenção' },
+    { employeeId: 'FUNC005', employeeName: 'Fernando Oliveira', role: 'Engenheiro de IA', avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026708d', balance: '+08h 15m', expiringHours: '00h 00m', expiryDate: '-', status: 'OK' },
+]
+
+export const personalTimeReportData = {
+    workedHours: '128h 45m',
+    timeBank: '+18h 30m',
+    timeBankChange: '+2h 15m vs. last month',
+    timeBankChangeType: 'positive',
+};
+
+export const lateAverageData = [
+    { month: 'Fev', 'Média de Atraso': 5 },
+    { month: 'Mar', 'Média de Atraso': 7 },
+    { month: 'Abr', 'Média de Atraso': 4 },
+    { month: 'Mai', 'Média de Atraso': 6 },
+    { month: 'Jun', 'Média de Atraso': 3 },
+    { month: 'Jul', 'Média de Atraso': 8 },
+];
+
+export const personalTimeOffData = [
+  { type: 'Férias', count: 10, fill: 'hsl(var(--chart-1))' },
+  { type: 'Licença Médica', count: 2, fill: 'hsl(var(--chart-2))' },
+  { type: 'Pessoal', count: 1, fill: 'hsl(var(--chart-4))' },
+];
+
+    

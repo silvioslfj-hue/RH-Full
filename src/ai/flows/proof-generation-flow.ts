@@ -100,17 +100,19 @@ const generateProofContentFlow = ai.defineFlow(
 
     // 2. Prepare data for the prompt.
     const promptData = {
-        ...input,
-        isoTimestamp: input.timestamp,
-        fullData: {
-            ...fullData,
-            company: {
-                ...fullData.company,
-                cnpj: fullData.company.cnpj.replace(/\D/g, ''),
-            },
-            employee: {
-                ...fullData.employee,
-                cpf: fullData.employee.cpf.replace(/\D/g, ''),
+        input: {
+            ...input,
+            isoTimestamp: input.timestamp,
+            fullData: {
+                ...fullData,
+                company: {
+                    ...fullData.company,
+                    cnpj: fullData.company.cnpj.replace(/\D/g, ''),
+                },
+                employee: {
+                    ...fullData.employee,
+                    cpf: fullData.employee.cpf.replace(/\D/g, ''),
+                }
             }
         }
     };
@@ -122,3 +124,5 @@ const generateProofContentFlow = ai.defineFlow(
     return output!;
   }
 );
+
+    
